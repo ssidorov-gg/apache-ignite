@@ -21,9 +21,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.apache.ignite.IgniteCheckedException;
 import org.apache.ignite.IgniteLogger;
+import org.apache.ignite.internal.processors.rest.client.message.GridClientResponse;
+import org.apache.ignite.internal.processors.rest.client.message.GridClientTaskResultBean;
 import org.apache.ignite.internal.util.tostring.GridToStringExclude;
 import org.apache.ignite.internal.util.typedef.internal.LT;
 import org.apache.ignite.internal.util.typedef.internal.S;
+import org.apache.ignite.internal.util.typedef.internal.U;
 
 /**
  * Filter that transforms byte buffers to user-defined objects and vice-versa
@@ -83,6 +86,21 @@ public class GridNioCodecFilter extends GridNioFilterAdapter {
 
         try {
             ByteBuffer res = parser.encode(ses, msg);
+
+            if (msg instanceof GridClientResponse) {
+                Object cr = ((GridClientResponse)msg).result();
+
+                if (cr != null && cr instanceof GridClientTaskResultBean) {
+                    Object tr = ((GridClientTaskResultBean)cr).getResult();
+
+                    U.warn(log, "Visor DEBUG1: " + (tr != null ? tr.getClass().getName() : "") + ", sz=" + res.limit());
+                }
+                else
+                    U.warn(log, "Visor DEBUG2: " + (cr != null ? cr.getClass().getName() : "") + ", sz=" + res.limit());
+
+            }
+            else
+                U.warn(log, "Visor DEBUG3: " + (msg != null ? msg.getClass().getName() : "") + ", sz=" + res.limit());
 
             return proceedSessionWrite(ses, res);
         }

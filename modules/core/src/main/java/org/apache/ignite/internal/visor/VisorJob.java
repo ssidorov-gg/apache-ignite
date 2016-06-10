@@ -53,7 +53,7 @@ public abstract class VisorJob<A, R> extends ComputeJobAdapter {
     protected VisorJob(@Nullable A arg, boolean debug) {
         super(arg);
 
-        this.debug = debug;
+        this.debug = true; // debug;
     }
 
     /** {@inheritDoc} */

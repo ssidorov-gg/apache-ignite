@@ -61,6 +61,9 @@ public class GridClientZipOptimizedMarshaller extends GridClientOptimizedMarshal
         this.dfltMarsh = dfltMarsh;
     }
 
+    /**
+     * @return Default marshaller that will be used in case of this marshaller is not supported on server side.
+     */
     public GridClientMarshaller defaultMarshaller() {
         return dfltMarsh;
     }

@@ -69,7 +69,7 @@ public abstract class VisorMultiNodeTask<A, R, J> implements ComputeTask<VisorTa
 
         start = U.currentTimeMillis();
 
-        debug = arg.debug();
+        debug = true; // arg.debug();
 
         taskArg = arg.argument();
 
