@@ -278,7 +278,7 @@ class VisorCacheCommand {
                             else if (hasArgFlag("swap", argLst))
                                 VisorCacheSwapCommand().swap(argLst, node)
                             else if (hasArgFlag("stop", argLst))
-                                VisorCacheStopCommand().scan(argLst, node)
+                                VisorCacheStopCommand().stop(argLst, node)
                         }
                         else {
                             if (hasArgFlag("clear", argLst))
@@ -649,7 +649,7 @@ class VisorCacheCommand {
 
         sumT.render()
 
-        val a = ask("\nChoose cache number ('c' to cancel) [c]: ", "c")
+        val a = ask("\nChoose cache number ('c' to cancel) [c]: ", "0")
 
         if (a.toLowerCase == "c")
             None

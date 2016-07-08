@@ -146,7 +146,7 @@ class VisorEventsCommand extends VisorConsoleCommand {
      */
     @throws[IllegalArgumentException]("In case unknown event mnemonic.")
     protected def typeFilter(typeArg: Option[String]) = {
-        typeArg.map(_.split(",").map(typeIds).flatten).orNull
+        typeArg.map(_.split(",").flatMap(typeIds)).orNull
     }
 
     /**
