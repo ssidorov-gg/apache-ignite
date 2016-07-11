@@ -234,6 +234,8 @@ object visor extends VisorTag {
 
     private var reader: ConsoleReader = null
 
+    var batchMode: Boolean = false
+
     def reader(reader: ConsoleReader) {
         assert(reader != null)
 
@@ -872,7 +874,7 @@ object visor extends VisorTag {
                 case _ => Left("'id8' resolves to more than one node (use full 'id' instead): " + id8.get)
             }
         }
-        else if (id.isDefined)
+        else if (id.isDefined) {
             try {
                 val node = Option(ignite.cluster.node(java.util.UUID.fromString(id.get)))
 
@@ -884,6 +886,7 @@ object visor extends VisorTag {
             catch {
                 case e: IllegalArgumentException => Left("Invalid node 'id': " + id.get)
             }
+        }
         else
             Right(None)
     }
@@ -1526,11 +1529,18 @@ object visor extends VisorTag {
             override def apply(e: Event): Boolean = {
                 e match {
                     case de: DiscoveryEvent =>
-                        setVarIfAbsent(nid8(de.eventNode()), "n")
+                        val n = nid8(de.eventNode())
+
+                        setVarIfAbsent(n, "n")
 
                         val node = ignite.cluster.node(de.eventNode().id())
 
                         if (node != null) {
+                            val alias = if (node.isLocal) "nl" else "nr"
+
+                            if (mgetOpt(alias).isEmpty)
+                                msetOpt(alias, n)
+
                             val ip = sortAddresses(node.addresses).headOption
 
                             if (ip.isDefined)
@@ -1551,29 +1561,30 @@ object visor extends VisorTag {
 
         ignite.events().localListen(nodeJoinLsnr, EVT_NODE_JOINED)
 
+        val mclear = (node: ClusterNode) => {
+            val n = nid8(node)
+
+            mfind(n).foreach(nv => mem.remove(nv._1))
+
+            if (mgetOpt("nl").isEmpty)
+                Option(ignite.cluster.forLocal().forOldest().node()).foreach(node => msetOpt(n, "nl"))
+
+            if (mgetOpt("nr").isEmpty)
+                Option(ignite.cluster.forRemotes().forOldest().node()).foreach(node => msetOpt(n, "nr"))
+
+            sortAddresses(node.addresses).headOption.foreach((ip) => {
+                val last = !ignite.cluster.nodes().exists(n =>
+                    n.addresses.size > 0 && sortAddresses(n.addresses).head == ip)
+
+                if (last)
+                    mfind(ip).foreach(hv => mem.remove(hv._1))
+            })
+        }
+
         nodeLeftLsnr = new IgnitePredicate[Event]() {
             override def apply(e: Event): Boolean = {
                 e match {
-                    case (de: DiscoveryEvent) =>
-                        val nv = mfind(nid8(de.eventNode()))
-
-                        if (nv.isDefined)
-                            mem.remove(nv.get._1)
-
-                        val ip = sortAddresses(de.eventNode().addresses).headOption
-
-                        if (ip.isDefined) {
-                            val last = !ignite.cluster.nodes().exists(n =>
-                                n.addresses.size > 0 && sortAddresses(n.addresses).head == ip.get
-                            )
-
-                            if (last) {
-                                val hv = mfind(ip.get)
-
-                                if (hv.isDefined)
-                                    mem.remove(hv.get._1)
-                            }
-                        }
+                    case (de: DiscoveryEvent) => mclear(de.eventNode())
                 }
 
                 true
@@ -1594,6 +1605,8 @@ object visor extends VisorTag {
 
                             close()
                         }
+                        else
+                            mclear(de.eventNode())
                 }
 
                 true
@@ -1999,6 +2012,9 @@ object visor extends VisorTag {
     def ask(prompt: String, dflt: String, passwd: Boolean = false): String = {
         assert(prompt != null)
         assert(dflt != null)
+
+        if (batchMode)
+            return dflt
 
         readLineOpt(prompt, if (passwd) Some('*') else None) match {
             case None => dflt
