@@ -1536,7 +1536,7 @@ object visor extends VisorTag {
                         val node = ignite.cluster.node(de.eventNode().id())
 
                         if (node != null) {
-                            val alias = if (node.isLocal) "nl" else "nr"
+                            val alias = if (U.sameMacs(ignite.localNode(), node)) "nl" else "nr"
 
                             if (mgetOpt(alias).isEmpty)
                                 msetOpt(alias, n)
