@@ -1527,8 +1527,8 @@ object visor extends VisorTag {
 
         val onHost = ignite.cluster.forHost(ignite.localNode())
 
-        Option(onHost.forServers().forOldest().node()).foreach(n => msetOpt(nid8(n), "nl"))
-        Option(ignite.cluster.forOthers(onHost).forServers.forOldest().node()).foreach(n => msetOpt(nid8(n), "nr"))
+        Option(onHost.forServers().forOldest().node()).foreach(n => msetOpt("nl", nid8(n)))
+        Option(ignite.cluster.forOthers(onHost).forServers.forOldest().node()).foreach(n => msetOpt("nr", nid8(n)))
 
         nodeJoinLsnr = new IgnitePredicate[Event]() {
             override def apply(e: Event): Boolean = {
@@ -1574,10 +1574,10 @@ object visor extends VisorTag {
             val onHost = ignite.cluster.forHost(ignite.localNode())
 
             if (mgetOpt("nl").isEmpty)
-                Option(onHost.forServers().forOldest().node()).foreach(node => msetOpt(n, "nl"))
+                Option(onHost.forServers().forOldest().node()).foreach(node => msetOpt("nl", n))
 
             if (mgetOpt("nr").isEmpty)
-                Option(ignite.cluster.forOthers(onHost).forServers.forOldest().node()).foreach(node => msetOpt(n, "nr"))
+                Option(ignite.cluster.forOthers(onHost).forServers.forOldest().node()).foreach(node => msetOpt("nr", n))
 
             if (onHost.nodes().isEmpty)
                 sortAddresses(node.addresses).headOption.foreach((ip) => mfind(ip).foreach(hv => mem.remove(hv._1)))
