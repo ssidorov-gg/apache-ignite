@@ -1525,6 +1525,11 @@ object visor extends VisorTag {
                 setVarIfAbsent(ip.get, "h")
         })
 
+        val onHost = ignite.cluster.forHost(ignite.localNode())
+
+        Option(onHost.forServers().forOldest().node()).foreach(n => msetOpt(nid8(n), "nl"))
+        Option(ignite.cluster.forOthers(onHost).forServers.forOldest().node()).foreach(n => msetOpt(nid8(n), "nr"))
+
         nodeJoinLsnr = new IgnitePredicate[Event]() {
             override def apply(e: Event): Boolean = {
                 e match {
