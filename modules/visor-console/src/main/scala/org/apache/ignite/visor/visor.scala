@@ -1573,17 +1573,15 @@ object visor extends VisorTag {
         ignite.events().localListen(nodeJoinLsnr, EVT_NODE_JOINED)
 
         val mclear = (node: ClusterNode) => {
-            val n = nid8(node)
-
-            mfind(n).foreach(nv => mem.remove(nv._1))
+            mfind(nid8(node)).foreach(nv => mem.remove(nv._1))
 
             val onHost = ignite.cluster.forHost(ignite.localNode())
 
             if (mgetOpt("nl").isEmpty)
-                Option(onHost.forServers().forOldest().node()).foreach(node => msetOpt("nl", n))
+                Option(onHost.forServers().forOldest().node()).foreach(n => msetOpt("nl", nid8(n)))
 
             if (mgetOpt("nr").isEmpty)
-                Option(ignite.cluster.forOthers(onHost).forServers.forOldest().node()).foreach(node => msetOpt("nr", n))
+                Option(ignite.cluster.forOthers(onHost).forServers.forOldest().node()).foreach(n => msetOpt("nr", nid8(n)))
 
             if (onHost.nodes().isEmpty)
                 sortAddresses(node.addresses).headOption.foreach((ip) => mfind(ip).foreach(hv => mem.remove(hv._1)))
