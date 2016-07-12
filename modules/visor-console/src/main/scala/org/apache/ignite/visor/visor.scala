@@ -663,12 +663,18 @@ object visor extends VisorTag {
     }
 
     /**
-     * Finds variable by its value.
+     * Finds variables by its value.
      *
      * @param v Value to find by.
      */
-    def mfind(@Nullable v: String): Option[(String, String)] =
-        mem find(t => t._2 == v)
+    def mfind(@Nullable v: String) = mem.filter(t => t._2 == v).toSeq
+
+    /**
+      * Finds variable by its value.
+      *
+      * @param v Value to find by.
+      */
+    def mfindHead(@Nullable v: String) = mfind(v).filterNot(entry => Seq("nl", "nr").contains(entry._1)).headOption
 
     /**
      * Sets Visor console memory variable. Note that this method '''does not'''
@@ -1673,7 +1679,7 @@ object visor extends VisorTag {
             val n = ignite.cluster.node(id)
 
             val id8 = nid8(id)
-            val v = mfind(id8)
+            val v = mfindHead(id8)
 
             id8 +
                 (if (v.isDefined) "(@" + v.get._1 + ")" else "") +
@@ -1693,7 +1699,7 @@ object visor extends VisorTag {
         assert(isCon)
 
         val id8 = nid8(id)
-        val v = mfind(id8)
+        val v = mfindHead(id8)
 
         id8 + (if (v.isDefined) "(@" + v.get._1 + ")" else "")
     }

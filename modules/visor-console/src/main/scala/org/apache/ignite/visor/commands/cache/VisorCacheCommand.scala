@@ -459,12 +459,12 @@ class VisorCacheCommand {
      */
     private def mkCacheName(@Nullable s: String): String = {
         if (s == null) {
-            val v = mfind(DFLT_CACHE_KEY)
+            val v = mfindHead(DFLT_CACHE_KEY)
 
             DFLT_CACHE_NAME + (if (v.isDefined) "(@" + v.get._1 + ')' else "")
         }
         else {
-            val v = mfind(s)
+            val v = mfindHead(s)
 
             s + (if (v.isDefined) "(@" + v.get._1 + ')' else "")
         }
