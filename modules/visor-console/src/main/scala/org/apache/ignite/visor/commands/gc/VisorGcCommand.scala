@@ -52,7 +52,8 @@ import scala.language.{implicitConversions, reflectiveCalls}
  * {{{
  *     -id8=<node-id8>
  *         ID8 of the node.
- *         Note that either '-id8' or '-id' can be specified.
+ *         Note that either '-id8' or '-id' can be specified and you can also use '@n0' ... '@nn' variables as shortcut to <node-id8>.
+ *         Or use @nl variable to specify oldest node on host where visor cmd is running or @nr for other hosts.
  *     -id=<node-id>
  *         ID of the node.
  *         Note that either '-id8' or '-id' can be specified.
@@ -160,7 +161,9 @@ object VisorGcCommand {
             "-id8=<node-id8>" -> List(
                 "ID8 of the node.",
                 "Note that either '-id8' or '-id' can be specified and " +
-                    "you can also use '@n0' ... '@nn' variables as shortcut to <node-id8>."
+                    "you can also use '@n0' ... '@nn' variables as shortcut to <node-id8>.",
+                "Or use @nl variable to specify oldest node on host where visor cmd is running " +
+                    "or @nr for other hosts."
             ),
             "-id=<node-id>" -> List(
                 "ID of the node.",

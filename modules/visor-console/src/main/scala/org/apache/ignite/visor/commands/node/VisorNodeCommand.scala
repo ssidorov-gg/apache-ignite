@@ -57,7 +57,9 @@ import scala.util.control.Breaks._
  * ====Arguments====
  * {{{
  *     -id8=<node-id8>
- *         ID8 of node. Either '-id8' or '-id' can be specified.
+ *         ID* of node.
+ *         Note that either '-id8' or '-id' can be specified and you can also use '@n0' ... '@nn' variables as shortcut to <node-id8>.
+ *         Or use @nl variable to specify oldest node on host where visor cmd is running or @nr for other hosts.
  *         If neither specified - command starts in interactive mode.
  *     -id=<node-id>
  *         Full ID of node. Either '-id8' or '-id' can  be specified.
@@ -295,8 +297,11 @@ object VisorNodeCommand {
         ),
         args = List(
             "-id8=<node-id8>" -> List(
+                "ID8 of node.",
                 "Note that either '-id8' or '-id' can be specified and " +
                     "you can also use '@n0' ... '@nn' variables as shortcut to <node-id8>.",
+                "Or use @nl variable to specify oldest node on host where visor cmd is running " +
+                    "or @nr for other hosts.",
                 "If neither specified - command starts in interactive mode."
             ),
             "-id=<node-id>" -> List(

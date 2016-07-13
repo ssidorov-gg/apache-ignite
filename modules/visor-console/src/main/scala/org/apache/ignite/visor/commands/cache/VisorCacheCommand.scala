@@ -73,12 +73,13 @@ import scala.language.{implicitConversions, reflectiveCalls}
  *
  * ====Arguments====
  * {{{
- *     -id=<node-id>
- *         Full ID of the node to get cache statistics from.
- *         Either '-id8' or '-id' can be specified.
- *         If neither is specified statistics will be gathered from all nodes.
  *     -id8=<node-id>
  *         ID8 of the node to get cache statistics from.
+ *         Note that either '-id8' or '-id' can be specified and you can also use '@n0' ... '@nn' variables as shortcut to <node-id8>.
+ *         Or use @nl variable to specify oldest node on host where visor cmd is running or @nr for other hosts.
+ *         If neither is specified statistics will be gathered from all nodes.
+ *     -id=<node-id>
+ *         Full ID of the node to get cache statistics from.
  *         Either '-id8' or '-id' can be specified.
  *         If neither is specified statistics will be gathered from all nodes.
  *     -c=<cache-name>
@@ -311,7 +312,12 @@ class VisorCacheCommand {
                 return
             }
 
-            println("Time of the snapshot: " + formatDateTime(System.currentTimeMillis))
+            node match {
+                case Some(n) =>
+                    println("ID8=" + nid8(n) + ", time of the snapshot: " + formatDateTime(System.currentTimeMillis))
+                case None =>
+                    println("Time of the snapshot: " + formatDateTime(System.currentTimeMillis))
+            }
 
             val sumT = VisorTextTable()
 
@@ -703,16 +709,18 @@ object VisorCacheCommand {
             "cache -stop -c=<cache-name>"
     ),
         args = Seq(
+            "-id8=<node-id>" -> Seq(
+                "ID8 of the node to get cache statistics from.",
+                "Note that either '-id8' or '-id' can be specified and " +
+                    "you can also use '@n0' ... '@nn' variables as shortcut to <node-id8>.",
+                "Or use @nl variable to specify oldest node on host where visor cmd is running " +
+                    "or @nr for other hosts.",
+                "If neither is specified statistics will be gathered from all nodes."
+            ),
             "-id=<node-id>" -> Seq(
                 "Full ID of the node to get cache statistics from.",
                 "Either '-id8' or '-id' can be specified.",
                 "If neither is specified statistics will be gathered from all nodes."
-            ),
-            "-id8=<node-id>" -> Seq(
-                "ID8 of the node to get cache statistics from.",
-                "Either '-id8' or '-id' can be specified.",
-                "If neither is specified statistics will be gathered from all nodes.",
-                "Note you can also use '@n0' ... '@nn' variables as shortcut to <node-id>."
             ),
             "-c=<cache-name>" -> Seq(
                 "Name of the cache.",

@@ -54,11 +54,12 @@ import scala.language.implicitConversions
  *
  * ====Arguments====
  * {{{
+ *     -id8=<node-id8>
+ *         Note that either '-id8' or '-id' can be specified and you can also use '@n0' ... '@nn' variables as shortcut to <node-id8>.
+ *         Or use @nl variable to specify oldest node on host where visor cmd is running or @nr for other hosts.
+ *         If neither is specified - command starts in interactive mode.
  *     -id=<node-id>
  *         Full node ID. Either '-id8' or '-id' can be specified.
- *         If neither is specified - command starts in interactive mode.
- *     -id8=<node-id8>
- *         Node ID8. Either '-id8' or '-id' can be specified.
  *         If neither is specified - command starts in interactive mode.
  * }}}
  *
@@ -388,14 +389,16 @@ object VisorConfigurationCommand {
             s"${cmd.name} {-id=<node-id>|id8=<node-id8>}"
         ),
         args = List(
+            "-id8=<node-id8>" -> List(
+                "Note that either '-id8' or '-id' can be specified and " +
+                    "you can also use '@n0' ... '@nn' variables as shortcut to <node-id8>.",
+                "Or use @nl variable to specify oldest node on host where visor cmd is running " +
+                    "or @nr for other hosts.",
+                "If neither is specified - command starts in interactive mode."
+            ),
             "-id=<node-id>" -> List(
                 "Full node ID. Either '-id8' or '-id' can be specified.",
                 "If neither is specified - command starts in interactive mode."
-            ),
-            "-id8=<node-id8>" -> List(
-                "Node ID8. Either '-id8' or '-id' can be specified.",
-                "If neither is specified - command starts in interactive mode.",
-                "Note you can also use '@n0' ... '@nn' variables as shortcut to <node-id>."
             )
         ),
         examples = List(
