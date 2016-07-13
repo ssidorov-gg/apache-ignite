@@ -78,10 +78,12 @@ import scala.util.control.Breaks._
  *         Note that either '-r' or '-k' can be specified.
  *         If no other parameters provided - command executes on all nodes.
  *     -id8=<node-id8>
- *        ID8 of the node to kill or restart.
- *        Note that either '-id8' or '-id' can be specified and you can also use '@n0' ... '@nn' variables as shortcut to <node-id8>.
- *        Or use @nl variable to specify oldest node on host where visor cmd is running or @nr for other hosts.
- *        If no parameters provided - command starts in interactive mode.
+ *         ID8 of the node to kill or restart.
+ *         Note that either '-id8' or '-id' should be specified.
+ *         You can also use '@n0' ... '@nn' variables as a shortcut for <node-id8>.
+ *         To specify oldest node on the same host as visor cmd use variable @nl.
+ *         To specify oldest node on other hosts that are not running visor cmd use variable @nr.
+ *         If no parameters provided - command starts in interactive mode.
  *     -id=<node-id>
  *         ID of the node to kill or restart.
  *         Note that either '-id8' or '-id' can be specified.
@@ -383,10 +385,10 @@ object VisorKillCommand {
             ),
             "-id8=<node-id8>" -> List(
                 "ID8 of the node to kill or restart.",
-                "Note that either '-id8' or '-id' can be specified and " +
-                    "you can also use '@n0' ... '@nn' variables as shortcut to <node-id8>.",
-                "Or use @nl variable to specify oldest node on host where visor cmd is running " +
-                    "or @nr for other hosts.",
+                "Note that either '-id8' or '-id' should be specified.",
+                "You can also use '@n0' ... '@nn' variables as a shortcut for <node-id8>.",
+                "To specify oldest node on the same host as visor cmd use variable @nl.",
+                "To specify oldest node on other hosts that are not running visor cmd use variable @nr.",
                 "If no parameters provided - command starts in interactive mode."
             ),
             "-id=<node-id>" -> List(
