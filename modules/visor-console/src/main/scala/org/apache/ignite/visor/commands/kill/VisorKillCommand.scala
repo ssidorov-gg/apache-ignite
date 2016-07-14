@@ -291,7 +291,7 @@ class VisorKillCommand extends VisorConsoleCommand {
                     case x => nl(); warn("Invalid answer: " + x); break()
                 }
             else
-                ask("Are you sure you want to " + op + " this node? (y/n) [n]: ", "n") match {
+                ask("Are you sure you want to " + op + " " + nid8(nodes.head) + " node? (y/n) [n]: ", "n") match {
                     case "y" | "Y" => ()
                     case "n" | "N" => break()
                     case x => nl(); warn("Invalid answer: " + x); break()
