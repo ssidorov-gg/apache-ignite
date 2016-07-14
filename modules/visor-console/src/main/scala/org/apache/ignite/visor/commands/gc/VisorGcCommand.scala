@@ -54,8 +54,8 @@ import scala.language.{implicitConversions, reflectiveCalls}
  *         ID8 of the node.
  *         Note that either '-id8' or '-id' should be specified.
  *         You can also use '@n0' ... '@nn' variables as a shortcut for <node-id8>.
- *         To specify oldest node on the same host as visor cmd use variable @nl.
- *         To specify oldest node on other hosts that are not running visor cmd use variable @nr.
+ *         To specify oldest node on the same host as visor use variable '@nl'.
+ *         To specify oldest node on other hosts that are not running visor use variable '@nr'.
  *     -id=<node-id>
  *         ID of the node.
  *         Note that either '-id8' or '-id' can be specified.
@@ -164,8 +164,8 @@ object VisorGcCommand {
                 "ID8 of the node.",
                 "Note that either '-id8' or '-id' should be specified.",
                 "You can also use '@n0' ... '@nn' variables as a shortcut for <node-id8>.",
-                "To specify oldest node on the same host as visor cmd use variable @nl.",
-                "To specify oldest node on other hosts that are not running visor cmd use variable @nr."
+                "To specify oldest node on the same host as visor use variable '@nl'.",
+                "To specify oldest node on other hosts that are not running visor use variable '@nr'."
             ),
             "-id=<node-id>" -> List(
                 "ID of the node.",
