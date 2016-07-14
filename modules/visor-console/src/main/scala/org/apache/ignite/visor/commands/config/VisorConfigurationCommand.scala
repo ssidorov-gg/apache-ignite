@@ -55,6 +55,7 @@ import scala.language.implicitConversions
  * ====Arguments====
  * {{{
  *     -id8=<node-id8>
+ *         Node ID8.
  *         Note that either '-id8' or '-id' should be specified.
  *         You can also use '@n0' ... '@nn' variables as a shortcut for <node-id8>.
  *         To specify oldest node on the same host as visor cmd use variable @nl.
@@ -392,6 +393,7 @@ object VisorConfigurationCommand {
         ),
         args = List(
             "-id8=<node-id8>" -> List(
+                "Node ID8.",
                 "Note that either '-id8' or '-id' should be specified.",
                 "You can also use '@n0' ... '@nn' variables as a shortcut for <node-id8>.",
                 "To specify oldest node on the same host as visor cmd use variable @nl.",
