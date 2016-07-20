@@ -34,6 +34,21 @@ Building the library:
          * ./configure
          * make
          * make install
+		 
+Building the standalone node binary:
+ 
+ * Build Apache Ignite C++ library as described above.
+ * Build Apache Ignite standalone node:
+     * Navigate to the directory $IGNITE_HOME/platforms/cpp/ignite
+     * Execute the following commands one by one:
+         * libtoolize
+         * aclocal
+         * autoheader
+         * automake --add-missing
+         * autoreconf
+         * ./configure
+         * make
+         * make install
 
 NOTE: "make install" command may require superuser privileges. In this case it must be
 executed as "sudo make install".
