@@ -38,6 +38,21 @@ public class IgniteWriteAheadLogNoopManager extends GridCacheSharedManagerAdapte
     }
 
     /** {@inheritDoc} */
+    @Override public void logStart() {
+        // No-op.
+    }
+
+    /** {@inheritDoc} */
+    @Override public void logLocal(WALRecord entry) throws IgniteCheckedException, StorageException {
+        // No-op.
+    }
+
+    /** {@inheritDoc} */
+    @Override public WALPointer logFlush() {
+        return null;
+    }
+
+    /** {@inheritDoc} */
     @Override public WALPointer log(WALRecord entry) throws IgniteCheckedException, StorageException {
         return null;
     }

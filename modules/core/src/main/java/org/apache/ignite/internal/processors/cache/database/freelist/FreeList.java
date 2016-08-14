@@ -114,7 +114,7 @@ public class FreeList {
 
             // TODO This record must contain only a reference to a logical WAL record with the actual data.
             if (isWalDeltaRecordNeeded(wal, page)) {
-                wal.log(new DataPageInsertRecord(cctx.cacheId(),
+                wal.logLocal(new DataPageInsertRecord(cctx.cacheId(),
                     page.id(),
                     row.key(),
                     row.value(),
@@ -161,7 +161,7 @@ public class FreeList {
                 buf.get(payload);
                 buf.position(0);
 
-                wal.log(new DataPageInsertFragmentRecord(cctx.cacheId(), page.id(), payload, lastLink));
+                wal.logLocal(new DataPageInsertFragmentRecord(cctx.cacheId(), page.id(), payload, lastLink));
             }
 
             return written + payloadSize;
@@ -182,7 +182,7 @@ public class FreeList {
             long nextLink = io.removeRow(buf, (byte)itemId);
 
             if (isWalDeltaRecordNeeded(wal, page))
-                wal.log(new DataPageRemoveRecord(cctx.cacheId(), page.id(), itemId));
+                wal.logLocal(new DataPageRemoveRecord(cctx.cacheId(), page.id(), itemId));
 
             int newFreeSpace = io.getFreeSpace(buf);
 

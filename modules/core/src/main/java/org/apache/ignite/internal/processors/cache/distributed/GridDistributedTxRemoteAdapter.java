@@ -460,11 +460,12 @@ public class GridDistributedTxRemoteAdapter extends IgniteTxAdapter
 
                     AffinityTopologyVersion topVer = topologyVersion();
 
-                    WALPointer ptr = null;
-
                     cctx.database().checkpointReadLock();
 
                     try {
+                        if (!near() && cctx.wal() != null)
+                            cctx.wal().logStart();
+
                         Collection<IgniteTxEntry> entries = near() ? allEntries() : writeEntries();
 
                         List<DataEntry> dataEntries = null;
@@ -716,11 +717,14 @@ public class GridDistributedTxRemoteAdapter extends IgniteTxAdapter
                             }
                         }
 
-                        if (!near() && cctx.wal() != null)
-                            cctx.wal().log(new DataRecord(dataEntries));
+                        if (!near() && cctx.wal() != null) {
+                            cctx.wal().logLocal(new DataRecord(dataEntries));
 
-                        if (ptr != null)
-                            cctx.wal().fsync(ptr);
+                            WALPointer ptr = cctx.wal().logFlush();
+
+                            if (ptr != null)
+                                cctx.wal().fsync(ptr);
+                        }
                     }
                     catch (StorageException e) {
                         throw new IgniteCheckedException("Failed to log transaction record " +

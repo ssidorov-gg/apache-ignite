@@ -31,6 +31,7 @@ import org.apache.ignite.internal.pagemem.Page;
 import org.apache.ignite.internal.pagemem.PageIdAllocator;
 import org.apache.ignite.internal.pagemem.PageIdUtils;
 import org.apache.ignite.internal.pagemem.PageMemory;
+import org.apache.ignite.internal.pagemem.wal.IgniteWriteAheadLogManager;
 import org.apache.ignite.internal.processors.affinity.AffinityTopologyVersion;
 import org.apache.ignite.internal.processors.cache.database.CacheDataRow;
 import org.apache.ignite.internal.processors.cache.database.CacheDataRowAdapter;
@@ -107,12 +108,17 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
         if (cctx.affinityNode()) {
             int cacheId = cctx.cacheId();
 
+            IgniteWriteAheadLogManager wal = cctx.shared().wal();
+
+            if (wal != null)
+                wal.logStart();
+
             final Metas metas = getOrAllocateMetas(pageMem, cacheId);
 
             cctx.shared().database().checkpointReadLock();
 
             try {
-                reuseList = new ReuseList(cacheId, pageMem, cctx.shared().wal(), metas.rootIds(), metas.isInitNew());
+                reuseList = new ReuseList(cacheId, pageMem, wal, metas.rootIds(), metas.isInitNew());
                 freeList = new FreeList(cctx, reuseList);
 
                 metaStore = new MetadataStorage(pageMem, cctx.shared().wal(),
@@ -136,6 +142,9 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
 
                     locCacheDataStore = createCacheDataStore(0, (CacheDataStore.Listener)cctx.cache());
                 }
+
+                if (wal != null)
+                    wal.logFlush();
             }
             finally {
                 cctx.shared().database().checkpointReadUnlock();
@@ -847,9 +856,17 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
 
         /** {@inheritDoc} */
         @Override public void destroy() throws IgniteCheckedException {
+            IgniteWriteAheadLogManager wal = cctx.shared().wal();
+
+            if (wal != null)
+                wal.logStart();
+
             dataTree.destroy();
 
             metaStore.dropRootPage(name);
+
+            if (wal != null)
+                wal.logFlush();
         }
     }
 

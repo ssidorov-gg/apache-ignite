@@ -139,7 +139,7 @@ public abstract class PageHandler<X, R> {
                 page.fullPageWalRecordPolicy(FALSE);
 
                 if (isWalDeltaRecordNeeded(wal, page))
-                    wal.log(new InitNewPageRecord(page.fullId().cacheId(), page.id(),
+                    wal.logLocal(new InitNewPageRecord(page.fullId().cacheId(), page.id(),
                         init.getType(), init.getVersion(), pageId));
             }
 

@@ -332,7 +332,7 @@ public abstract class BPlusTree<L, T extends L> {
             io.store(buf, idx, newRow, null);
 
             if (needWalDeltaRecord(page))
-                wal.log(new ReplaceRecord<>(cacheId, page.id(), io, newRow, null, idx));
+                wal.logLocal(new ReplaceRecord<>(cacheId, page.id(), io, newRow, null, idx));
 
             return FOUND;
         }
@@ -549,7 +549,7 @@ public abstract class BPlusTree<L, T extends L> {
             io.cutRoot(buf);
 
             if (needWalDeltaRecord(meta))
-                wal.log(new MetaPageCutRootRecord(cacheId, meta.id()));
+                wal.logLocal(new MetaPageCutRootRecord(cacheId, meta.id()));
 
             return null;
         }
@@ -568,7 +568,7 @@ public abstract class BPlusTree<L, T extends L> {
             io.addRoot(buf, rootPageId);
 
             if (needWalDeltaRecord(meta))
-                wal.log(new MetaPageAddRootRecord(cacheId, meta.id(), rootPageId));
+                wal.logLocal(new MetaPageAddRootRecord(cacheId, meta.id(), rootPageId));
 
             return null;
         }
@@ -585,7 +585,7 @@ public abstract class BPlusTree<L, T extends L> {
             io.initRoot(buf, rootId);
 
             if (needWalDeltaRecord(meta))
-                wal.log(new MetaPageInitRootRecord(cacheId, meta.id(), rootId));
+                wal.logLocal(new MetaPageInitRootRecord(cacheId, meta.id(), rootId));
 
             return null;
         }
@@ -1573,7 +1573,7 @@ public abstract class BPlusTree<L, T extends L> {
         PageIO.setPageId(buf, pageId);
 
         if (needWalDeltaRecord(page))
-            wal.log(new RecycleRecord(cacheId, page.id(), pageId));
+            wal.logLocal(new RecycleRecord(cacheId, page.id(), pageId));
 
         return pageId;
     }
@@ -1615,14 +1615,14 @@ public abstract class BPlusTree<L, T extends L> {
         // Here the order of records for pages is important because forward split requires
         // that existing page is still in initial state.
         if (needWalDeltaRecord(fwd))
-            wal.log(new SplitForwardPageRecord(cacheId, fwd.id(), fwdId,
+            wal.logLocal(new SplitForwardPageRecord(cacheId, fwd.id(), fwdId,
                 io.getType(), io.getVersion(), page.id(), mid, cnt));
 
         // Update existing page.
         io.splitExistingPage(buf, mid, fwdId);
 
         if (needWalDeltaRecord(page))
-            wal.log(new SplitExistingPageRecord(cacheId, page.id(), mid, fwdId));
+            wal.logLocal(new SplitExistingPageRecord(cacheId, page.id(), mid, fwdId));
 
         return res;
     }
@@ -2057,7 +2057,7 @@ public abstract class BPlusTree<L, T extends L> {
             io.insert(buf, idx, row, null, rightId);
 
             if (needWalDeltaRecord(page))
-                wal.log(new InsertRecord<>(cacheId, page.id(), io, idx, row, null, rightId));
+                wal.logLocal(new InsertRecord<>(cacheId, page.id(), io, idx, row, null, rightId));
         }
 
         /**
@@ -2096,7 +2096,7 @@ public abstract class BPlusTree<L, T extends L> {
                             inner(io).setLeft(fwdBuf, 0, rightId);
 
                             if (needWalDeltaRecord(fwd)) // Rare case, we can afford separate WAL record to avoid complexity.
-                                wal.log(new FixLeftmostChildRecord(cacheId, fwd.id(), rightId));
+                                wal.logLocal(new FixLeftmostChildRecord(cacheId, fwd.id(), rightId));
                         }
                     }
                     else // Insert into newly allocated forward page.
@@ -2112,7 +2112,7 @@ public abstract class BPlusTree<L, T extends L> {
                         io.setCount(buf, cnt - 1);
 
                         if (needWalDeltaRecord(page)) // Rare case, we can afford separate WAL record to avoid complexity.
-                            wal.log(new FixCountRecord(cacheId, page.id(), cnt - 1));
+                            wal.logLocal(new FixCountRecord(cacheId, page.id(), cnt - 1));
                     }
 
                     if (!hadFwd && lvl == getRootLevel(meta)) { // We are splitting root.
@@ -2133,7 +2133,7 @@ public abstract class BPlusTree<L, T extends L> {
                                 inner(io).initNewRoot(newRootBuf, newRootId, pageId, moveUpRow, null, fwdId);
 
                                 if (needWalDeltaRecord(newRoot))
-                                    wal.log(new NewRootInitRecord<>(cacheId, newRoot.id(), newRootId,
+                                    wal.logLocal(new NewRootInitRecord<>(cacheId, newRoot.id(), newRootId,
                                         inner(io), pageId, moveUpRow, null, fwdId));
                             }
                             finally {
@@ -2500,7 +2500,7 @@ public abstract class BPlusTree<L, T extends L> {
             io.remove(buf, idx, cnt, rmvId);
 
             if (needWalDeltaRecord(page))
-                wal.log(new RemoveRecord(cacheId, page.id(), idx, cnt, rmvId));
+                wal.logLocal(new RemoveRecord(cacheId, page.id(), idx, cnt, rmvId));
         }
 
         /**
@@ -2528,7 +2528,7 @@ public abstract class BPlusTree<L, T extends L> {
                 return false;
 
             if (needWalDeltaRecord(left.page))
-                wal.log(new MergeRecord<>(cacheId, left.page.id(), prnt.page.id(), prntIdx,
+                wal.logLocal(new MergeRecord<>(cacheId, left.page.id(), prnt.page.id(), prntIdx,
                     right.page.id(), emptyBranch));
 
             // Remove split key from parent. If we are merging empty branch then remove only on the top iteration.
@@ -2601,7 +2601,7 @@ public abstract class BPlusTree<L, T extends L> {
                 inner.io.store(inner.buf, innerIdx, leaf.io, leaf.buf, leafIdx);
 
                 if (needWalDeltaRecord(inner.page))
-                    wal.log(new InnerReplaceRecord<>(cacheId, inner.page.id(),
+                    wal.logLocal(new InnerReplaceRecord<>(cacheId, inner.page.id(),
                         innerIdx, leaf.page.id(), leafIdx));
             }
             else {

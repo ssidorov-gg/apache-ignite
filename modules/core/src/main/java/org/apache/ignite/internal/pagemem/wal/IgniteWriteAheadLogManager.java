@@ -38,6 +38,30 @@ public interface IgniteWriteAheadLogManager extends GridCacheSharedManager {
     public void resumeLogging() throws IgniteCheckedException;
 
     /**
+     * Initializes local WAL queue.
+     */
+    public void logStart();
+
+    /**
+     * Appends the given log entry to the local WAL queue.
+     *
+     * @param entry Record to log.
+     * @throws IgniteCheckedException
+     * @throws StorageException
+     */
+    public void logLocal(WALRecord entry) throws IgniteCheckedException, StorageException;
+
+    /**
+     * Flush local WAL queue to global queue.
+     *
+     * @return WALPointer that may be passed to {@link #fsync(WALPointer)} method to make sure the record is
+     *      written to the log.
+     * @throws IgniteCheckedException If failed to construct log entry.
+     * @throws StorageException If IO error occurred while writing log entry.
+     */
+    public WALPointer logFlush() throws IgniteCheckedException;
+
+    /**
      * Appends the given log entry to the write-ahead log.
      *
      * @param entry entry to log.
