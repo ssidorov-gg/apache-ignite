@@ -35,6 +35,7 @@ import org.apache.ignite.IgniteException;
 import org.apache.ignite.IgniteLogger;
 import org.apache.ignite.cache.CacheAtomicWriteOrderMode;
 import org.apache.ignite.cache.eviction.EvictableEntry;
+import org.apache.ignite.internal.pagemem.wal.IgniteWriteAheadLogManager;
 import org.apache.ignite.internal.pagemem.wal.StorageException;
 import org.apache.ignite.internal.pagemem.wal.record.DataEntry;
 import org.apache.ignite.internal.pagemem.wal.record.DataRecord;
@@ -1584,6 +1585,85 @@ public abstract class GridCacheMapEntry extends GridMetadataAwareAdapter impleme
         @Nullable final Long updateCntr,
         @Nullable GridDhtAtomicUpdateFuture fut
     ) throws IgniteCheckedException, GridCacheEntryRemovedException, GridClosureException {
+        IgniteWriteAheadLogManager wal = cctx.shared().wal();
+
+        if (wal != null)
+            wal.logStart();
+
+        GridCacheUpdateAtomicResult res = doInnerUpdate(
+            newVer,
+            evtNodeId,
+            affNodeId,
+            op,
+            writeObj,
+            invokeArgs,
+            writeThrough,
+            readThrough,
+            retval,
+            keepBinary,
+            expiryPlc,
+            evt,
+            metrics,
+            primary,
+            verCheck,
+            topVer,
+            filter,
+            drType,
+            explicitTtl,
+            explicitExpireTime,
+            conflictVer,
+            conflictResolve,
+            intercept,
+            subjId,
+            taskName,
+            prevVal,
+            updateCntr,
+            fut);
+
+        if (wal != null)
+            wal.logFlush();
+
+        return res;
+    }
+
+    /**
+     * @param newVer New version.
+     * @param evtNodeId Event node id.
+     * @param affNodeId Aff node id.
+     * @param op Op.
+     * @param writeObj Write object.
+     * @param invokeArgs Invoke args.
+     * @param writeThrough Write through.
+     * @param readThrough Read through.
+     * @param retval Retval.
+     * @param keepBinary Keep binary.
+     * @param expiryPlc Expiry policy.
+     * @param evt Event.
+     * @param metrics Metrics.
+     * @param primary Primary.
+     * @param verCheck Version check.
+     * @param topVer Topology version.
+     * @param filter Filter.
+     * @param drType Dr type.
+     * @param explicitTtl Explicit ttl.
+     * @param explicitExpireTime Explicit expire time.
+     * @param conflictVer Conflict version.
+     * @param conflictResolve Conflict resolve.
+     * @param intercept Intercept.
+     * @param subjId Subj id.
+     * @param taskName Task name.
+     * @param prevVal Prev value.
+     * @param updateCntr Update counter.
+     * @param fut Future.
+     */
+    private GridCacheUpdateAtomicResult doInnerUpdate(GridCacheVersion newVer, UUID evtNodeId, UUID affNodeId,
+        GridCacheOperation op, @Nullable Object writeObj, @Nullable Object[] invokeArgs, boolean writeThrough,
+        boolean readThrough, boolean retval, boolean keepBinary, @Nullable IgniteCacheExpiryPolicy expiryPlc,
+        boolean evt, boolean metrics, boolean primary, boolean verCheck, AffinityTopologyVersion topVer,
+        @Nullable CacheEntryPredicate[] filter, GridDrType drType, long explicitTtl, long explicitExpireTime,
+        @Nullable GridCacheVersion conflictVer, boolean conflictResolve, boolean intercept, @Nullable UUID subjId,
+        String taskName, @Nullable CacheObject prevVal, @Nullable Long updateCntr,
+        @Nullable GridDhtAtomicUpdateFuture fut) throws GridCacheEntryRemovedException, IgniteCheckedException {
         assert cctx.atomic();
 
         boolean res = true;
@@ -2942,8 +3022,17 @@ public abstract class GridCacheMapEntry extends GridMetadataAwareAdapter impleme
 
                 val = cctx.kernalContext().cacheObjects().prepareForCache(val, cctx);
 
-                if (val != null)
+                if (val != null) {
+                    IgniteWriteAheadLogManager wal = cctx.shared().wal();
+
+                    if (wal != null)
+                        wal.logStart();
+
                     storeValue(val, expTime, ver);
+
+                    if (wal != null)
+                        wal.logFlush();
+                }
 
                 // Version does not change for load ops.
                 update(val, expTime, ttl, ver, true);
@@ -3541,8 +3630,8 @@ public abstract class GridCacheMapEntry extends GridMetadataAwareAdapter impleme
         assert cctx.atomic();
 
         try {
-            if (cctx.shared().wal() != null)
-                cctx.shared().wal().log(new DataRecord(new DataEntry(
+            if (cctx.shared().wal() != null) {
+                cctx.shared().wal().logLocal(new DataRecord(new DataEntry(
                     cctx.cacheId(),
                     key,
                     val,
@@ -3552,6 +3641,7 @@ public abstract class GridCacheMapEntry extends GridMetadataAwareAdapter impleme
                     expireTime,
                     partition(),
                     updCntr)));
+            }
         }
         catch (StorageException e) {
             throw new IgniteCheckedException("Failed to log ATOMIC cache update [key=" + key + ", op=" + op +

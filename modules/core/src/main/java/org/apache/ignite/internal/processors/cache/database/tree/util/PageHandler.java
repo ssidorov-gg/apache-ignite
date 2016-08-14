@@ -186,10 +186,10 @@ public abstract class PageHandler<X, R> {
         // Here we should never write full page, because it is known to be new.
         page.fullPageWalRecordPolicy(FALSE);
 
-        if (isWalDeltaRecordNeeded(wal, page))
-            wal.log(new InitNewPageRecord(page.fullId().cacheId(), page.id(),
-                init.getType(), init.getVersion(), pageId));
-    }
+                if (isWalDeltaRecordNeeded(wal, page))
+                    wal.logLocal(new InitNewPageRecord(page.fullId().cacheId(), page.id(),
+                        init.getType(), init.getVersion(), pageId));
+            }
 
     /**
      * @param wal Write ahead log.

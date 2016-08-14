@@ -655,11 +655,12 @@ public abstract class IgniteTxLocalAdapter extends IgniteTxAdapter implements Ig
         if (!empty) {
             batchStoreCommit(writeEntries());
 
-            WALPointer ptr = null;
-
             cctx.database().checkpointReadLock();
 
             try {
+                if (cctx.wal() != null && !writeEntries().isEmpty())
+                    cctx.wal().logStart();
+
                 cctx.tm().txContext(this);
 
                 AffinityTopologyVersion topVer = topologyVersion();
@@ -804,7 +805,7 @@ public abstract class IgniteTxLocalAdapter extends IgniteTxAdapter implements Ig
 
                                     if (cctx.wal() != null && !writeEntries().isEmpty()
                                         && op != NOOP && op != RELOAD && op != READ)
-                                        ptr = cctx.wal().log(new DataRecord(new DataEntry(
+                                        cctx.wal().logLocal(new DataRecord(new DataEntry(
                                             cacheCtx.cacheId(),
                                             txEntry.key(),
                                             val,
@@ -1003,8 +1004,12 @@ public abstract class IgniteTxLocalAdapter extends IgniteTxAdapter implements Ig
                     }
                 }
 
-                if (ptr != null)
-                    cctx.wal().fsync(ptr);
+                if (cctx.wal() != null && !writeEntries().isEmpty()) {
+                    WALPointer ptr = cctx.wal().logFlush();
+
+                    if (ptr != null)
+                        cctx.wal().fsync(ptr);
+                }
             }
             catch (StorageException e) {
                 throw new IgniteCheckedException("Failed to log transaction record " +

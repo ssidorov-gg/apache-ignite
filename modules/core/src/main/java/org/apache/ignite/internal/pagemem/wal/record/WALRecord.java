@@ -147,6 +147,10 @@ public abstract class WALRecord {
     private WALRecord prev;
 
     /** */
+    @GridToStringExclude
+    private WALRecord next;
+
+    /** */
     private long pos;
 
     /**
@@ -175,6 +179,20 @@ public abstract class WALRecord {
      */
     public void previous(WALRecord prev) {
         this.prev = prev;
+    }
+
+    /**
+     * @return Next record in chain.
+     */
+    public WALRecord next() {
+        return next;
+    }
+
+    /**
+     * @param next Next record in chain.
+     */
+    public void next(WALRecord next) {
+        this.next = next;
     }
 
     /**

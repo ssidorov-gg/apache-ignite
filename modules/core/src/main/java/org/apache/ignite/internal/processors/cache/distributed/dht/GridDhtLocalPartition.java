@@ -33,6 +33,7 @@ import org.apache.ignite.IgniteException;
 import org.apache.ignite.IgniteLogger;
 import org.apache.ignite.internal.IgniteInternalFuture;
 import org.apache.ignite.internal.IgniteInterruptedCheckedException;
+import org.apache.ignite.internal.pagemem.wal.IgniteWriteAheadLogManager;
 import org.apache.ignite.internal.processors.affinity.AffinityTopologyVersion;
 import org.apache.ignite.internal.processors.cache.CacheEntryPredicate;
 import org.apache.ignite.internal.processors.cache.CacheObject;
@@ -167,7 +168,15 @@ public class GridDhtLocalPartition implements Comparable<GridDhtLocalPartition>,
         rmvQueue = new GridCircularBuffer<>(U.ceilPow2(delQueueSize));
 
         try {
+            IgniteWriteAheadLogManager wal = cctx.shared().wal();
+
+            if (wal != null)
+                wal.logStart();
+
             store = cctx.offheap().createCacheDataStore(id, this);
+
+            if (wal != null)
+                wal.logFlush();
         }
         catch (IgniteCheckedException e) {
             // TODO ignite-db

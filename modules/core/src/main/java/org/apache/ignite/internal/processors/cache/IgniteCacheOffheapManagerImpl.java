@@ -30,6 +30,7 @@ import org.apache.ignite.cluster.ClusterNode;
 import org.apache.ignite.internal.pagemem.FullPageId;
 import org.apache.ignite.internal.pagemem.PageIdUtils;
 import org.apache.ignite.internal.pagemem.PageMemory;
+import org.apache.ignite.internal.pagemem.wal.IgniteWriteAheadLogManager;
 import org.apache.ignite.internal.processors.affinity.AffinityTopologyVersion;
 import org.apache.ignite.internal.processors.cache.database.CacheDataRow;
 import org.apache.ignite.internal.processors.cache.database.CacheDataRowAdapter;
@@ -94,6 +95,11 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
             cctx.shared().database().checkpointReadLock();
 
             try {
+                IgniteWriteAheadLogManager wal = cctx.shared().wal();
+
+                if (wal != null)
+                    wal.logStart();
+
                 initDataStructures();
 
                 if (cctx.isLocal()) {
@@ -101,6 +107,9 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
 
                     locCacheDataStore = createCacheDataStore(0, (CacheDataStore.Listener)cctx.cache());
                 }
+
+                if (wal != null)
+                    wal.logFlush();
             }
             finally {
                 cctx.shared().database().checkpointReadUnlock();
@@ -795,7 +804,15 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
 
         /** {@inheritDoc} */
         @Override public void destroy() throws IgniteCheckedException {
+            IgniteWriteAheadLogManager wal = cctx.shared().wal();
+
+            if (wal != null)
+                wal.logStart();
+
             dataTree.destroy();
+
+            if (wal != null)
+                wal.logFlush();
         }
 
         /** {@inheritDoc} */
