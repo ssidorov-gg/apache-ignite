@@ -26,6 +26,7 @@ import './decorator/tooltip';
 import './modules/form/form.module';
 import './modules/agent/agent.module.js';
 import './modules/sql/sql.module';
+import './modules/nodes/nodes.module';
 import './modules/Demo/Demo.module.js';
 
 import './modules/states/signin.state';
@@ -151,6 +152,7 @@ angular
     'ignite-console.socket',
     'ignite-console.agent',
     'ignite-console.sql',
+    'ignite-console.nodes',
     'ignite-console.demo',
     // States.
     'ignite-console.states.login',

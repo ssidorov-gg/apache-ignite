@@ -93,8 +93,8 @@ class Paragraph {
 }
 
 // Controller for SQL notebook screen.
-export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', '$animate', '$location', '$anchorScroll', '$state', '$modal', '$popover', 'IgniteLoading', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteConfirm', 'IgniteAgentMonitor', 'IgniteChartColors', 'IgniteNotebook', 'IgniteScanFilterInput', 'uiGridConstants', 'uiGridExporterConstants',
-    function($root, $scope, $http, $q, $timeout, $interval, $animate, $location, $anchorScroll, $state, $modal, $popover, Loading, LegacyUtils, Messages, Confirm, agentMonitor, IgniteChartColors, Notebook, ScanFilterInput, uiGridConstants, uiGridExporterConstants) {
+export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', '$animate', '$location', '$anchorScroll', '$state', '$modal', '$popover', 'IgniteLoading', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteConfirm', 'IgniteAgentMonitor', 'IgniteChartColors', 'IgniteNotebook', 'IgniteScanFilterInput', 'IgniteNodes', 'uiGridConstants', 'uiGridExporterConstants',
+    function($root, $scope, $http, $q, $timeout, $interval, $animate, $location, $anchorScroll, $state, $modal, $popover, Loading, LegacyUtils, Messages, Confirm, agentMonitor, IgniteChartColors, Notebook, ScanFilterInput, Nodes, uiGridConstants, uiGridExporterConstants) {
         let stopTopology = null;
 
         const _tryStopRefresh = function(paragraph) {
@@ -1276,6 +1276,30 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
                     $scope.stopRefresh(paragraph);
                 })
                 .then(() => paragraph.ace.focus());
+        };
+
+        $scope._execute = $scope.execute;
+
+        let showModal;
+        $timeout(() => {
+            showModal = true;
+        }, 5000);
+        $scope.execute = (paragraph) => {
+
+            if (showModal) {
+                const name = paragraph.cacheName;
+                const cache = _.find($scope.caches, { name });
+                const nodes = _.map(cache.nodeIds, (_id) => ({ _id }) );
+
+                Nodes
+                .selectNodes({ resolve: { nodes: () => nodes } })
+                .then((selectedNodes) => {
+                    console.log(selectedNodes);
+                });
+            } else
+                $scope._execute(paragraph);
+
+            console.log(paragraph);
         };
 
         $scope.queryExecuted = function(paragraph) {

@@ -1,0 +1,33 @@
+//-
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+.modal.ignite-nodes-dialog(tabindex='-1' role='dialog')
+    .modal-dialog
+        .modal-content
+            .modal-header
+                button.close(ng-click='$hide()' aria-hidden='true') &times;
+                h4.modal-title Select Node
+            .modal-body.modal-body-with-scroll()
+                div
+                    label.pull-left Nodes: {{ $ctrl.nodes.length }}
+                    label Selected: {{ $ctrl.selected.length }}
+                        sub(ng-show='!$ctrl.selected.length') all
+                
+                div
+                    .grid(ui-grid='$ctrl.gridOptions' ui-grid-resize-columns ui-grid-selection ui-grid-pinning)
+
+            .modal-footer
+                button.btn.btn-primary(id='confirm-btn-confirm' ng-click='$hide($ctrl.selected)') Close
