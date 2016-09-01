@@ -20,13 +20,18 @@ package org.apache.ignite.internal.processors.datastreamer;
 import java.util.concurrent.Callable;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteDataStreamer;
+import org.apache.ignite.cache.CacheAtomicityMode;
+import org.apache.ignite.cache.CacheMemoryMode;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.internal.binary.BinaryMarshaller;
 import org.apache.ignite.internal.util.typedef.internal.U;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.TcpDiscoveryIpFinder;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
+import org.apache.ignite.stream.StreamReceiver;
 import org.apache.ignite.testframework.junits.common.GridCommonAbstractTest;
+import org.jetbrains.annotations.NotNull;
 import org.jsr166.LongAdder8;
 import org.jsr166.ThreadLocalRandom8;
 
@@ -46,7 +51,10 @@ public class IgniteDataStreamerPerformanceTest extends GridCommonAbstractTest {
     private static final TcpDiscoveryIpFinder IP_FINDER = new TcpDiscoveryVmIpFinder(true);
 
     /** */
-    private static final int GRID_CNT = 3;
+    private static final int GRID_CNT = 1;
+
+    /** */
+    private static final int MEASURE_TIME = 300000;
 
     /** */
     private static final int ENTRY_CNT = 80000;
@@ -75,6 +83,8 @@ public class IgniteDataStreamerPerformanceTest extends GridCommonAbstractTest {
 
         cfg.setPeerClassLoadingEnabled(true);
 
+        cfg.setMarshaller(new BinaryMarshaller());
+
         if (useCache) {
             CacheConfiguration cc = defaultCacheConfiguration();
 
@@ -85,7 +95,11 @@ public class IgniteDataStreamerPerformanceTest extends GridCommonAbstractTest {
             cc.setStartSize(ENTRY_CNT / GRID_CNT);
             cc.setSwapEnabled(false);
 
-            cc.setBackups(1);
+            cc.setMemoryMode(CacheMemoryMode.OFFHEAP_TIERED);
+
+            cc.setBackups(0);
+
+            cc.setAtomicityMode(CacheAtomicityMode.ATOMIC);
 
             cfg.setCacheSanityCheckEnabled(false);
             cfg.setCacheConfiguration(cc);
@@ -94,6 +108,10 @@ public class IgniteDataStreamerPerformanceTest extends GridCommonAbstractTest {
             cfg.setCacheConfiguration();
 
         return cfg;
+    }
+
+    @Override protected long getTestTimeout() {
+        return MEASURE_TIME * 10;
     }
 
     /** {@inheritDoc} */
@@ -108,7 +126,9 @@ public class IgniteDataStreamerPerformanceTest extends GridCommonAbstractTest {
             for (int j = 0; j < valLen; j++)
                 sb.append('a' + ThreadLocalRandom8.current().nextInt(20));
 
-            vals[i] = sb.toString();
+            //vals[i] = sb.toString();
+
+            vals[i] = Integer.toString(i);
 
             info("Value: " + vals[i]);
         }
@@ -143,6 +163,7 @@ public class IgniteDataStreamerPerformanceTest extends GridCommonAbstractTest {
             ldr.perNodeBufferSize(8192);
             ldr.receiver(DataStreamerCacheUpdaters.<Integer, String>batchedSorted());
             ldr.autoFlushFrequency(0);
+            ldr.allowOverwrite(true);
 
             final LongAdder8 cnt = new LongAdder8();
 
@@ -195,6 +216,138 @@ public class IgniteDataStreamerPerformanceTest extends GridCommonAbstractTest {
         }
         finally {
             stopAllGrids();
+        }
+    }
+
+    /**
+     * @throws Exception If failed.
+     */
+    public void testPerformanceWithCompositeKeys() throws Exception {
+        Long[] longKeys = new Long[ENTRY_CNT];
+        CompositeKey[] compositeKeys = new CompositeKey[ENTRY_CNT];
+
+        for (int i = 0; i < longKeys.length; ++i) {
+            longKeys[i] = (long)i;
+            compositeKeys[i] = new CompositeKey((long)i);
+        }
+
+        double rateLong = measureRate(longKeys, vals);
+        double rateComposite = measureRate(compositeKeys, vals);
+
+        info(String.format("Long rate: %.03f", rateLong));
+
+        info(String.format("Composite rate: %.03f", rateComposite));
+    }
+
+    /**
+     * @param keys Keys array.
+     * @param vals Values array.
+     * @param <K> Key type.
+     * @param <V> Value type.
+     * @throws Exception If failed.
+     * @return Entry insertion rate.
+     */
+    private <K, V> double measureRate(final K[] keys, final V[] vals) throws Exception {
+        System.gc();
+        System.gc();
+        System.gc();
+
+        try {
+            useCache = true;
+
+            startGridsMultiThreaded(GRID_CNT);
+
+            useCache = false;
+
+            Ignite ignite = startGrid();
+
+            final IgniteDataStreamer<K, V> ldr = ignite.dataStreamer(null);
+
+            ldr.perNodeBufferSize(8192);
+            ldr.receiver((StreamReceiver<K, V>)DataStreamerCacheUpdaters.batchedSorted());
+            ldr.autoFlushFrequency(0);
+            ldr.perNodeParallelOperations(64);
+
+            final LongAdder8 cnt = new LongAdder8();
+
+            final long start = U.currentTimeMillis();
+            final long finishTime = start + MEASURE_TIME;
+
+            int threadNum = 20;
+
+            multithreaded(new Callable<Object>() {
+                @SuppressWarnings("InfiniteLoopStatement")
+                @Override public Object call() throws Exception {
+                    ThreadLocalRandom8 rnd = ThreadLocalRandom8.current();
+
+                    while (U.currentTimeMillis() < finishTime) {
+                        for (int i = 0; i < 100; ++i) {
+                            ldr.addData(keys[rnd.nextInt(keys.length)], vals[rnd.nextInt(vals.length)]);
+
+                            cnt.increment();
+                        }
+                    }
+                    return null;
+                }
+            }, threadNum, "loader");
+
+            info("Closing loader...");
+
+            ldr.close(false);
+
+            long duration = U.currentTimeMillis() - start;
+
+            info("Finished performance test. Duration: " + duration + "ms.");
+
+            return (double)cnt.sum() / (double)duration * 1000.0;
+        }
+        finally {
+            stopAllGrids();
+        }
+    }
+
+    /**
+     * 
+     */
+    private static class CompositeKey implements Comparable<CompositeKey> {
+        /** K 0. */
+        private int k0;
+        
+        /** K 1. */
+        private int k1;
+
+        /**
+         * @param k Long key.
+         */
+        public CompositeKey(long k) {
+            k0 = (int)k;
+            k1 = (int)(k >> 32);
+        }
+
+        /** {@inheritDoc} */
+        @Override public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+
+            CompositeKey key = (CompositeKey)o;
+
+            if (k0 != key.k0)
+                return false;
+            return k1 == key.k1;
+        }
+
+        /** {@inheritDoc} */
+        @Override public int hashCode() {
+            int result = k0;
+            result = 31 * result + k1;
+            return result;
+        }
+
+        @Override public int compareTo(@NotNull CompositeKey o) {
+            int res = Integer.compare(k1, o.k1);
+            return (res != 0)? res : Integer.compare(k0, o.k0);
         }
     }
 }
