@@ -58,12 +58,12 @@ suite('AuthServiceTestsSuite', () => {
     });
 
     test('Check token generator', () => {
-        const token_length = 16;
-        const token1 = authService.generateResetToken(token_length);
-        const token2 = authService.generateResetToken(token_length);
+        const tokenLength = 16;
+        const token1 = authService.generateResetToken(tokenLength);
+        const token2 = authService.generateResetToken(tokenLength);
 
-        assert.equal(token1.length, token_length);
-        assert.equal(token2.length, token_length);
+        assert.equal(token1.length, tokenLength);
+        assert.equal(token2.length, tokenLength);
         assert.notEqual(token1, token2);
     });
 

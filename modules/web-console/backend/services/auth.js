@@ -21,7 +21,7 @@
 
 module.exports = {
     implements: 'services/auth',
-    inject: ['require(lodash)', 'mongo','settings', 'errors']
+    inject: ['require(lodash)', 'mongo', 'settings', 'errors']
 };
 
 /**
@@ -100,7 +100,7 @@ module.exports.factory = (_, mongo, settings, errors) => {
         /**
          * Find account by token
          * @param {string} token - reset token
-         * @returns {Promise.<mongo.Account>} - that resolves found account
+         * @returns {Promise.<{token, email}>} - that resolves token and user email
          */
         static validateResetToken(token) {
             return mongo.Account.findOne({resetPasswordToken: token}).exec()
