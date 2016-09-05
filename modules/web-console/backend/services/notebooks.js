@@ -44,8 +44,8 @@ module.exports.factory = (_, mongo, spacesService, errors) => {
      * @returns {Promise.<mongo.ObjectId>} that resolves cache id
      */
     const update = (notebook) => {
-        return mongo.Notebook.update({_id: notebook._id}, notebook, {upsert: true}).exec()
-            .then(() => notebook)
+        return mongo.Notebook.findOneAndUpdate({_id: notebook._id}, notebook, {upsert: true}).exec()
+            .then((doc) => doc)
             .catch((err) => {
                 if (err.code === mongo.errCodes.DUPLICATE_KEY_UPDATE_ERROR || err.code === mongo.errCodes.DUPLICATE_KEY_ERROR)
                     throw new errors.DuplicateKeyException('Notebook with name: "' + notebook.name + '" already exist.');

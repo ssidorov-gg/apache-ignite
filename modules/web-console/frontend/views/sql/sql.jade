@@ -84,11 +84,11 @@ mixin paragraph-rename
 
 mixin query-controls
     .sql-controls
-        a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='actionAvailable(paragraph, true) && execute(paragraph)' data-placement='bottom' bs-tooltip data-title='{{actionTooltip(paragraph, "execute", true)}}') Execute
-        a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='actionAvailable(paragraph, true) && explain(paragraph)' data-placement='bottom' bs-tooltip data-title='{{actionTooltip(paragraph, "explain", true)}}') Explain
-        .btn-group(ng-disabled='!actionAvailable(paragraph, false)')
-            a.btn.btn-primary.fieldButton(ng-click='actionAvailable(paragraph, false) && scan(paragraph)' data-placement='bottom' bs-tooltip data-title='{{actionTooltip(paragraph, "execute scan", false)}}') Scan
-            a.btn.btn-primary(data-toggle='dropdown' data-container='body' bs-dropdown='[{ text: "Scan with filter", click: "actionAvailable(paragraph, false) && scanWithFilter(paragraph)" }]' data-placement='bottom-right')
+        a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='execute(paragraph)' data-placement='bottom' bs-tooltip='' data-title='{{actionTooltip(paragraph, "execute", true)}}') Execute
+        a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='explain(paragraph)' data-placement='bottom' bs-tooltip='' data-title='{{actionTooltip(paragraph, "explain", true)}}') Explain
+        .btn-group(bs-tooltip='' data-title='{{actionTooltip(paragraph, "execute scan", false)}}' data-placement='bottom')
+            a.btn.btn-primary.fieldButton(ng-disabled='!actionAvailable(paragraph, false)' ng-click='scan(paragraph)') Scan
+            a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, false)' data-toggle='dropdown' data-container='body' bs-dropdown='[{ text: "Scan with filter", click: "actionAvailable(paragraph, false) && scanWithFilter(paragraph)" }]')
                 span.caret
 
         .pull-right
@@ -115,7 +115,7 @@ mixin table-result
     .grid(ui-grid='paragraph.gridOptions' ui-grid-resize-columns ui-grid-exporter)
 
 mixin chart-result
-    div(ng-show='paragraph.queryExecuted()')
+    div(ng-hide='paragraph.scanExplain()')
         +chart-settings
         .empty(ng-show='paragraph.chartColumns.length > 0 && !paragraph.chartColumnsConfigured()') Cannot display chart. Please configure axis using #[b Chart settings]
         .empty(ng-show='paragraph.chartColumns.length == 0') Cannot display chart. Result set must contain Java build-in type columns. Please change query and execute it again.
@@ -124,7 +124,7 @@ mixin chart-result
                 div(ng-repeat='chart in paragraph.charts')
                     nvd3(options='chart.options' data='chart.data' api='chart.api')
             .empty(ng-show='!paragraph.timeLineSupported() && paragraph.chartTimeLineEnabled()') Pie chart does not support 'TIME_LINE' column for X-axis. Please use another column for X-axis or switch to another chart.
-    .empty(ng-hide='paragraph.queryExecuted()')
+    .empty(ng-show='paragraph.scanExplain()')
         .row
             .col-xs-4.col-xs-offset-4
                 +result-toolbar
@@ -176,7 +176,7 @@ mixin chart-result
                                         label No caches
                             .col-sm-12
                                 +query-controls
-                            .col-sm-12.sql-result(ng-switch='paragraph.resultType()')
+                            .col-sm-12.sql-result(ng-if='paragraph.queryExecuted()' ng-switch='paragraph.resultType()')
                                 .error(ng-switch-when='error') Error: {{paragraph.errMsg}}
                                 .empty(ng-switch-when='empty') Result set is empty
                                 .table(ng-switch-when='table')

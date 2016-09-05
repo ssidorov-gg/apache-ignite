@@ -133,7 +133,11 @@ class Paragraph {
     }
 
     queryExecuted() {
-        return this.queryArgs && this.queryArgs.query && !this.queryArgs.query.startsWith('EXPLAIN ');
+        return !_.isEmpty(this.meta);
+    }
+
+    scanExplain() {
+        return this.queryExecuted() && this.queryArgs.type !== 'QUERY';
     }
 
     timeLineSupported() {
@@ -1191,7 +1195,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
 
             _showLoading(paragraph, false);
 
-            if (paragraph.result === 'none' || !paragraph.queryExecuted())
+            if (_.isNil(paragraph.result) || paragraph.scanExplain())
                 paragraph.result = 'table';
             else if (paragraph.chart()) {
                 let resetCharts = queryChanged;
@@ -1246,6 +1250,9 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
         };
 
         $scope.execute = (paragraph) => {
+            if (!$scope.actionAvailable(paragraph, true))
+                return;
+
             Notebook.save($scope.notebook)
                 .catch(Messages.showError);
 
@@ -1258,7 +1265,8 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
                     const args = paragraph.queryArgs = {
                         cacheName: paragraph.cacheName,
                         pageSize: paragraph.pageSize,
-                        query: paragraph.query
+                        query: paragraph.query,
+                        type: 'QUERY'
                     };
 
                     return agentMonitor.query(cacheNode(paragraph.cacheName), args.cacheName, args.query, false, args.pageSize);
@@ -1278,10 +1286,6 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
                 .then(() => paragraph.ace.focus());
         };
 
-        $scope.queryExecuted = function(paragraph) {
-            return LegacyUtils.isDefined(paragraph.queryArgs);
-        };
-
         const _cancelRefresh = (paragraph) => {
             if (paragraph.rate && paragraph.rate.stopTime) {
                 delete paragraph.queryArgs;
@@ -1295,6 +1299,9 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
         };
 
         $scope.explain = (paragraph) => {
+            if (!$scope.actionAvailable(paragraph, true))
+                return;
+
             Notebook.save($scope.notebook)
                 .catch(Messages.showError);
 
@@ -1307,7 +1314,8 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
                     const args = paragraph.queryArgs = {
                         cacheName: paragraph.cacheName,
                         pageSize: paragraph.pageSize,
-                        query: 'EXPLAIN ' + paragraph.query
+                        query: 'EXPLAIN ' + paragraph.query,
+                        type: 'EXPLAIN'
                     };
 
                     return agentMonitor.query(cacheNode(paragraph.cacheName), args.cacheName, args.query, false, args.pageSize);
@@ -1322,6 +1330,9 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
         };
 
         $scope.scan = (paragraph, query = null) => {
+            if (!$scope.actionAvailable(paragraph, false))
+                return;
+
             Notebook.save($scope.notebook)
                 .catch(Messages.showError);
 
@@ -1334,7 +1345,8 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
                     const args = paragraph.queryArgs = {
                         cacheName: paragraph.cacheName,
                         pageSize: paragraph.pageSize,
-                        query
+                        query,
+                        type: 'SCAN'
                     };
 
                     return agentMonitor.query(cacheNode(paragraph.cacheName), args.cacheName, query, false, args.pageSize);
@@ -1349,6 +1361,9 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
         };
 
         $scope.scanWithFilter = (paragraph) => {
+            if (!$scope.actionAvailable(paragraph, false))
+                return;
+
             ScanFilterInput.open()
                 .then(({filter, caseSensitive}) => {
                     const prefix = caseSensitive ? SCAN_CACHE_WITH_FILTER_CASE_SENSITIVE : SCAN_CACHE_WITH_FILTER;
@@ -1581,14 +1596,14 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
         };
 
         $scope.showResultQuery = function(paragraph) {
-            if (LegacyUtils.isDefined(paragraph)) {
+            if (!_.isNil(paragraph)) {
                 const scope = $scope.$new();
 
                 if (_.isNil(paragraph.queryArgs.query)) {
                     scope.title = 'SCAN query';
                     scope.content = [`SCAN query for cache: <b>${$scope.maskCacheName(paragraph.queryArgs.cacheName)}</b>`];
                 }
-                if (paragraph.queryArgs.query.startsWith(SCAN_CACHE_WITH_FILTER)) {
+                else if (paragraph.queryArgs.query.startsWith(SCAN_CACHE_WITH_FILTER)) {
                     scope.title = 'SCAN query';
 
                     let filter = '';

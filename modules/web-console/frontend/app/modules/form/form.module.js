@@ -21,6 +21,7 @@ import angular from 'angular';
 import './field/field.scss';
 import './field/feedback.scss';
 import './field/input/text.scss';
+import './field/input/select.scss';
 
 // Panel.
 import igniteFormPanel from './panel/panel.directive';

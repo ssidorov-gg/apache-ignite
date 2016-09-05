@@ -331,7 +331,7 @@ export default ['cachesController', [
                 return ErrorPopover.show('cacheStoreFactory', 'Write behind enabled but store is not configured!', $scope.ui, 'store');
 
             if (cacheStoreFactorySelected && !item.readThrough && !item.writeThrough)
-                return ErrorPopover.show('readThroughTooltip', 'Store is configured but read/write through are not enabled!', $scope.ui, 'store');
+                return ErrorPopover.show('readThroughLabel', 'Store is configured but read/write through are not enabled!', $scope.ui, 'store');
 
             return true;
         }
