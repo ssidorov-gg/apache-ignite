@@ -144,10 +144,6 @@ public abstract class WALRecord {
 
     /** */
     @GridToStringExclude
-    private WALRecord prev;
-
-    /** */
-    @GridToStringExclude
     private WALRecord next;
 
     /** */
@@ -165,20 +161,6 @@ public abstract class WALRecord {
      */
     public int chainSize() {
         return chainSize;
-    }
-
-    /**
-     * @return Previous record in chain.
-     */
-    public WALRecord previous() {
-        return prev;
-    }
-
-    /**
-     * @param prev Previous record in chain.
-     */
-    public void previous(WALRecord prev) {
-        this.prev = prev;
     }
 
     /**

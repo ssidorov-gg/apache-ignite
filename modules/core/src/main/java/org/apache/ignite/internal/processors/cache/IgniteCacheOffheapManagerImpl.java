@@ -155,6 +155,11 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
     protected void destroyCacheDataStructures() {
         try {
             if (cctx.affinityNode()) {
+                IgniteWriteAheadLogManager wal = cctx.shared().wal();
+
+                if (wal != null)
+                    wal.logStart();
+
                 if (locCacheDataStore != null)
                     locCacheDataStore.destroy();
 
@@ -163,6 +168,9 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
 
                 for (CacheDataStore store : partDataStores.values())
                     store.destroy();
+
+                if (wal != null)
+                    wal.logStart();
             }
         }
         catch (IgniteCheckedException e) {
@@ -627,7 +635,19 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
         try {
             partDataStores.remove(p, store);
 
+/*
+            IgniteWriteAheadLogManager wal = cctx.shared().wal();
+
+            if (wal != null)
+                wal.logStart();
+*/
+
             store.destroy();
+
+/*
+            if (wal != null)
+                wal.logFlush();
+*/
         }
         catch (IgniteCheckedException e) {
             throw new IgniteException(e);
@@ -806,13 +826,17 @@ public class IgniteCacheOffheapManagerImpl extends GridCacheManagerAdapter imple
         @Override public void destroy() throws IgniteCheckedException {
             IgniteWriteAheadLogManager wal = cctx.shared().wal();
 
+/*
             if (wal != null)
                 wal.logStart();
+*/
 
             dataTree.destroy();
 
+/*
             if (wal != null)
                 wal.logFlush();
+*/
         }
 
         /** {@inheritDoc} */

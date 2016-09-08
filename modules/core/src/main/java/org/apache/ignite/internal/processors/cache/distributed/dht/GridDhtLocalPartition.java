@@ -760,9 +760,17 @@ public class GridDhtLocalPartition implements Comparable<GridDhtLocalPartition>,
      */
     private void destroyCacheDataStore() {
         try {
+            IgniteWriteAheadLogManager wal = cctx.shared().wal();
+
+            if (wal != null)
+                wal.logStart();
+
             CacheDataStore store = dataStore();
 
             cctx.offheap().destroyCacheDataStore(id, store);
+
+            if (wal != null)
+                wal.logFlush();
         }
         catch (IgniteCheckedException e) {
             log.error("Unable to destroy cache data store on partition eviction [id=" + id + "]", e);

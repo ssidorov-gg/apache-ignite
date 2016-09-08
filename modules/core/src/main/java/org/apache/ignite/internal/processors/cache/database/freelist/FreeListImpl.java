@@ -113,7 +113,7 @@ public final class FreeListImpl extends PagesList implements FreeList, ReuseList
 
                 // TODO This record must contain only a reference to a logical WAL record with the actual data.
                 if (isWalDeltaRecordNeeded(wal, page))
-                    wal.log(new DataPageInsertRecord(cacheId, page.id(),
+                    wal.logLocal(new DataPageInsertRecord(cacheId, page.id(),
                         row.key(), row.value(), row.version(), row.expireTime(), rowSize));
 
                 return rowSize;
@@ -152,7 +152,7 @@ public final class FreeListImpl extends PagesList implements FreeList, ReuseList
                     buf.get(payload);
                     buf.position(0);
 
-                    wal.log(new DataPageInsertFragmentRecord(cacheId, page.id(), payload, lastLink));
+                    wal.logLocal(new DataPageInsertFragmentRecord(cacheId, page.id(), payload, lastLink));
                 }
 
                 return written + payloadSize;
@@ -172,7 +172,7 @@ public final class FreeListImpl extends PagesList implements FreeList, ReuseList
             long nextLink = io.removeRow(buf, (byte)itemId);
 
             if (isWalDeltaRecordNeeded(wal, page))
-                wal.log(new DataPageRemoveRecord(cacheId, page.id(), itemId));
+                wal.logLocal(new DataPageRemoveRecord(cacheId, page.id(), itemId));
 
             // TODO: properly handle reuse bucket.
 //            if (io.isEmpty(buf)) {

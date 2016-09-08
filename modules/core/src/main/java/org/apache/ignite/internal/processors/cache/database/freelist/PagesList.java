@@ -96,7 +96,7 @@ public abstract class PagesList extends DataStructure {
             io.setNextId(buf, 0L);
 
             if (isWalDeltaRecordNeeded(wal, page))
-                wal.log(new PagesListSetNextRecord(cacheId, pageId, 0L));
+                wal.logLocal(new PagesListSetNextRecord(cacheId, pageId, 0L));
 
             updateTail(bucket, tailId, pageId);
 
@@ -124,13 +124,13 @@ public abstract class PagesList extends DataStructure {
                 handlePageFull(pageId, page, buf, io, dataPage, dataPageBuf, bucket);
             else {
                 if (isWalDeltaRecordNeeded(wal, page))
-                    wal.log(new PagesListAddPageRecord(cacheId, pageId, dataPageId));
+                    wal.logLocal(new PagesListAddPageRecord(cacheId, pageId, dataPageId));
 
                 DataPageIO dataIO = DataPageIO.VERSIONS.forPage(dataPageBuf);
                 dataIO.setFreeListPageId(dataPageBuf, pageId);
 
                 if (isWalDeltaRecordNeeded(wal, dataPage))
-                    wal.log(new DataPageSetFreeListPageRecord(cacheId, dataPage.id(), pageId));
+                    wal.logLocal(new DataPageSetFreeListPageRecord(cacheId, dataPage.id(), pageId));
             }
 
             return true;
@@ -169,10 +169,10 @@ public abstract class PagesList extends DataStructure {
                 setupNextPage(io, pageId, buf, dataPageId, dataPageBuf);
 
                 if (isWalDeltaRecordNeeded(wal, page))
-                    wal.log(new PagesListSetNextRecord(cacheId, pageId, dataPageId));
+                    wal.logLocal(new PagesListSetNextRecord(cacheId, pageId, dataPageId));
 
                 if (isWalDeltaRecordNeeded(wal, dataPage))
-                    wal.log(new PagesListInitNewPageRecord(cacheId, dataPageId, pageId, 0L));
+                    wal.logLocal(new PagesListInitNewPageRecord(cacheId, dataPageId, pageId, 0L));
 
                 updateTail(bucket, pageId, dataPageId);
             }
@@ -187,7 +187,7 @@ public abstract class PagesList extends DataStructure {
                         setupNextPage(io, pageId, buf, nextId, nextBuf);
 
                         if (isWalDeltaRecordNeeded(wal, page))
-                            wal.log(new PagesListSetNextRecord(cacheId, pageId, nextId));
+                            wal.logLocal(new PagesListSetNextRecord(cacheId, pageId, nextId));
 
                         int idx = io.addPage(nextBuf, dataPageId);
 
@@ -195,14 +195,14 @@ public abstract class PagesList extends DataStructure {
                         next.fullPageWalRecordPolicy(Boolean.FALSE);
 
                         if (isWalDeltaRecordNeeded(wal, next))
-                            wal.log(new PagesListInitNewPageRecord(cacheId, nextId, pageId, dataPageId));
+                            wal.logLocal(new PagesListInitNewPageRecord(cacheId, nextId, pageId, dataPageId));
 
                         assert idx != -1;
 
                         dataIO.setFreeListPageId(dataPageBuf, nextId);
 
                         if (isWalDeltaRecordNeeded(wal, dataPage))
-                            wal.log(new DataPageSetFreeListPageRecord(cacheId, dataPageId, nextId));
+                            wal.logLocal(new DataPageSetFreeListPageRecord(cacheId, dataPageId, nextId));
 
                         updateTail(bucket, pageId, nextId);
                     }
@@ -249,13 +249,13 @@ public abstract class PagesList extends DataStructure {
                             setupNextPage(io, prevId, prevBuf, nextId, nextBuf);
 
                             if (isWalDeltaRecordNeeded(wal, page))
-                                wal.log(new PagesListSetNextRecord(cacheId, pageId, nextId));
+                                wal.logLocal(new PagesListSetNextRecord(cacheId, pageId, nextId));
 
                             // Here we should never write full page, because it is known to be new.
                             next.fullPageWalRecordPolicy(Boolean.FALSE);
 
                             if (isWalDeltaRecordNeeded(wal, next))
-                                wal.log(new PagesListInitNewPageRecord(cacheId, nextId, pageId, 0L));
+                                wal.logLocal(new PagesListInitNewPageRecord(cacheId, nextId, pageId, 0L));
 
                             // Switch to this new page, which is now a part of our list
                             // to add the rest of the bag to the new page.
@@ -267,7 +267,7 @@ public abstract class PagesList extends DataStructure {
                     else {
                         // TODO: use single WAL record for bag?
                         if (isWalDeltaRecordNeeded(wal, page))
-                            wal.log(new PagesListAddPageRecord(cacheId, pageId, nextId));
+                            wal.logLocal(new PagesListAddPageRecord(cacheId, pageId, nextId));
                     }
                 }
             }
@@ -789,7 +789,7 @@ public abstract class PagesList extends DataStructure {
 
                     if (pageId != 0L) {
                         if (isWalDeltaRecordNeeded(wal, tail))
-                            wal.log(new PagesListRemovePageRecord(cacheId, tailId, pageId));
+                            wal.logLocal(new PagesListRemovePageRecord(cacheId, tailId, pageId));
 
                         return pageId;
                     }
@@ -813,7 +813,7 @@ public abstract class PagesList extends DataStructure {
                             initIo.initNewPage(tailBuf, tailId);
 
                             if (isWalDeltaRecordNeeded(wal, tail))
-                                wal.log(new InitNewPageRecord(cacheId, tail.id(), initIo.getType(), initIo.getVersion(), tailId));
+                                wal.logLocal(new InitNewPageRecord(cacheId, tail.id(), initIo.getType(), initIo.getVersion(), tailId));
                         }
                         else {
                             tailId = PageIdUtils.rotatePageId(tailId);
@@ -821,7 +821,7 @@ public abstract class PagesList extends DataStructure {
                             PageIO.setPageId(tailBuf, tailId);
 
                             if (isWalDeltaRecordNeeded(wal, tail))
-                                wal.log(new RecycleRecord(cacheId, tail.id(), tailId));
+                                wal.logLocal(new RecycleRecord(cacheId, tail.id(), tailId));
                         }
 
                         return tailId;
@@ -879,13 +879,13 @@ public abstract class PagesList extends DataStructure {
                     return false;
 
                 if (isWalDeltaRecordNeeded(wal, page))
-                    wal.log(new PagesListRemovePageRecord(cacheId, pageId, dataPageId));
+                    wal.logLocal(new PagesListRemovePageRecord(cacheId, pageId, dataPageId));
 
                 // Reset free list page ID.
                 dataIO.setFreeListPageId(dataPageBuf, 0L);
 
                 if (isWalDeltaRecordNeeded(wal, dataPage))
-                    wal.log(new DataPageSetFreeListPageRecord(cacheId, dataPageId, 0L));
+                    wal.logLocal(new DataPageSetFreeListPageRecord(cacheId, dataPageId, 0L));
 
                 if (!io.isEmpty(buf))
                     return true; // In optimistic case we still have something in the page and can leave it as is.
@@ -1032,7 +1032,7 @@ public abstract class PagesList extends DataStructure {
                 nextIO.setPreviousId(nextBuf, 0);
 
                 if (isWalDeltaRecordNeeded(wal, next))
-                    wal.log(new PagesListSetPreviousRecord(cacheId, nextId, 0L));
+                    wal.logLocal(new PagesListSetPreviousRecord(cacheId, nextId, 0L));
             }
             else // Do a fair merge: link previous and next to each other.
                 fairMerge(prevId, pageId, nextId, next, nextBuf);
@@ -1073,12 +1073,12 @@ public abstract class PagesList extends DataStructure {
                 prevIO.setNextId(prevBuf, nextId);
 
                 if (isWalDeltaRecordNeeded(wal, prev))
-                    wal.log(new PagesListSetNextRecord(cacheId, prevId, nextId));
+                    wal.logLocal(new PagesListSetNextRecord(cacheId, prevId, nextId));
 
                 nextIO.setPreviousId(nextBuf, prevId);
 
                 if (isWalDeltaRecordNeeded(wal, next))
-                    wal.log(new PagesListSetPreviousRecord(cacheId, nextId, prevId));
+                    wal.logLocal(new PagesListSetPreviousRecord(cacheId, nextId, prevId));
             }
             finally {
                 prev.releaseWrite(true);
@@ -1099,7 +1099,7 @@ public abstract class PagesList extends DataStructure {
         PageIO.setPageId(buf, pageId);
 
         if (isWalDeltaRecordNeeded(wal, page))
-            wal.log(new RecycleRecord(cacheId, page.id(), pageId));
+            wal.logLocal(new RecycleRecord(cacheId, page.id(), pageId));
 
         return pageId;
     }

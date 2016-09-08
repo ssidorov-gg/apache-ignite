@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import org.apache.ignite.IgniteCheckedException;
 import org.apache.ignite.IgniteException;
+import org.apache.ignite.internal.pagemem.wal.IgniteWriteAheadLogManager;
 import org.apache.ignite.internal.processors.cache.GridCacheContext;
 import org.apache.ignite.internal.processors.cache.database.IgniteCacheDatabaseSharedManager;
 import org.apache.ignite.internal.processors.cache.database.RootPage;
@@ -79,6 +80,11 @@ public class H2TreeIndex extends GridH2IndexBase {
 
         IgniteCacheDatabaseSharedManager dbMgr = cctx.shared().database();
 
+        IgniteWriteAheadLogManager wal = cctx.shared().wal();
+
+        if (wal != null)
+            wal.logStart();
+
         RootPage page = cctx.offheap().rootPageForIndex(name);
 
         tree = new H2Tree(name, cctx.offheap().reuseListForIndex(name), cctx.cacheId(),
@@ -90,6 +96,9 @@ public class H2TreeIndex extends GridH2IndexBase {
         };
 
         initDistributedJoinMessaging(tbl);
+
+        if (wal != null)
+            wal.logFlush();
     }
 
     /**
