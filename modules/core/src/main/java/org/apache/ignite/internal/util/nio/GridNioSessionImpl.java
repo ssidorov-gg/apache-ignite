@@ -45,14 +45,20 @@ public class GridNioSessionImpl implements GridNioSession {
     /** Session close timestamp. */
     private final AtomicLong closeTime = new AtomicLong();
 
-    /** Sent bytes counter. */
-    private volatile long bytesSent;
-
     private final long[] writesStat = new long[25];
     private final long[] readsStat = new long[25];
 
+    /** Sent bytes counter. */
+    private volatile long bytesSent;
+
     /** Received bytes counter. */
     private volatile long bytesRcvd;
+
+    /** Sent bytes counter since last re-balancing. */
+    private volatile long bytesSent0;
+
+    /** Received bytes counter since last re-balancing. */
+    private volatile long bytesRcvd0;
 
     /** Last send schedule timestamp. */
     private volatile long sndSchedTime;
@@ -166,6 +172,19 @@ public class GridNioSessionImpl implements GridNioSession {
         return bytesRcvd;
     }
 
+    public long bytesSent0() {
+        return bytesSent0;
+    }
+
+    public long bytesReceived0() {
+        return bytesRcvd0;
+    }
+
+    public void reset0() {
+        bytesSent0 = 0;
+        bytesRcvd0 = 0;
+    }
+
     /** {@inheritDoc} */
     @Override public long createTime() {
         return createTime;
@@ -243,6 +262,7 @@ public class GridNioSessionImpl implements GridNioSession {
      */
     public void bytesSent(int cnt) {
         bytesSent += cnt;
+        bytesSent0 += cnt;
 
         lastSndTime = U.currentTimeMillis();
     }
@@ -282,6 +302,7 @@ public class GridNioSessionImpl implements GridNioSession {
      */
     public void bytesReceived(int cnt) {
         bytesRcvd += cnt;
+        bytesRcvd0 += cnt;
 
         lastRcvTime = U.currentTimeMillis();
     }
