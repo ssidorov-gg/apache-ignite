@@ -2135,6 +2135,8 @@ public class GridNioServer<T> {
 
                                 U.debug(log, "Will move session to less loaded writer [ses=" + ses +
                                     ", from=" + maxSentIdx + ", to=" + minSentIdx + ']');
+
+                                clientWorkers.get(maxSentIdx).offer(new SessionMoveFuture(ses, minSentIdx));
                             }
                             else {
                                 if (log.isDebugEnabled())
@@ -2142,8 +2144,6 @@ public class GridNioServer<T> {
 
                                 U.debug(log, "Unable to find session to move for writers.");
                             }
-
-                            clientWorkers.get(maxSentIdx).offer(new SessionMoveFuture(ses, minSentIdx));
                         }
 
                         if (maxRcvd0 != -1 && minRcvd0 != -1) {
@@ -2170,6 +2170,8 @@ public class GridNioServer<T> {
 
                                 U.debug(log, "Will move session to less loaded reader [ses=" + ses +
                                     ", from=" + maxSentIdx + ", to=" + minSentIdx + ']');
+
+                                clientWorkers.get(maxRcvdIdx).offer(new SessionMoveFuture(ses, minRcvdIdx));
                             }
                             else {
                                 if (log.isDebugEnabled())
@@ -2177,8 +2179,6 @@ public class GridNioServer<T> {
 
                                 U.debug(log, "Unable to find session to move for readers.");
                             }
-
-                            clientWorkers.get(maxRcvdIdx).offer(new SessionMoveFuture(ses, minRcvdIdx));
                         }
 
                         for (int i = 0; i < clientWorkers.size(); i++) {
