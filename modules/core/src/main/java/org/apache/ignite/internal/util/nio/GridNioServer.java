@@ -467,7 +467,7 @@ public class GridNioServer<T> {
             // Change from 0 to 1 means that worker thread should be waken up.
             int idx = ses.selectorIndex();
 
-            if (idx != 1) // TODO revisit
+            if (idx != -1) // TODO revisit
                 clientWorkers.get(idx).offer(fut);
         }
 
