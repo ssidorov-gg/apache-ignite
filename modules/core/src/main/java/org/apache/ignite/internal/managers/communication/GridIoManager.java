@@ -529,26 +529,26 @@ public class GridIoManager extends GridManagerAdapter<CommunicationSpi<Serializa
             }
         }
 
-//        Thread t = new Thread(
-//            new Runnable() {
-//                @Override public void run() {
-//                    for (;;) {
-//                        try {
-//                            Thread.sleep(5000);
-//                        }
-//                        catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//
-//                        dumpStats();
-//                    }
-//                }
-//            }
-//        );
-//
-//        t.setDaemon(true);
-//
-//        t.start();
+        Thread t = new Thread(
+            new Runnable() {
+                @Override public void run() {
+                    for (;;) {
+                        try {
+                            Thread.sleep(5000);
+                        }
+                        catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        dumpStats();
+                    }
+                }
+            }
+        );
+
+        t.setDaemon(true);
+
+        t.start();
     }
 
     /** {@inheritDoc} */
