@@ -53,6 +53,7 @@ import org.apache.ignite.IgniteCheckedException;
 import org.apache.ignite.IgniteClientDisconnectedException;
 import org.apache.ignite.IgniteException;
 import org.apache.ignite.IgniteLogger;
+import org.apache.ignite.IgniteSystemProperties;
 import org.apache.ignite.cluster.ClusterNode;
 import org.apache.ignite.configuration.AddressResolver;
 import org.apache.ignite.configuration.IgniteConfiguration;
@@ -284,7 +285,7 @@ public class TcpCommunicationSpi extends IgniteSpiAdapter
      * Default count of selectors for TCP server equals to
      * {@code "Math.min(4, Runtime.getRuntime().availableProcessors())"}.
      */
-    public static final int DFLT_SELECTORS_CNT = Math.min(8, Runtime.getRuntime().availableProcessors());
+    public static final int DFLT_SELECTORS_CNT = IgniteSystemProperties.getInteger("SELS", Runtime.getRuntime().availableProcessors());
 
     /** Node ID meta for session. */
     private static final int NODE_ID_META = GridNioSessionMetaKey.nextUniqueKey();
@@ -826,7 +827,7 @@ public class TcpCommunicationSpi extends IgniteSpiAdapter
     private final ConcurrentMap<ConnectionId, GridCommunicationClient> clients = GridConcurrentFactory.newMap();
 
     /** */
-    private int connectionsPerNode = 2;
+    private int connectionsPerNode = IgniteSystemProperties.getInteger("CONNS", 2);
 
     public int getConnectionsPerNode() {
         return connectionsPerNode;
