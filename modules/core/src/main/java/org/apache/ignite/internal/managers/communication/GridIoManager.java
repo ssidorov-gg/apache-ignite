@@ -37,9 +37,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.apache.ignite.IgniteCheckedException;
 import org.apache.ignite.IgniteException;
+import org.apache.ignite.IgniteSystemProperties;
 import org.apache.ignite.cluster.ClusterNode;
 import org.apache.ignite.events.DiscoveryEvent;
 import org.apache.ignite.events.Event;
@@ -53,6 +53,9 @@ import org.apache.ignite.internal.managers.GridManagerAdapter;
 import org.apache.ignite.internal.managers.deployment.GridDeployment;
 import org.apache.ignite.internal.managers.eventstorage.GridEventStorageManager;
 import org.apache.ignite.internal.managers.eventstorage.GridLocalEventListener;
+import org.apache.ignite.internal.processors.cache.GridCacheReturn;
+import org.apache.ignite.internal.processors.cache.distributed.dht.atomic.GridNearAtomicUpdateRequest;
+import org.apache.ignite.internal.processors.cache.distributed.dht.atomic.GridNearAtomicUpdateResponse;
 import org.apache.ignite.internal.processors.platform.message.PlatformMessageFilter;
 import org.apache.ignite.internal.processors.timeout.GridTimeoutObject;
 import org.apache.ignite.internal.util.GridBoundedConcurrentLinkedHashSet;
@@ -61,6 +64,7 @@ import org.apache.ignite.internal.util.lang.GridTuple3;
 import org.apache.ignite.internal.util.tostring.GridToStringInclude;
 import org.apache.ignite.internal.util.typedef.F;
 import org.apache.ignite.internal.util.typedef.X;
+import org.apache.ignite.internal.util.typedef.internal.CU;
 import org.apache.ignite.internal.util.typedef.internal.S;
 import org.apache.ignite.internal.util.typedef.internal.U;
 import org.apache.ignite.lang.IgniteBiPredicate;
@@ -86,6 +90,7 @@ import org.jsr166.ConcurrentLinkedDeque8;
 import static org.apache.ignite.events.EventType.EVT_NODE_FAILED;
 import static org.apache.ignite.events.EventType.EVT_NODE_JOINED;
 import static org.apache.ignite.events.EventType.EVT_NODE_LEFT;
+import static org.apache.ignite.internal.GridTopic.TOPIC_CACHE;
 import static org.apache.ignite.internal.GridTopic.TOPIC_COMM_USER;
 import static org.apache.ignite.internal.managers.communication.GridIoPolicy.AFFINITY_POOL;
 import static org.apache.ignite.internal.managers.communication.GridIoPolicy.IDX_POOL;
@@ -829,6 +834,10 @@ public class GridIoManager extends GridManagerAdapter<CommunicationSpi<Serializa
         }
     }
 
+    private static final String cheatCacheName = IgniteSystemProperties.getString("CHEAT_CACHE_MGR");
+
+    private static final int cheatCacheId = CU.cacheId(cheatCacheName);
+
     /**
      * @param nodeId Node ID.
      * @param msg Message.
@@ -842,6 +851,20 @@ public class GridIoManager extends GridManagerAdapter<CommunicationSpi<Serializa
         final byte plc,
         final IgniteRunnable msgC
     ) throws IgniteCheckedException {
+        if (cheatCacheName != null && msg.message() instanceof GridNearAtomicUpdateRequest &&
+            ((GridNearAtomicUpdateRequest)msg.message()).cacheId() == cheatCacheId) {
+            GridNearAtomicUpdateRequest req = (GridNearAtomicUpdateRequest)msg.message();
+
+            GridNearAtomicUpdateResponse res = new GridNearAtomicUpdateResponse(cheatCacheId, nodeId, req.futureVersion(),
+                false);
+
+            res.returnValue(new GridCacheReturn(ctx.cache().context().cacheContext(cheatCacheId), false, true, null, true));
+
+            send(nodeId, TOPIC_CACHE, res, GridIoPolicy.SYSTEM_POOL);
+
+            return;
+        }
+
         Runnable c = new Runnable() {
             @Override public void run() {
                 try {

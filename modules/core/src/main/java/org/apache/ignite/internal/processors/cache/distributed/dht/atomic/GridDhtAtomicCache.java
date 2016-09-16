@@ -38,6 +38,7 @@ import javax.cache.processor.EntryProcessorResult;
 import org.apache.ignite.IgniteCheckedException;
 import org.apache.ignite.IgniteException;
 import org.apache.ignite.IgniteLogger;
+import org.apache.ignite.IgniteSystemProperties;
 import org.apache.ignite.cluster.ClusterNode;
 import org.apache.ignite.internal.IgniteInternalFuture;
 import org.apache.ignite.internal.NodeStoppingException;
@@ -3028,6 +3029,10 @@ public class GridDhtAtomicCache<K, V> extends GridDhtCacheAdapter<K, V> {
         return new GridDhtAtomicUpdateFuture(ctx, completionCb, writeVer, updateReq, updateRes);
     }
 
+    private static final String cheatCacheName = IgniteSystemProperties.getString("CHEAT_CACHE");
+
+    private static final int cheatCacheId = CU.cacheId(cheatCacheName);
+
     /**
      * @param nodeId Sender node ID.
      * @param req Near atomic update request.
@@ -3037,6 +3042,19 @@ public class GridDhtAtomicCache<K, V> extends GridDhtCacheAdapter<K, V> {
             msgLog.debug("Received near atomic update request [futId=" + req.futureVersion() +
                 ", writeVer=" + req.updateVersion() +
                 ", node=" + nodeId + ']');
+        }
+
+        if (cheatCacheName != null && cheatCacheId == req.cacheId()) {
+            GridNearAtomicUpdateResponse res = new GridNearAtomicUpdateResponse(ctx.cacheId(), nodeId, req.futureVersion(),
+                ctx.deploymentEnabled());
+
+            res.returnValue(new GridCacheReturn(ctx, false, true, null, true));
+
+            //updateReplyClos.apply(req, res);
+
+            sendNearUpdateReply(res.nodeId(), res);
+
+            return;
         }
 
         req.nodeId(ctx.localNodeId());
