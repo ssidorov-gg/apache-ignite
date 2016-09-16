@@ -1529,7 +1529,8 @@ public class GridNioServer<T> {
 
                                     sb.append("    Connection info [")
                                         .append("rmtAddr=").append(ses.remoteAddress())
-                                        .append(", locAddr=").append(ses.localAddress());
+                                        .append(", locAddr=").append(ses.localAddress())
+                                        .append(", in=").append(ses.accepted());
 
                                     GridNioRecoveryDescriptor desc = ses.recoveryDescriptor();
 
