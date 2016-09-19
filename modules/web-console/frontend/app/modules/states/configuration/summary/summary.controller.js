@@ -233,10 +233,10 @@ export default [
 
             mainFolder.children = [javaFolder];
 
-            if (_.isEmpty(cluster.caches))
-                javaFolder.children = [javaConfigFolder, javaStartupFolder];
+            if (_.find(cluster.caches, (caches) => (cache) => !_.isNil(cache.cacheStoreFactory)))
+                javaFolder.children = [javaConfigFolder, loadFolder, javaStartupFolder];
             else
-                javaFolder.children = [loadFolder, javaStartupFolder];
+                javaFolder.children = [javaConfigFolder, javaStartupFolder];
 
             if ($generatorCommon.secretPropertiesNeeded(cluster))
                 mainFolder.children.push(resourcesFolder);
@@ -320,6 +320,7 @@ export default [
                     'ServerConfigurationFactory.createConfiguration()', 'config.ServerConfigurationFactory'));
             }
 
+            // Generate loader for caches with configured store.
             const cachesToLoad = _.filter(cluster.caches, (cache) => !_.isNil(cache.cacheStoreFactory));
 
             if (!_.isEmpty(cachesToLoad))
