@@ -44,7 +44,7 @@ const VALID_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-
 export default class JavaTypes {
     /**
      * @param clsName {String} Class name to check.
-     * @returns boolean 'true' if provided class name is a not Java built in class.
+     * @returns {boolean} 'true' if provided class name is a not Java built in class.
      */
     nonBuiltInClass(clsName) {
         return _.isNil(_.find(JAVA_CLASSES, (clazz) => clsName === clazz.short || clsName === clazz.full));
@@ -62,7 +62,7 @@ export default class JavaTypes {
 
     /**
      * @param value {String} Value text to check.
-     * @returns boolean 'true' if given text is valid Java class name.
+     * @returns {boolean} 'true' if given text is valid Java class name.
      */
     validIdentifier(value) {
         return !!(value && VALID_IDENTIFIER.test(value));
@@ -70,7 +70,7 @@ export default class JavaTypes {
 
     /**
      * @param value {String} Value text to check.
-     * @returns boolean 'true' if given text is valid Java class name.
+     * @returns {boolean} 'true' if given text is valid Java class name.
      */
     validClassName(value) {
         return !!(value && VALID_CLASS_NAME.test(value));
@@ -78,7 +78,7 @@ export default class JavaTypes {
 
     /**
      * @param value {String} Value text to check.
-     * @returns boolean 'true' if given text is valid Java package.
+     * @returns {boolean} 'true' if given text is valid Java package.
      */
     validPackage(value) {
         return !!(value && VALID_PACKAGE.test(value));
@@ -86,7 +86,7 @@ export default class JavaTypes {
 
     /**
      * @param value {String} Value text to check.
-     * @returns boolean 'true' if given text is valid Java UUID value.
+     * @returns {boolean} 'true' if given text is valid Java UUID value.
      */
     validUUID(value) {
         return !!(value && VALID_UUID.test(value));
@@ -94,7 +94,7 @@ export default class JavaTypes {
 
     /**
      * @param value {String} Value text to check.
-     * @returns boolean 'true' if given text is a Java type with package.
+     * @returns {boolean} 'true' if given text is a Java type with package.
      */
     packageSpecified(value) {
         return value.split('.').length >= 2;
@@ -102,7 +102,7 @@ export default class JavaTypes {
 
     /**
      * @param value {String} Value text to check.
-     * @returns {boolean} 'true' if given text non Java keyword.
+     * @returns {boolean} 'true' if given value is one of Java reserved keywords.
      */
     isKeyword(value) {
         return !!(value && _.includes(JAVA_KEYWORDS, value.toLowerCase()));

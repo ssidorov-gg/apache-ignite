@@ -15,13 +15,10 @@
  * limitations under the License.
  */
 
-// H2 SQL keywords.
-import SQL_KEYWORDS from 'app/data/sql-keywords.json';
-
 // Controller for Domain model screen.
 export default ['domainsController', [
-    '$rootScope', '$scope', '$http', '$state', '$filter', '$timeout', '$modal', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteFocus', 'IgniteConfirm', 'IgniteConfirmBatch', 'IgniteClone', 'IgniteLoading', 'IgniteModelNormalizer', 'IgniteUnsavedChangesGuard', 'IgniteAgentMonitor', 'IgniteLegacyTable', 'igniteConfigurationResource', 'IgniteErrorPopover', 'IgniteFormUtils', 'JavaTypes',
-    function($root, $scope, $http, $state, $filter, $timeout, $modal, LegacyUtils, Messages, Focus, Confirm, ConfirmBatch, Clone, Loading, ModelNormalizer, UnsavedChangesGuard, IgniteAgentMonitor, LegacyTable, Resource, ErrorPopover, FormUtils, JavaTypes) {
+    '$rootScope', '$scope', '$http', '$state', '$filter', '$timeout', '$modal', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteFocus', 'IgniteConfirm', 'IgniteConfirmBatch', 'IgniteClone', 'IgniteLoading', 'IgniteModelNormalizer', 'IgniteUnsavedChangesGuard', 'IgniteAgentMonitor', 'IgniteLegacyTable', 'igniteConfigurationResource', 'IgniteErrorPopover', 'IgniteFormUtils', 'JavaTypes', 'SqlTypes',
+    function($root, $scope, $http, $state, $filter, $timeout, $modal, LegacyUtils, Messages, Focus, Confirm, ConfirmBatch, Clone, Loading, ModelNormalizer, UnsavedChangesGuard, IgniteAgentMonitor, LegacyTable, Resource, ErrorPopover, FormUtils, JavaTypes, SqlTypes) {
         UnsavedChangesGuard.install($scope);
 
         const emptyDomain = {empty: true};
@@ -537,13 +534,14 @@ export default ['domainsController', [
         };
 
         function isValidJavaIdentifier(s) {
-            return !_.includes(SQL_KEYWORDS, s.toUpperCase()) && JavaTypes.validIdentifier(s) && !JavaTypes.isKeyword(s);
+            return JavaTypes.validIdentifier(s) && !JavaTypes.isKeyword(s) &&
+                SqlTypes.validIdentifier(s) && !SqlTypes.isKeyword(s);
         }
 
-        function toJavaClassName(name) {
+        function toJavaIdentifier(name) {
             const len = name.length;
 
-            let buf = '';
+            let ident = '';
 
             let capitalizeNext = true;
 
@@ -553,22 +551,28 @@ export default ['domainsController', [
                 if (ch === ' ' || ch === '_')
                     capitalizeNext = true;
                 else if (capitalizeNext) {
-                    buf += ch.toLocaleUpperCase();
+                    ident += ch.toLocaleUpperCase();
 
                     capitalizeNext = false;
                 }
                 else
-                    buf += ch.toLocaleLowerCase();
+                    ident += ch.toLocaleLowerCase();
             }
 
-            if (isValidJavaIdentifier(buf))
-                return buf;
+            return ident;
+        }
 
-            return 'Class' + buf;
+        function toJavaClassName(name) {
+            const clazzName = toJavaIdentifier(name);
+
+            if (isValidJavaIdentifier(clazzName))
+                return clazzName;
+
+            return 'Class' + clazzName;
         }
 
         function toJavaFieldName(dbName) {
-            const javaName = toJavaClassName(dbName);
+            const javaName = toJavaIdentifier(dbName);
 
             const fieldName = javaName.charAt(0).toLocaleLowerCase() + javaName.slice(1);
 
@@ -814,9 +818,13 @@ export default ['domainsController', [
 
                         const fld = dbField(colName, jdbcType, nullable);
 
-                        if ($scope.ui.generateAliases && !_.find(aliases, {field: fld.javaFieldName}) &&
-                            fld.javaFieldName.toUpperCase() !== fld.databaseFieldName.toUpperCase())
-                            aliases.push({field: fld.javaFieldName, alias: fld.databaseFieldName});
+                        const dbName = fld.databaseFieldName;
+
+                        if ($scope.ui.generateAliases &&
+                            SqlTypes.validIdentifier(dbName) && !SqlTypes.isKeyword(dbName) &&
+                            !_.find(aliases, {field: fld.javaFieldName}) &&
+                            fld.javaFieldName.toUpperCase() !== dbName.toUpperCase())
+                            aliases.push({field: fld.javaFieldName, alias: dbName});
 
                         if (col.key) {
                             keyFields.push(fld);

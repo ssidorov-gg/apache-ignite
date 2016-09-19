@@ -80,6 +80,7 @@ import Focus from './services/Focus.service';
 import FormUtils from './services/FormUtils.service';
 import InetAddress from './services/InetAddress.service';
 import JavaTypes from './services/JavaTypes.service';
+import SqlTypes from './services/SqlTypes.service';
 import LegacyTable from './services/LegacyTable.service';
 import LegacyUtils from './services/LegacyUtils.service';
 import Messages from './services/Messages.service';
@@ -191,8 +192,9 @@ angular
 .directive(...igniteUiAceXml)
 .directive(...igniteRetainSelection)
 // Services.
-.service('JavaTypes', JavaTypes)
 .service('IgniteErrorPopover', ErrorPopover)
+.service('JavaTypes', JavaTypes)
+.service('SqlTypes', SqlTypes)
 .service(...ChartColors)
 .service(...Clone)
 .service(...Confirm)

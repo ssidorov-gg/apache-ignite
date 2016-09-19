@@ -81,6 +81,14 @@ export default [
             ]
         };
 
+        const loadFolder = {
+            type: 'folder',
+            name: 'load',
+            children: [
+                { type: 'file', name: 'LoadCaches.java' }
+            ]
+        };
+
         const javaStartupFolder = {
             type: 'folder',
             name: 'startup',
@@ -224,7 +232,11 @@ export default [
             sessionStorage.summarySelectedId = $scope.clusters.indexOf(cluster);
 
             mainFolder.children = [javaFolder];
-            javaFolder.children = [javaConfigFolder, javaStartupFolder];
+
+            if (_.isEmpty(cluster.caches))
+                javaFolder.children = [javaConfigFolder, javaStartupFolder];
+            else
+                javaFolder.children = [loadFolder, javaStartupFolder];
 
             if ($generatorCommon.secretPropertiesNeeded(cluster))
                 mainFolder.children.push(resourcesFolder);
@@ -307,6 +319,11 @@ export default [
                 zip.file(srcPath + 'demo/DemoStartup.java', $generatorJava.nodeStartup(cluster, 'demo', 'DemoStartup',
                     'ServerConfigurationFactory.createConfiguration()', 'config.ServerConfigurationFactory'));
             }
+
+            const cachesToLoad = _.filter(cluster.caches, (cache) => !_.isNil(cache.cacheStoreFactory));
+
+            if (!_.isEmpty(cachesToLoad))
+                zip.file(srcPath + 'load/LoadCaches.java', $generatorJava.loadCaches(cachesToLoad, 'load', 'LoadCaches', '"' + serverXml + '"'));
 
             zip.file(srcPath + 'startup/ServerNodeSpringStartup.java', $generatorJava.nodeStartup(cluster, 'startup', 'ServerNodeSpringStartup', '"' + serverXml + '"'));
             zip.file(srcPath + 'startup/ClientNodeSpringStartup.java', $generatorJava.nodeStartup(cluster, 'startup', 'ClientNodeSpringStartup', '"' + clientXml + '"'));

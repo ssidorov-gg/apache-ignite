@@ -3548,4 +3548,47 @@ $generatorJava.nodeStartup = function(cluster, pkg, cls, cfg, factoryCls, client
     return 'package ' + pkg + ';\n\n' + res.generateImports() + '\n\n' + res.generateStaticImports() + '\n\n' + res.asString();
 };
 
+/**
+ * Function to generate java class for load caches.
+ *
+ * @param caches Caches to load.
+ * @param pkg Class package name.
+ * @param cls Class name.
+ * @param cfg Config.
+ */
+$generatorJava.loadCaches = function(caches, pkg, cls, cfg) {
+    const res = $generatorCommon.builder();
+
+    res.line('/**');
+    res.line(' * ' + $generatorCommon.mainComment());
+    res.line(' */');
+    res.startBlock('public class ' + cls + ' {');
+
+    res.line('/**');
+    res.line(' * Start up node with specified configuration and');
+    res.line(' * load all caches with configured store from database.');
+    res.line(' *');
+    res.line(' * @param args Command line arguments, none required.');
+    res.line(' * @throws Exception If failed.');
+    res.line(' */');
+
+    res.startBlock('public static void main(String[] args) throws Exception {');
+
+    res.line(res.importClass('org.apache.ignite.Ignite') + ' ignite = ' +
+        res.importClass('org.apache.ignite.Ignition') + '.start(' + cfg + ');');
+
+    res.needEmptyLine = true;
+
+    _.forEach(caches, (cache) => {
+        res.line('ignite.cache("' + cache.name + '").loadCache(null);');
+    });
+
+    res.endBlock('}');
+
+    res.endBlock('}');
+
+    return 'package ' + pkg + ';\n\n' + res.generateImports() + '\n\n' + res.generateStaticImports() + '\n\n' + res.asString();
+};
+
+
 export default $generatorJava;
