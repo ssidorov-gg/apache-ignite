@@ -254,16 +254,17 @@ angular
         _.forEach(angular.element('.modal'), (m) => angular.element(m).scope().$hide());
     });
 }])
-.run(['$rootScope', '$http', '$state', 'IgniteMessages', 'User',
-    ($root, $http, $state, Messages, User) => { // eslint-disable-line no-shadow
+.run(['$rootScope', '$http', '$state', 'IgniteMessages', 'User', 'IgniteNotebookData',
+    ($root, $http, $state, Messages, User, Notebook) => { // eslint-disable-line no-shadow
         $root.revertIdentity = () => {
             $http.get('/api/v1/admin/revert/identity')
-                .then(User.load)
+                .then(() => User.load())
                 .then((user) => {
                     $root.$broadcast('user', user);
 
                     $state.go('settings.admin');
                 })
+                .then(() => Notebook.load())
                 .catch(Messages.showError);
         };
     }
