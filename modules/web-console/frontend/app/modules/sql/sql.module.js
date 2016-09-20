@@ -26,8 +26,8 @@ import sql from './sql.controller';
 angular.module('ignite-console.sql', [
     'ui.router'
 ])
-    .config(['$stateProvider',
-        ($stateProvider) => {
+    .config(['$stateProvider', 'AclRouteProvider',
+        ($stateProvider, AclRoute) => {
             // set up the states
             $stateProvider
                 .state('base.sql', {
@@ -38,6 +38,7 @@ angular.module('ignite-console.sql', [
                 .state('base.sql.notebook', {
                     url: '/notebook/{noteId}',
                     templateUrl: '/sql/sql.html',
+                    onEnter: AclRoute.checkAccess('query'),
                     metaTags: {
                         title: 'Query notebook'
                     }
@@ -45,6 +46,7 @@ angular.module('ignite-console.sql', [
                 .state('base.sql.demo', {
                     url: '/demo',
                     templateUrl: '/sql/sql.html',
+                    onEnter: AclRoute.checkAccess('query'),
                     metaTags: {
                         title: 'SQL demo'
                     }

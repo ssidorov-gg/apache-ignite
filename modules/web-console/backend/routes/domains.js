@@ -54,7 +54,7 @@ module.exports.factory = (_, express, mongo, domainsService) => {
          * Remove domain model by ._id.
          */
         router.post('/remove', (req, res) => {
-            const domainId = req.body;
+            const domainId = req.body._id;
 
             domainsService.remove(domainId)
                 .then(res.api.ok)

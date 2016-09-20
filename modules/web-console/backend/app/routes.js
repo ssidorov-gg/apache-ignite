@@ -29,9 +29,19 @@ module.exports.factory = function(publicRoute, adminRoute, profilesRoute, demoRo
     clustersRoute, domainsRoute, cachesRoute, igfssRoute, notebooksRoute, agentsRoute, configurationsRoute) {
     return {
         register: (app) => {
-            const _mustAuthenticated = (req, res, next) => req.isAuthenticated() ? next() : res.redirect('/');
+            const _mustAuthenticated = (req, res, next) => {
+                if (req.isAuthenticated())
+                    return next();
 
-            const _adminOnly = (req, res, next) => req.isAuthenticated() && req.user.admin ? next() : res.sendStatus(403);
+                res.status(401).send('Access denied. You are not authorized to access this page.');
+            };
+
+            const _adminOnly = (req, res, next) => {
+                if (req.isAuthenticated() && req.user.admin)
+                    return next();
+
+                res.status(401).send('Access denied. You are not authorized to access this page.');
+            };
 
             // Registering the standard routes
             app.use('/', publicRoute);

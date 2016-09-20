@@ -103,18 +103,18 @@ mixin checkbox(lbl, model, name, tip)
 
 //- Mixin for checkbox with enabled condition.
 mixin checkbox-enabled(lbl, model, name, enabled, tip)
-    if enabled === false || enabled === true 
+    if enabled === false || enabled === true
         -var disabled = !enabled
     else
         -var disabled = '!('+enabled+')'
-        
+
     +form-field-checkbox(lbl, model, name, disabled, false, tip)
 
 //- Mixin for java name field with enabled condition.
 mixin java-class(lbl, model, name, enabled, required, tip)
     -var errLbl = lbl.substring(0, lbl.length - 1)
 
-    if enabled === false || enabled === true 
+    if enabled === false || enabled === true
         -var disabled = !enabled
     else
         -var disabled = '!('+enabled+')'
@@ -132,8 +132,6 @@ mixin java-class(lbl, model, name, enabled, required, tip)
         +form-field-feedback(name, 'javaKeywords', errLbl + ' could not contains reserved Java keyword!')
         +form-field-feedback(name, 'javaPackageSpecified', errLbl + ' does not have package specified!')
         +form-field-feedback(name, 'javaIdentifier', errLbl + ' is invalid Java identifier!')
-
-        
 
 //- Mixin for text field with enabled condition with options.
 mixin java-class-typeahead(lbl, model, name, options, enabled, required, placeholder, tip)
@@ -153,19 +151,20 @@ mixin text-ip-address(lbl, model, name, enabled, placeholder, tip)
     +ignite-form-field-text(lbl, model, name, '!('+enabled+')', false, placeholder, tip)(data-ipaddress='true')
         +ipaddress-feedback(name)
 
-//- Mixin for text field with IP address and port check.
-mixin text-ip-address-with-port(lbl, model, name, enabled, placeholder, tip)
-    +ignite-form-field-text(lbl, model, name, '!('+enabled+')', false, placeholder, tip)(data-ipaddress='true' data-ipaddress-with-port='true')
+//- Mixin for text field with IP address and port range check.
+mixin text-ip-address-with-port-range(lbl, model, name, enabled, placeholder, tip)
+    +ignite-form-field-text(lbl, model, name, '!('+enabled+')', false, placeholder, tip)(data-ipaddress='true' data-ipaddress-with-port='true' data-ipaddress-with-port-range='true')
         +ipaddress-feedback(name)
         +ipaddress-port-feedback(name)
+        +ipaddress-port-range-feedback(name)
 
 //- Mixin for text field.
 mixin text-enabled(lbl, model, name, enabled, required, placeholder, tip)
-    if enabled === false || enabled === true 
+    if enabled === false || enabled === true
         -var disabled = !enabled
     else
         -var disabled = '!('+enabled+')'
-        
+
     +ignite-form-field-text(lbl, model, name, disabled, required, placeholder, tip)
         if  block
             block
@@ -173,6 +172,12 @@ mixin text-enabled(lbl, model, name, enabled, required, placeholder, tip)
 //- Mixin for text field.
 mixin text(lbl, model, name, required, placeholder, tip)
     +ignite-form-field-text(lbl, model, name, false, required, placeholder, tip)
+        if  block
+            block
+
+//- Mixin for password field.
+mixin password(lbl, model, name, required, placeholder, tip)
+    +ignite-form-field-password(lbl, model, name, false, required, placeholder, tip)
         if  block
             block
 
@@ -198,7 +203,7 @@ mixin number(lbl, model, name, enabled, placeholder, min, tip)
 
 //- Mixin for required dropdown field.
 mixin dropdown-required-empty(lbl, model, name, enabled, required, placeholder, placeholderEmpty, options, tip)
-    if enabled === false || enabled === true 
+    if enabled === false || enabled === true
         -var disabled = !enabled
     else
         -var disabled = '!('+enabled+')'
@@ -206,10 +211,10 @@ mixin dropdown-required-empty(lbl, model, name, enabled, required, placeholder, 
     +ignite-form-field-dropdown(lbl, model, name, disabled, required, false, placeholder, placeholderEmpty, options, tip)
         if  block
             block
-                
+
 //- Mixin for required dropdown field.
 mixin dropdown-required(lbl, model, name, enabled, required, placeholder, options, tip)
-    if enabled === false || enabled === true 
+    if enabled === false || enabled === true
         -var disabled = !enabled
     else
         -var disabled = '!('+enabled+')'
@@ -220,7 +225,7 @@ mixin dropdown-required(lbl, model, name, enabled, required, placeholder, option
 
 //- Mixin for dropdown field.
 mixin dropdown(lbl, model, name, enabled, placeholder, options, tip)
-    if enabled === false || enabled === true 
+    if enabled === false || enabled === true
         -var disabled = !enabled
     else
         -var disabled = '!('+enabled+')'
@@ -231,7 +236,7 @@ mixin dropdown(lbl, model, name, enabled, placeholder, options, tip)
 
 //- Mixin for dropdown-multiple field.
 mixin dropdown-multiple(lbl, model, name, enabled, placeholder, placeholderEmpty, options, tip)
-    if enabled === false || enabled === true 
+    if enabled === false || enabled === true
         -var disabled = !enabled
     else
         -var disabled = '!('+enabled+')'
@@ -360,7 +365,7 @@ mixin table-address-field(name, model, items, valid, save, newItem, portRange)
         )
 
 //- Mixin for table UUID field.
-mixin table-uuid-field(name, model, items, valid, save, newItem, portRange)
+mixin table-uuid-field(name, model, items, valid, save, newItem)
     -var resetOnEnter = newItem ? '(stopblur = true) && (group.add = [{}])' : '(field.edit = false)'
     -var onEnter = valid + ' && (' + save + '); ' + valid + ' && ' + resetOnEnter + ';'
 
@@ -462,7 +467,7 @@ mixin caches(model, tip)
 //- Mixin for XML and Java preview.
 mixin preview-xml-java(master, generator, detail)
     ignite-ui-ace-tabs
-        .preview-panel(ng-init='mode = false')
+        .preview-panel
             .preview-legend
                 a(ng-class='{active: !mode, inactive: mode}' ng-click='mode = false') XML
                 | &nbsp;
@@ -506,7 +511,6 @@ mixin table-pair-edit(tbl, prefix, keyPlaceholder, valPlaceholder, keyJavaBuiltI
             else
                 input.form-control(id=keyFocusId ignite-on-enter-focus-move=valFocusId type='text' ng-model=keyModel placeholder=keyPlaceholder ignite-on-escape='tableReset()')
     .col-xs-6.col-sm-6.col-md-6
-        -var arg = keyModel + ', ' + valModel
         -var btnVisible = 'tablePairSaveVisible(' + tbl + ', ' + index + ')'
         -var btnSave = 'tablePairSave(tablePairValid, backupItem, ' + tbl + ', ' + index + ')'
         -var btnVisibleAndSave = btnVisible + ' && ' + btnSave
@@ -529,7 +533,7 @@ mixin dialect(lbl, model, name, required, tipTitle, genericDialectName, placehol
                 {value: "PostgreSQL", label: "PostgreSQL"},\
                 {value: "H2", label: "H2 database"}\
         ]',
-        tipTitle + 
+        tipTitle +
         '<ul>\
             <li>' + genericDialectName + '</li>\
             <li>Oracle database</li>\

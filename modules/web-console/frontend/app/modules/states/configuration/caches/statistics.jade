@@ -30,8 +30,10 @@ include ../../../../../app/helpers/jade/mixins.jade
         .panel-body(ng-if='ui.isPanelLoaded("#{form}")')
             .col-sm-6
                 .settings-row
-                    +checkbox('Statistics enabled', model + '.statisticsEnabled', '"statisticsEnabled"', 'Flag indicating whether statistics gathering is enabled on a cache')
+                    +checkbox('Statistics enabled', model + '.statisticsEnabled', '"statisticsEnabled"', 'Flag indicating whether statistics gathering is enabled on this cache')
                 .settings-row
-                    +checkbox('Management enabled', model + '.managementEnabled', '"managementEnabled"', 'Flag indicating whether management is enabled on this cache')
+                    +checkbox('Management enabled', model + '.managementEnabled', '"managementEnabled"',
+                    'Flag indicating whether management is enabled on this cache<br/>\
+                    If enabled the CacheMXBean for each cache is registered in the platform MBean server')
             .col-sm-6
                 +preview-xml-java(model, 'cacheStatistics')

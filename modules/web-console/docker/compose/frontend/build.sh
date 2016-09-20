@@ -16,24 +16,44 @@
 # limitations under the License.
 #
 
-cd "$(dirname "$0")"
+if [ -z "$IGNITE_HOME" ]; then
+    echo "Ignite source folder is not found or IGNITE_HOME environment variable is not valid."
 
-BUILD_DIR=$PWD/build
-IMAGE_BUILD_CONTAINER=web-console-frontend-builder
-IMAGE_BUILD_NAME=ignite/$IMAGE_BUILD_CONTAINER
-IMAGE_NAME=ignite/web-console-frontend
-CURRENT_USER=$(whoami)
+    exit 1
+fi
 
+WORK_DIR=`cd "$(dirname "$0")"; pwd`
+
+SOURCE_DIR=$WORK_DIR/src
+BUILD_DIR=$WORK_DIR/build
+
+DOCKER_BUILD_CONTAINER=web-console-frontend-builder
+DOCKER_BUILD_IMAGE_NAME=ignite/$DOCKER_BUILD_CONTAINER
+DOCKER_IMAGE_NAME=ignite/web-console-frontend
+
+echo "Receiving version..."
+VERSION=`cd $IGNITE_HOME && mvn org.apache.maven.plugins:maven-help-plugin:evaluate -Dexpression=project.version| grep -Ev '(^\[|Download\w+:)'`
+RELEASE_VERSION=${VERSION%-SNAPSHOT}
+
+echo "Building $DOCKER_IMAGE_NAME:$RELEASE_VERSION"
 echo "Step 1. Build frontend SPA"
+cd $WORK_DIR
+
+rm -Rf $SOURCE_DIR
+rm -Rf $BUILD_DIR
+mkdir -p $SOURCE_DIR
 mkdir -p $BUILD_DIR
-sudo docker build -f=./DockerfileBuild -t $IMAGE_BUILD_NAME:latest ../../..
-sudo docker run -it -v $BUILD_DIR:/opt/web-console-frontend/build --name $IMAGE_BUILD_CONTAINER $IMAGE_BUILD_NAME
-sudo chown -R $CURRENT_USER $BUILD_DIR
+
+cp -r $IGNITE_HOME/modules/web-console/frontend/. $SOURCE_DIR
+
+docker build -f=./DockerfileBuild -t $DOCKER_BUILD_IMAGE_NAME:latest .
+docker run -it -v $BUILD_DIR:/opt/web-console-frontend/build --name $DOCKER_BUILD_CONTAINER $DOCKER_BUILD_IMAGE_NAME
 
 echo "Step 2. Build NGINX container with SPA and proxy configuration"
-sudo docker build -f=./Dockerfile -t $IMAGE_NAME:latest .
+docker build -f=./Dockerfile -t $DOCKER_IMAGE_NAME:$RELEASE_VERSION .
 
 echo "Step 3. Cleanup"
-sudo docker rm $IMAGE_BUILD_CONTAINER
-sudo docker rmi $IMAGE_BUILD_NAME
+docker rm -f $DOCKER_BUILD_CONTAINER
+docker rmi -f $DOCKER_BUILD_IMAGE_NAME
+rm -r $SOURCE_DIR
 rm -r $BUILD_DIR

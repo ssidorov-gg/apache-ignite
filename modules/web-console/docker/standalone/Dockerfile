@@ -20,7 +20,7 @@ FROM ubuntu:14.04
 ENV NPM_CONFIG_LOGLEVEL info
 ENV NODE_VERSION 4.4.7
 
-# Before package list update
+# Before package list update.
 RUN set -ex  && \
       for key in \
         9554F04D7259F04124DE6B476D5A82AC7E37093B \
@@ -38,7 +38,7 @@ RUN set -ex  && \
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927 && \
    echo "deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
 
-# Update package list & install
+# Update package list & install.
 RUN apt-get update && \
     apt-get install -y nginx-light mongodb-org-server curl xz-utils
 
@@ -50,25 +50,29 @@ RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-
   tar -xJf "node-v$NODE_VERSION-linux-x64.tar.xz" -C /usr/local --strip-components=1 && \
   rm "node-v$NODE_VERSION-linux-x64.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt
 
+# Install global node packages.
+RUN npm upgrade -g npm && npm install -g pm2
+
 # Install frontend & backend apps.
 RUN mkdir -p /opt/web-console
 
+# Copy source.
+WORKDIR /opt/web-console
+COPY build .
+
+# Install node modules.
+RUN cd /opt/web-console/frontend && npm install --no-optional && npm run build
+RUN cd /opt/web-console/backend && npm install --no-optional
+
+# Returns to base path.
 WORKDIR /opt/web-console
 
-# Copy source.
-ADD . /opt/web-console
-
-RUN npm upgrade -g npm && \
-    npm install && \
-    npm run build && \
-    npm install -g pm2
-
 # Copy nginx config.
-COPY docker/web-console/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY docker/web-console/nginx/web-console.conf /etc/nginx/web-console.conf
+COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
+COPY ./nginx/web-console.conf /etc/nginx/web-console.conf
 
 # Setup entrypoint.
-COPY docker/web-console/entrypoint.sh .
+COPY ./entrypoint.sh .
 RUN chmod 755 /opt/web-console/entrypoint.sh
 
 # Clean up.

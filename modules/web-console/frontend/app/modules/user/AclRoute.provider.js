@@ -20,11 +20,20 @@ export default [() => {
         static checkAccess = (permissions, failState) => {
             failState = failState || '403';
 
-            return ['$state', 'AclService', 'Auth', ($state, AclService) => {
-                if (AclService.can(permissions))
-                    return;
+            return ['$state', 'AclService', 'User', ($state, AclService, User) => {
+                User.read()
+                    .then(() => {
+                        if (AclService.can(permissions))
+                            return;
 
-                return $state.go(failState);
+                        return $state.go(failState);
+                    })
+                    .catch(() => {
+                        User.clean();
+
+                        if ($state.current.name !== 'signin')
+                            $state.go('signin');
+                    });
             }];
         }
     }

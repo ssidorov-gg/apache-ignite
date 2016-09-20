@@ -487,6 +487,24 @@ module.exports.factory = function(_, ws, fs, path, JSZip, socketio, settings, mo
 
             return this.executeRest(cmd);
         }
+
+        /**
+         * Collect cache partitions.
+         * @param {Boolean} demo Is need run command on demo node.
+         * @param {Array.<String>} nids Cache node IDs.
+         * @param {String} cacheName Cache name.
+         * @returns {Promise}
+         */
+        partitions(demo, nids, cacheName) {
+            const cmd = new Command(demo, 'exe')
+                .addParam('name', 'org.apache.ignite.internal.visor.compute.VisorGatewayTask')
+                .addParam('p1', nids)
+                .addParam('p2', 'org.apache.ignite.internal.visor.cache.VisorCachePartitionsTask')
+                .addParam('p3', 'java.lang.String')
+                .addParam('p4', cacheName);
+
+            return this.executeRest(cmd);
+        }
     }
 
     /**

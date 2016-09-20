@@ -29,7 +29,7 @@ export default ['igniteFormFieldLabel', [() => {
 
                         const $label = $element.parent().parent().find('.group-legend > label, .ignite-field > label');
 
-                        if ($element[0].id) {
+                        if ($label[0] && $element[0].id) {
                             const id = $element[0].id;
 
                             $label[0].id = id.indexOf('+') >= 0 ? $scope.$eval(id) : id;

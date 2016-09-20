@@ -377,10 +377,23 @@ module.exports.factory = (_, socketio, agentMgr, configure) => {
                         .catch((err) => cb(_errorToJson(err)));
                 });
 
-                // GC node and return result to browser.
+                // Thread dump for node.
                 socket.on('node:thread:dump', (nid, cb) => {
                     agentMgr.findAgent(accountId())
                         .then((agent) => agent.threadDump(demo, nid))
+                        .then((data) => {
+                            if (data.finished)
+                                return cb(null, data.result);
+
+                            cb(_errorToJson(data.error));
+                        })
+                        .catch((err) => cb(_errorToJson(err)));
+                });
+
+                // Collect cache partitions.
+                socket.on('node:cache:partitions', (nids, cacheName, cb) => {
+                    agentMgr.findAgent(accountId())
+                        .then((agent) => agent.partitions(demo, nids, cacheName))
                         .then((data) => {
                             if (data.finished)
                                 return cb(null, data.result);

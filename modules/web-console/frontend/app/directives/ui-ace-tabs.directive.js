@@ -17,6 +17,7 @@
 
 export default ['igniteUiAceTabs', [() => {
     return {
+        scope: true,
         restrict: 'AE',
         controller: _.noop
     };

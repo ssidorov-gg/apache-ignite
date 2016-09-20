@@ -24,9 +24,6 @@ module.exports = {
     factory: () => {
         return (req, res, next) => {
             req.currentUserId = function() {
-                if (!req.user)
-                    return null;
-
                 if (req.session.viewedUser && req.user.admin)
                     return req.session.viewedUser._id;
 

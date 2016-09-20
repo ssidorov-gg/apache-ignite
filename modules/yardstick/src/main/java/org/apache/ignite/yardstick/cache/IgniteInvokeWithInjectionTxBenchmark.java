@@ -15,15 +15,16 @@
  * limitations under the License.
  */
 
-import templateUrl from './table.jade';
+package org.apache.ignite.yardstick.cache;
 
-export default ['igniteFormGroupTable', [() => {
-    return {
-        restrict: 'E',
-        scope: {},
-        templateUrl,
-        replace: true,
-        transclude: true,
-        require: ['^form', '^igniteFormGroup']
-    };
-}]];
+import org.apache.ignite.IgniteCache;
+
+/**
+ * Ignite benchmark that performs invoke operations.
+ */
+public class IgniteInvokeWithInjectionTxBenchmark extends IgniteInvokeWithInjectionBenchmark {
+    /** {@inheritDoc} */
+    @Override protected IgniteCache<Integer, Object> cache() {
+        return ignite().cache("tx");
+    }
+}

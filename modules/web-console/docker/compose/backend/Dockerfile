@@ -21,12 +21,10 @@ RUN mkdir -p /opt/web-console-backend
 
 WORKDIR /opt/web-console-backend
 
-COPY backend .
+COPY build .
 
-RUN npm -g update npm && npm install
+RUN npm -g update npm && npm install --no-optional
 
 EXPOSE 3000 3001
-
-VOLUME ["/opt/web-console-backend/serve/agent_dists"]
 
 CMD ["npm", "start"]

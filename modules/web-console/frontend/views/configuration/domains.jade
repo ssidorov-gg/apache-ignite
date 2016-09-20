@@ -59,8 +59,8 @@ include ../../app/helpers/jade/mixins.jade
                 hr
             .bs-affix-fix
             div(bs-collapse='' data-allow-multiple='true' ng-model='ui.activePanels')
-                form.form-horizontal(name='ui.inputForm' novalidate)
-                    .panel-group(ng-if='contentVisible()')
+                form.form-horizontal(name='ui.inputForm' novalidate ng-if='contentVisible()')
+                    .panel-group
                         include ../../app/modules/states/configuration/domains/general.jade
                         include ../../app/modules/states/configuration/domains/query.jade
                         include ../../app/modules/states/configuration/domains/store.jade

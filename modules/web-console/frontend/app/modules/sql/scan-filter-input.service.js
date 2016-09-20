@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-class ScanFilter {
+export default class ScanFilter {
     static $inject = ['$rootScope', '$q', '$modal'];
 
     constructor($root, $q, $modal) {
@@ -49,4 +49,3 @@ class ScanFilter {
         return this.deferred.promise;
     }
 }
-export default ScanFilter;

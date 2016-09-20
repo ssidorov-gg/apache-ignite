@@ -231,11 +231,11 @@ mixin hibernateField(name, model, items, valid, save, newItem)
                                     'Maximum batch size for write-behind cache store operations<br/>\
                                      Store operations(get or remove) are combined in a batch of this size to be passed to cache store')
                             .details-row
-                                +number('Flush size:', model + '.writeBehindFlushSize', '"writeBehindFlushSize"', enabled, '10240', '1',
+                                +number('Flush size:', model + '.writeBehindFlushSize', '"writeBehindFlushSize"', enabled, '10240', '0',
                                     'Maximum size of the write-behind cache<br/>\
                                      If cache size exceeds this value, all cached items are flushed to the cache store and write cache is cleared')
                             .details-row
-                                +number('Flush frequency:', model + '.writeBehindFlushFrequency', '"writeBehindFlushFrequency"', enabled, '5000', '1',
+                                +number('Flush frequency:', model + '.writeBehindFlushFrequency', '"writeBehindFlushFrequency"', enabled, '5000', '0',
                                     'Frequency with which write-behind cache is flushed to the cache store in milliseconds')
                             .details-row
                                 +number('Flush threads count:', model + '.writeBehindFlushThreadCount', '"writeBehindFlushThreadCount"', enabled, '1', '1',

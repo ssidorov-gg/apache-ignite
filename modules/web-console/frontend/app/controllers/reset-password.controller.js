@@ -35,15 +35,15 @@ export default ['resetPassword', [
         $scope.resetPassword = (reset_info) => {
             $http.post('/api/v1/password/reset', reset_info)
                 .success(() => {
-                    Messages.showInfo('Password successfully changed');
+                    $state.go('signin');
 
-                    $state.go('base.configuration.clusters');
+                    Messages.showInfo('Password successfully changed');
                 })
                 .error((err, state) => {
-                    Messages.showError(err);
-
                     if (state === 503)
-                        $state.go('base.configuration.clusters');
+                        $state.go('signin');
+
+                    Messages.showError(err);
                 });
         };
     }

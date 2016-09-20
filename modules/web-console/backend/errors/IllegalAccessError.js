@@ -22,7 +22,7 @@ import AppErrorException from './AppErrorException';
 class IllegalAccessError extends AppErrorException {
     constructor(message) {
         super(message);
-        this.httpCode = 401;
+        this.httpCode = 403;
     }
 }
 

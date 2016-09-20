@@ -77,6 +77,7 @@ export default ['igniteUiAceJava', ['GeneratorJava', (generator) => {
                     break;
 
                 case 'cacheStore':
+                case 'cacheQuery':
                     ctrl.generator = (cache) => {
                         const domains = _.reduce(scope.detail, (acc, domain) => {
                             if (_.includes(cache.domains, domain.value))
@@ -85,7 +86,7 @@ export default ['igniteUiAceJava', ['GeneratorJava', (generator) => {
                             return acc;
                         }, []);
 
-                        return generator.cacheStore(cache, domains).asString();
+                        return generator[method](cache, domains).asString();
                     };
 
                     break;

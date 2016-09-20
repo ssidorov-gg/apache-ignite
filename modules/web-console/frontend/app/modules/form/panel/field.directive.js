@@ -41,7 +41,8 @@ export default ['igniteFormPanelField', ['$parse', 'IgniteLegacyTable', ($parse,
             saveDefault();
 
         scope.tableReset = () => {
-            LegacyTable.tableSaveAndReset();
+            if (!LegacyTable.tableSaveAndReset())
+                LegacyTable.tableReset();
         };
 
         scope.$watch(() => formCtrl.$pristine, () => {

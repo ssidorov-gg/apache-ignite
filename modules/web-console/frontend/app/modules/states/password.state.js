@@ -21,7 +21,7 @@ angular
 .module('ignite-console.states.password', [
     'ui.router'
 ])
-.config(['$stateProvider', 'AclRouteProvider', function($stateProvider, AclRoute) {
+.config(['$stateProvider', function($stateProvider) {
     // set up the states
     $stateProvider
     .state('password', {
@@ -32,7 +32,6 @@ angular
     .state('password.reset', {
         url: '/reset?{token}',
         templateUrl: '/reset.html',
-        onEnter: AclRoute.checkAccess('login'),
         metaTags: {
             title: 'Reset password'
         }
@@ -40,7 +39,6 @@ angular
     .state('password.send', {
         url: '/send',
         templateUrl: '/reset.html',
-        onEnter: AclRoute.checkAccess('login'),
         metaTags: {
             title: 'Password Send'
         }

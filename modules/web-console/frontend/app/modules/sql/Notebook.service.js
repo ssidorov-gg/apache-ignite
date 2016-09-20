@@ -15,7 +15,9 @@
  * limitations under the License.
  */
 
-class Notebook {
+export default class Notebook {
+    static $inject = ['$state', 'IgniteConfirm', 'IgniteMessages', 'IgniteNotebookData'];
+
     /**
      * @param $state
      * @param confirmModal
@@ -70,7 +72,3 @@ class Notebook {
             });
     }
 }
-
-Notebook.$inject = ['$state', 'IgniteConfirm', 'IgniteMessages', 'IgniteNotebookData'];
-
-export default Notebook;

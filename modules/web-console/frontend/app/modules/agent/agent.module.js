@@ -126,6 +126,9 @@ class IgniteAgentMonitor {
     }
 
     init() {
+        if (this._socket)
+            return;
+
         this._socket = this._socketFactory();
 
         const disconnectFn = () => {

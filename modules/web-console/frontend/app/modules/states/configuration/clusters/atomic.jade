@@ -47,7 +47,7 @@ include ../../../../../app/helpers/jade/mixins.jade
                     +number('Sequence reserve:', model + '.atomicSequenceReserveSize', '"atomicSequenceReserveSize"', 'true', '1000', '0',
                         'Default number of sequence values reserved for IgniteAtomicSequence instances<br/>\
                         After a certain number has been reserved, consequent increments of sequence will happen locally, without communication with other nodes, until the next reservation has to be made')
-                .settings-row(ng-if='!(#{model}.cacheMode && #{model}.cacheMode != "PARTITIONED")')
+                .settings-row(ng-show='!(#{model}.cacheMode && #{model}.cacheMode != "PARTITIONED")')
                     +number('Backups:', model + '.backups', '"backups"', 'true', '0', '0', 'Number of backup nodes')
             .col-sm-6
                 +preview-xml-java(model, 'clusterAtomics')

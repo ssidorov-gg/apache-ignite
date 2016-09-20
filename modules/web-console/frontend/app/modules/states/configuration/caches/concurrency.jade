@@ -35,7 +35,7 @@ include ../../../../../app/helpers/jade/mixins.jade
                         If <b>0</b> then number of concurrent asynchronous operations is unlimited')
                 .settings-row
                     +number('Default lock timeout:', model + '.defaultLockTimeout', '"defaultLockTimeout"', 'true', '0', '0',
-                        'Default lock acquisition timeout<br/>\
+                        'Default lock acquisition timeout in milliseconds<br/>\
                         If <b>0</b> then lock acquisition will never timeout')
                 .settings-row(ng-hide='#{model}.atomicityMode === "TRANSACTIONAL"')
                     +dropdown('Entry versioning:', model + '.atomicWriteOrderMode', '"atomicWriteOrderMode"', 'true', 'Choose versioning',

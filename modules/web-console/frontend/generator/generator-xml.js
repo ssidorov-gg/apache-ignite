@@ -1009,6 +1009,19 @@ $generatorXml.clusterTime = function(cluster, res) {
     return res;
 };
 
+// Generate OBC configuration group.
+$generatorXml.clusterODBC = function(odbc, res) {
+    if (!res)
+        res = $generatorCommon.builder();
+
+    if (odbc && odbc.odbcEnabled)
+        $generatorXml.beanProperty(res, odbc, 'odbcConfiguration', $generatorCommon.ODBC_CONFIGURATION, true);
+
+    res.needEmptyLine = true;
+
+    return res;
+};
+
 // Generate thread pools group.
 $generatorXml.clusterPools = function(cluster, res) {
     if (!res)
@@ -1142,7 +1155,7 @@ $generatorXml.cacheMemory = function(cache, res) {
 };
 
 // Generate cache query & indexing group.
-$generatorXml.cacheQuery = function(cache, res) {
+$generatorXml.cacheQuery = function(cache, domains, res) {
     if (!res)
         res = $generatorCommon.builder();
 
@@ -1150,9 +1163,11 @@ $generatorXml.cacheQuery = function(cache, res) {
     $generatorXml.property(res, cache, 'sqlOnheapRowCacheSize', null, 10240);
     $generatorXml.property(res, cache, 'longQueryWarningTimeout', null, 3000);
 
-    const indexedTypes = _.filter(cache.domains, (domain) => domain.queryMetadata === 'Annotations');
+    const indexedTypes = _.filter(domains, (domain) => domain.queryMetadata === 'Annotations');
 
     if (indexedTypes.length > 0) {
+        res.softEmptyLine();
+
         res.startBlock('<property name="indexedTypes">');
         res.startBlock('<list>');
 
@@ -1293,7 +1308,7 @@ $generatorXml.cacheNodeFilter = function(cache, igfss, res) {
 
     const kind = _.get(cache, 'nodeFilter.kind');
 
-    if (_.isNil(cache.nodeFilter[kind]))
+    if (_.isNil(kind) || _.isNil(cache.nodeFilter[kind]))
         return res;
 
     switch (kind) {
@@ -1689,7 +1704,7 @@ $generatorXml.cacheConfiguration = function(cache, res) {
 
     $generatorXml.cacheGeneral(cache, res);
     $generatorXml.cacheMemory(cache, res);
-    $generatorXml.cacheQuery(cache, res);
+    $generatorXml.cacheQuery(cache, cache.domains, res);
     $generatorXml.cacheStore(cache, cache.domains, res);
 
     const igfs = _.get(cache, 'nodeFilter.IGFS.instance');
@@ -2001,6 +2016,8 @@ $generatorXml.clusterConfiguration = function(cluster, clientNearCfg, res) {
 
     $generatorXml.clusterLogger(cluster.logger, res);
 
+    $generatorXml.clusterODBC(cluster.odbc, res);
+
     $generatorXml.clusterMarshaller(cluster, res);
 
     $generatorXml.clusterMetrics(cluster, res);
@@ -2056,7 +2073,7 @@ $generatorXml.cluster = function(cluster, clientNearCfg) {
         // 1. Add header.
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n\n';
 
-        xml += '<!-- ' + $generatorCommon.mainComment() + ' -->\n\n';
+        xml += '<!-- ' + $generatorCommon.mainComment('configuration') + ' -->\n\n';
         xml += '<beans xmlns="http://www.springframework.org/schema/beans"\n';
         xml += '       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n';
         xml += '       xmlns:util="http://www.springframework.org/schema/util"\n';

@@ -21,9 +21,9 @@ RUN mkdir -p /opt/web-console-frontend
 
 WORKDIR /opt/web-console-frontend
 
-ADD frontend /opt/web-console-frontend
+COPY src .
 
-RUN npm update -g npm && npm install
+RUN npm update -g npm && npm install --no-optional
 
 VOLUME /opt/web-console-frontend/build
 

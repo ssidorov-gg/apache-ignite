@@ -101,9 +101,9 @@ include ../../../../../app/helpers/jade/mixins.jade
                         .group-content-empty(ng-if='!(#{trust}.length) && !group.add.length')
                             | Not defined
 
-                .settings-row(ng-if='!#{trust}.length')
+                .settings-row(ng-show='!#{trust}.length')
                     +text-enabled('Trust store file:', model + '.trustStoreFilePath', '"trustStoreFilePath"', enabled, 'false', 'Path to the trust store file', 'Path to the trust store file')
-                .settings-row(ng-if='!#{trust}.length')
+                .settings-row(ng-show='!#{trust}.length')
                     +text-options('Trust store type:', model + '.trustStoreType', '"trustStoreType"', '["JKS", "PCKS11", "PCKS12"]', enabled, 'false', 'JKS', 'Trust store type used in context initialization')
             .col-sm-6
                 +preview-xml-java(cluster, 'clusterSsl')

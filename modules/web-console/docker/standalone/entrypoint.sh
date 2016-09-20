@@ -20,4 +20,4 @@
 
 service nginx start
 
-pm2 start index.js --no-daemon
+cd backend && pm2 start ./index.js --no-daemon

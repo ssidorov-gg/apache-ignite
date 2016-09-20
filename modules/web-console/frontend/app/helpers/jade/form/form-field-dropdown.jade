@@ -31,15 +31,16 @@ mixin ignite-form-field-dropdown(label, model, name, disabled, required, multipl
             bs-options='item.value as item.label for item in #{options}' 
 
             data-multiple=multiple ? '1' : false
+            data-container='body > .wrapper'
 
             tabindex='0'
 
             data-ignite-form-panel-field=''
         )&attributes(attributes.attributes)
 
-    div
-        +ignite-form-field-label(label, name, required)
-        .col-xs-8.col-sm-8.col-md-8
+    .ignite-form-field
+        +ignite-form-field__label(label, name, required)
+        .ignite-form-field__control
             i.tipField.fa.fa-question-circle(bs-tooltip data-title=tip)
 
             if block
