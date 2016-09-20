@@ -1214,15 +1214,28 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
         };
 
         const _closeOldQuery = (paragraph) => {
-            const queryId = paragraph.queryArgs && paragraph.queryArgs.queryId;
+            if (paragraph.queryId)
+                return agentMonitor.queryClose(paragraph.resNodeId, paragraph.queryId);
 
-            return queryId ? agentMonitor.queryClose(queryId) : $q.when();
+            return $q.when();
         };
 
-        const cacheNode = (name) => {
-            const cache = _.find($scope.caches, {name});
+        /**
+         * @param {String} name Cache name.
+         * @return {Array.<String>} Nids
+         */
+        const cacheNodes = (name) => {
+            return _.find($scope.caches, {name}).nodeIds;
+        };
 
-            return cache.nodeIds[_.random(0, cache.nodeIds.length - 1)];
+        /**
+         * @param {String} name Cache name.
+         * @return {String} Nid
+         */
+        const cacheNode = (name) => {
+            const nodeIds = cacheNodes(name);
+
+            return nodeIds[_.random(0, nodeIds.length - 1)];
         };
 
         const _executeRefresh = (paragraph) => {
@@ -1247,6 +1260,16 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
 
                 paragraph.rate.stopTime = $interval(_executeRefresh, delay, 0, false, paragraph);
             }
+        };
+
+        $scope._execute = (paragraph) => {
+            const nodeIds = cacheNodes(paragraph.cacheName);
+
+            Nodes
+                .selectNodes({ resolve: { nodes: () => nodeIds } })
+                .then((selectedNodes) => {
+                    console.log(selectedNodes);
+                });
         };
 
         $scope.execute = (paragraph) => {
