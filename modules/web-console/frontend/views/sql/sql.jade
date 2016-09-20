@@ -84,7 +84,7 @@ mixin paragraph-rename
 
 mixin query-controls
     .sql-controls
-        a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='execute(paragraph)' data-placement='bottom' bs-tooltip='' data-title='{{actionTooltip(paragraph, "execute", true)}}') Execute
+        a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='_execute(paragraph)' data-placement='bottom' bs-tooltip='' data-title='{{actionTooltip(paragraph, "execute", true)}}') Execute
         a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='explain(paragraph)' data-placement='bottom' bs-tooltip='' data-title='{{actionTooltip(paragraph, "explain", true)}}') Explain
         .btn-group(bs-tooltip='' data-title='{{actionTooltip(paragraph, "execute scan", false)}}' data-placement='bottom')
             a.btn.btn-primary.fieldButton(ng-disabled='!actionAvailable(paragraph, false)' ng-click='scan(paragraph)') Scan

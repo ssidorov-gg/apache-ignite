@@ -18,7 +18,10 @@
 import nodesDialogTemplate from './nodes-dialog.jade';
 
 class Nodes {
+    static $inject = ['$q', '$modal'];
+
     /**
+     * @param $q
      * @param $modal
      */
     constructor($q, $modal) {
@@ -26,20 +29,20 @@ class Nodes {
         this.$modal = $modal;
     }
 
-    selectNodes(settings) {
+    selectNode(nodes) {
         const { $q, $modal } = this;
         const defer = $q.defer();
 
-        const modalInstance = $modal(_.assign({
+        const modalInstance = $modal({
             templateUrl: nodesDialogTemplate,
             show: true,
             resolve: {
-                nodes: () => []
+                nodes: () => nodes || []
             },
             placement: 'center',
             controller: 'nodesDialogController',
             controllerAs: '$ctrl'
-        }, settings));
+        });
 
         modalInstance.$scope._hide = modalInstance.$scope.$hide;
         modalInstance.$scope.$hide = (data) => {
@@ -52,7 +55,5 @@ class Nodes {
         return defer.promise;
     }
 }
-
-Nodes.$inject = ['$q', '$modal'];
 
 export default Nodes;

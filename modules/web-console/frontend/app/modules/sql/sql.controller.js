@@ -781,24 +781,29 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
          * @private
          */
         const _refreshFn = () =>
-            agentMonitor.topology()
-                .then((clusters) => {
-                    $scope.caches = _.sortBy(_.reduce(clusters, (items, cluster) => {
-                        _.forEach(cluster.caches, (cache) => {
-                            let item = _.find(items, {name: cache.name});
+            agentMonitor.topology(true)
+                .then((nodes) => {
+                    $scope.caches = _.sortBy(_.reduce(nodes, (cachesAcc, node) => {
+                        _.forEach(node.caches, (cache) => {
+                            let item = _.find(cachesAcc, {name: cache.name});
 
                             if (_.isNil(item)) {
                                 cache.label = $scope.maskCacheName(cache.name);
 
-                                cache.nodeIds = [];
+                                cache.nodes = [];
 
-                                items.push(item = cache);
+                                cachesAcc.push(item = cache);
                             }
 
-                            item.nodeIds.push(cluster.nodeId);
+                            item.nodes.push({
+                                nid: node.nodeId.toUpperCase(),
+                                ip: _.head(node.attributes['org.apache.ignite.ips'].split(', ')),
+                                version: node.attributes['org.apache.ignite.build.ver'],
+                                os: `${node.attributes['os.name']} ${node.attributes['os.arch']} ${node.attributes['os.version']}`
+                            });
                         });
 
-                        return items;
+                        return cachesAcc;
                     }, []), 'label');
 
                     if (_.isEmpty($scope.caches))
@@ -1225,7 +1230,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
          * @return {Array.<String>} Nids
          */
         const cacheNodes = (name) => {
-            return _.find($scope.caches, {name}).nodeIds;
+            return _.find($scope.caches, {name}).nodes;
         };
 
         /**
@@ -1233,9 +1238,9 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
          * @return {String} Nid
          */
         const cacheNode = (name) => {
-            const nodeIds = cacheNodes(name);
+            const nodes = cacheNodes(name);
 
-            return nodeIds[_.random(0, nodeIds.length - 1)];
+            return nodes[_.random(0, nodes.length - 1)].nid;
         };
 
         const _executeRefresh = (paragraph) => {
@@ -1263,10 +1268,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
         };
 
         $scope._execute = (paragraph) => {
-            const nodeIds = cacheNodes(paragraph.cacheName);
-
-            Nodes
-                .selectNodes({ resolve: { nodes: () => nodeIds } })
+            Nodes.selectNode(cacheNodes(paragraph.cacheName))
                 .then((selectedNodes) => {
                     console.log(selectedNodes);
                 });

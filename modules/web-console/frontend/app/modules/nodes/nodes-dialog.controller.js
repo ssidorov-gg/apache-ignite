@@ -18,7 +18,10 @@
 const NID_TEMPLATE = '<div class="ui-grid-cell-contents" title="{{ COL_FIELD }}">{{ COL_FIELD | limitTo:8 }}</div>';
 
 const COLUMNS_DEFS = [
-    {displayName: 'Node ID8', field: '_id', headerTooltip: 'Node ID8', minWidth: 620, cellTemplate: NID_TEMPLATE, pinnedLeft: true}
+    {displayName: 'Node ID8', field: 'nid', headerTooltip: 'Node ID8', cellTemplate: NID_TEMPLATE, minWidth: 85, width: 85, pinnedLeft: true},
+    {displayName: 'Node IP', field: 'ip', headerTooltip: 'Primary IP address of node', minWidth: 75, width: 90},
+    {displayName: 'Version', field: 'version', headerTooltip: 'Node version', minWidth: 75, width: 100},
+    {displayName: 'OS information', field: 'os', headerTooltip: 'OS information for node\'s host', minWidth: 125}
 ];
 
 export default ['$scope', '$animate', 'uiGridConstants', 'nodes', function($scope, $animate, uiGridConstants, nodes) {
