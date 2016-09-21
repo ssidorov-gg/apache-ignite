@@ -1267,16 +1267,17 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
             }
         };
 
-        $scope._execute = (paragraph) => {
-            Nodes.selectNode(cacheNodes(paragraph.cacheName), paragraph.cacheName)
-                .then((selectedNodes) => {
-                    console.log(selectedNodes);
-                });
+        $scope.executeLocal = (paragraph) => {
+            return Nodes.selectNode(cacheNodes(paragraph.cacheName), paragraph.cacheName)
+                .then((selectedNids) => $scope.execute(paragraph, _.head(selectedNids)));
         };
 
-        $scope.execute = (paragraph) => {
+        $scope.execute = (paragraph, localNid) => {
             if (!$scope.actionAvailable(paragraph, true))
                 return;
+
+            const local = !!localNid;
+            const nid = localNid || cacheNode(paragraph.cacheName);
 
             Notebook.save($scope.notebook)
                 .catch(Messages.showError);
@@ -1285,7 +1286,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
 
             _showLoading(paragraph, true);
 
-            _closeOldQuery(paragraph)
+            return _closeOldQuery(paragraph)
                 .then(() => {
                     const args = paragraph.queryArgs = {
                         cacheName: paragraph.cacheName,
@@ -1294,7 +1295,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
                         type: 'QUERY'
                     };
 
-                    return agentMonitor.query(cacheNode(paragraph.cacheName), args.cacheName, args.query, false, args.pageSize);
+                    return agentMonitor.query(nid, args.cacheName, args.query, local, args.pageSize);
                 })
                 .then((res) => {
                     _processQueryResult(paragraph, res);

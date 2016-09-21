@@ -623,7 +623,7 @@ button.form-control {
         margin-top: 30px;
     }
 
-    .btn-group {
+    .btn-group:last-of-type {
         margin-right: 0;
     }
 
@@ -1316,12 +1316,6 @@ label {
     float: right;
     line-height: $input-height;
     margin: 0 5px;
-}
-
-.fieldButton {
-    float: right;
-    margin-left: 5px;
-    margin-right: 0;
 }
 
 .fa {
