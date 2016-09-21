@@ -17,6 +17,12 @@
 
 import nodesDialogTemplate from './nodes-dialog.jade';
 
+const DEFAULT_OPTIONS = {
+    grid: {
+        multiSelect: false
+    }
+};
+
 class Nodes {
     static $inject = ['$q', '$modal'];
 
@@ -29,28 +35,32 @@ class Nodes {
         this.$modal = $modal;
     }
 
-    selectNode(nodes) {
+    selectNode(nodes, cacheName, options = DEFAULT_OPTIONS) {
         const { $q, $modal } = this;
         const defer = $q.defer();
+        options.target = cacheName;
 
         const modalInstance = $modal({
             templateUrl: nodesDialogTemplate,
             show: true,
             resolve: {
-                nodes: () => nodes || []
+                nodes: () => nodes || [],
+                options: () => options
             },
             placement: 'center',
             controller: 'nodesDialogController',
             controllerAs: '$ctrl'
         });
 
-        modalInstance.$scope._hide = modalInstance.$scope.$hide;
-        modalInstance.$scope.$hide = (data) => {
+        modalInstance.$scope.$ok = (data) => {
             defer.resolve(data);
-            modalInstance.$scope._hide();
+            modalInstance.$scope.$hide();
         };
 
-        console.log(modalInstance);
+        modalInstance.$scope.$cancel = () => {
+            defer.reject();
+            modalInstance.$scope.$hide();
+        };
 
         return defer.promise;
     }

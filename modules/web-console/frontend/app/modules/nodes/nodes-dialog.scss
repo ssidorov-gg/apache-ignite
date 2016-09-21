@@ -7,6 +7,14 @@
     .ui-grid-pinned-container.ui-grid-pinned-container-left .ui-grid-cell:last-child,
     .ui-grid-pinned-container.ui-grid-pinned-container-left .ui-grid-header-cell:last-child,
     .ui-grid-header-cell:last-child .ui-grid-column-resizer.right {
-      border-right: none;
+      //border-right: none;
+    }
+
+    .nodes-grid {
+        height: 320px;
+    }
+    .panel-body_collapse {
+        padding: 0;
+        margin: 0;
     }
 }

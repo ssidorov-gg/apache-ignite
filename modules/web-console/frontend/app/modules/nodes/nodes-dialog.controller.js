@@ -24,17 +24,19 @@ const COLUMNS_DEFS = [
     {displayName: 'OS information', field: 'os', headerTooltip: 'OS information for node\'s host', minWidth: 125}
 ];
 
-export default ['$scope', '$animate', 'uiGridConstants', 'nodes', function($scope, $animate, uiGridConstants, nodes) {
+export default ['$scope', '$animate', 'uiGridConstants', 'nodes', 'options', function($scope, $animate, uiGridConstants, nodes, options) {
     const $ctrl = this;
 
     const updateSelected = () => {
-        const nids = $ctrl.gridApi.selection.getSelectedRows().map((node) => node._id).sort();
+        const nids = $ctrl.gridApi.selection.getSelectedRows().map((node) => node.nid).sort();
 
         if (!_.isEqual(nids, $ctrl.selected))
             $ctrl.selected = nids;
     };
 
     $ctrl.nodes = nodes;
+    $ctrl.options = options;
+    $ctrl.selected = [];
 
     $ctrl.gridOptions = {
         data: nodes,
@@ -56,7 +58,10 @@ export default ['$scope', '$animate', 'uiGridConstants', 'nodes', function($scop
             api.selection.on.rowSelectionChanged($scope, updateSelected);
             api.selection.on.rowSelectionChangedBatch($scope, updateSelected);
 
+            $ctrl.gridApi.grid.element.css('height', '270px');
+
             setTimeout(() => $ctrl.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN), 300);
-        }
+        },
+        ...options.grid
     };
 }];

@@ -1268,7 +1268,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
         };
 
         $scope._execute = (paragraph) => {
-            Nodes.selectNode(cacheNodes(paragraph.cacheName))
+            Nodes.selectNode(cacheNodes(paragraph.cacheName), paragraph.cacheName)
                 .then((selectedNodes) => {
                     console.log(selectedNodes);
                 });
