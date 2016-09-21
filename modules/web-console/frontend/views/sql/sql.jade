@@ -82,22 +82,30 @@ mixin paragraph-rename
         .input-tip
             input.form-control(id='paragraph-name-{{paragraph.id}}' ng-model='paragraph.editName' required ng-click='$event.stopPropagation();' ignite-on-enter='renameParagraph(paragraph, paragraph.editName)' ignite-on-escape='paragraph.edit = false')
 
+mixin query-settings
+    label.tipLabel System columns:
+    a.btn.btn-default.fa.fa-bars.tipLabel(ng-class='{"btn-info": paragraph.systemColumns}' ng-click='toggleSystemColumns(paragraph)' ng-disabled='paragraph.disabledSystemColumns' bs-tooltip data-title='Show "_KEY", "_VAL" columns')
+    label.tipLabel Refresh rate:
+    button.btn.btn-default.fa.fa-clock-o.tipLabel(title='Click to show refresh rate dialog' ng-class='{"btn-info": paragraph.rate && paragraph.rate.installed}' bs-popover data-template-url='/sql/paragraph-rate.html' data-placement='left' data-auto-close='1' data-trigger='click') {{rateAsString(paragraph)}}
+    label.tipLabel Page size:
+    button.select-toggle.fieldButton.btn.btn-default(ng-model='paragraph.pageSize' bs-options='item for item in pageSizes' bs-select bs-tooltip data-placement='bottom-right' data-title='Max number of rows to show in query result as one page')
+
+mixin query-actions
+    .btn-group(bs-tooltip='' data-title='{{actionTooltip(paragraph, "execute", true)}}' data-placement='bottom')
+        button.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='execute(paragraph)') Execute
+        button.btn.btn-primary.dropdown-toggle(ng-disabled='!actionAvailable(paragraph, true)' data-toggle='dropdown' data-container='body' bs-dropdown='[{ text: "Execute local", click: "executeLocal(paragraph)" }]' data-placement='bottom-right')
+            span.caret
+    a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='explain(paragraph)' data-placement='bottom' bs-tooltip='' data-title='{{actionTooltip(paragraph, "explain", true)}}') Explain
+    .btn-group(bs-tooltip='' data-title='{{actionTooltip(paragraph, "execute scan", false)}}' data-placement='bottom')
+        button.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, false)' ng-click='scan(paragraph)') Scan
+        button.btn.btn-primary.dropdown-toggle(ng-disabled='!actionAvailable(paragraph, false)' data-toggle='dropdown' data-container='body' bs-dropdown='[{ text: "Scan with filter", click: "actionAvailable(paragraph, false) && scanWithFilter(paragraph)" }]')
+            span.caret
+
 mixin query-controls
     .sql-controls
-        a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='execute(paragraph)' data-placement='bottom' bs-tooltip='' data-title='{{actionTooltip(paragraph, "execute", true)}}') Execute
-        a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='explain(paragraph)' data-placement='bottom' bs-tooltip='' data-title='{{actionTooltip(paragraph, "explain", true)}}') Explain
-        .btn-group(bs-tooltip='' data-title='{{actionTooltip(paragraph, "execute scan", false)}}' data-placement='bottom')
-            a.btn.btn-primary.fieldButton(ng-disabled='!actionAvailable(paragraph, false)' ng-click='scan(paragraph)') Scan
-            a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, false)' data-toggle='dropdown' data-container='body' bs-dropdown='[{ text: "Scan with filter", click: "actionAvailable(paragraph, false) && scanWithFilter(paragraph)" }]')
-                span.caret
-
+        +query-actions()
         .pull-right
-            label.tipLabel System columns:
-            a.btn.btn-default.fa.fa-bars.tipLabel(ng-class='{"btn-info": paragraph.systemColumns}' ng-click='toggleSystemColumns(paragraph)' ng-disabled='paragraph.disabledSystemColumns' bs-tooltip data-title='Show "_KEY", "_VAL" columns')
-            label.tipLabel Refresh rate:
-            button.btn.btn-default.fa.fa-clock-o.tipLabel(title='Click to show refresh rate dialog' ng-class='{"btn-info": paragraph.rate && paragraph.rate.installed}' bs-popover data-template-url='/sql/paragraph-rate.html' data-placement='left' data-auto-close='1' data-trigger='click') {{rateAsString(paragraph)}}
-            label.tipLabel Page size:
-            button.select-toggle.fieldButton.btn.btn-default(ng-model='paragraph.pageSize' bs-options='item for item in pageSizes' bs-select bs-tooltip data-placement='bottom-right' data-title='Max number of rows to show in query result as one page')
+            +query-settings()
 
 mixin table-result
     .total.row
@@ -109,8 +117,8 @@ mixin table-result
             +result-toolbar
         .col-xs-4
             .btn-group.pull-right(ng-disabled='paragraph.loading')
-                button.btn.btn-primary.fieldButton(ng-click='exportCsv(paragraph)' bs-tooltip data-title='{{actionTooltip(paragraph, "export", false)}}') Export
-                button.btn.btn-primary(id='export-item-dropdown' data-toggle='dropdown' data-container='body' bs-dropdown='exportDropdown' data-placement='bottom-right')
+                button.btn.btn-primary(ng-click='exportCsv(paragraph)' bs-tooltip data-title='{{actionTooltip(paragraph, "export", false)}}') Export
+                button.btn.btn-primary.dropdown-toggle(id='export-item-dropdown' data-toggle='dropdown' data-container='body' bs-dropdown='exportDropdown' data-placement='bottom-right')
                     span.caret
     .grid(ui-grid='paragraph.gridOptions' ui-grid-resize-columns ui-grid-exporter)
 

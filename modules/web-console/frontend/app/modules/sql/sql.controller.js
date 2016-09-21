@@ -154,8 +154,8 @@ class Paragraph {
 }
 
 // Controller for SQL notebook screen.
-export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', '$animate', '$location', '$anchorScroll', '$state', '$modal', '$popover', 'IgniteLoading', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteConfirm', 'IgniteAgentMonitor', 'IgniteChartColors', 'IgniteNotebook', 'IgniteScanFilterInput', 'uiGridExporterConstants',
-    function($root, $scope, $http, $q, $timeout, $interval, $animate, $location, $anchorScroll, $state, $modal, $popover, Loading, LegacyUtils, Messages, Confirm, agentMonitor, IgniteChartColors, Notebook, ScanFilterInput, uiGridExporterConstants) {
+export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', '$animate', '$location', '$anchorScroll', '$state', '$modal', '$popover', 'IgniteLoading', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteConfirm', 'IgniteAgentMonitor', 'IgniteChartColors', 'IgniteNotebook', 'IgniteScanFilterInput', 'IgniteNodes', 'uiGridExporterConstants',
+    function($root, $scope, $http, $q, $timeout, $interval, $animate, $location, $anchorScroll, $state, $modal, $popover, Loading, LegacyUtils, Messages, Confirm, agentMonitor, IgniteChartColors, Notebook, ScanFilterInput, Nodes, uiGridExporterConstants) {
         let stopTopology = null;
 
         const _tryStopRefresh = function(paragraph) {
@@ -781,24 +781,29 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
          * @private
          */
         const _refreshFn = () =>
-            agentMonitor.topology()
-                .then((clusters) => {
-                    $scope.caches = _.sortBy(_.reduce(clusters, (items, cluster) => {
-                        _.forEach(cluster.caches, (cache) => {
-                            let item = _.find(items, {name: cache.name});
+            agentMonitor.topology(true)
+                .then((nodes) => {
+                    $scope.caches = _.sortBy(_.reduce(nodes, (cachesAcc, node) => {
+                        _.forEach(node.caches, (cache) => {
+                            let item = _.find(cachesAcc, {name: cache.name});
 
                             if (_.isNil(item)) {
                                 cache.label = $scope.maskCacheName(cache.name);
 
-                                cache.nodeIds = [];
+                                cache.nodes = [];
 
-                                items.push(item = cache);
+                                cachesAcc.push(item = cache);
                             }
 
-                            item.nodeIds.push(cluster.nodeId);
+                            item.nodes.push({
+                                nid: node.nodeId.toUpperCase(),
+                                ip: _.head(node.attributes['org.apache.ignite.ips'].split(', ')),
+                                version: node.attributes['org.apache.ignite.build.ver'],
+                                os: `${node.attributes['os.name']} ${node.attributes['os.arch']} ${node.attributes['os.version']}`
+                            });
                         });
 
-                        return items;
+                        return cachesAcc;
                     }, []), 'label');
 
                     if (_.isEmpty($scope.caches))
@@ -1214,15 +1219,28 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
         };
 
         const _closeOldQuery = (paragraph) => {
-            const queryId = paragraph.queryArgs && paragraph.queryArgs.queryId;
+            if (paragraph.queryId)
+                return agentMonitor.queryClose(paragraph.resNodeId, paragraph.queryId);
 
-            return queryId ? agentMonitor.queryClose(queryId) : $q.when();
+            return $q.when();
         };
 
-        const cacheNode = (name) => {
-            const cache = _.find($scope.caches, {name});
+        /**
+         * @param {String} name Cache name.
+         * @return {Array.<String>} Nids
+         */
+        const cacheNodes = (name) => {
+            return _.find($scope.caches, {name}).nodes;
+        };
 
-            return cache.nodeIds[_.random(0, cache.nodeIds.length - 1)];
+        /**
+         * @param {String} name Cache name.
+         * @return {String} Nid
+         */
+        const cacheNode = (name) => {
+            const nodes = cacheNodes(name);
+
+            return nodes[_.random(0, nodes.length - 1)].nid;
         };
 
         const _executeRefresh = (paragraph) => {
@@ -1249,9 +1267,17 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
             }
         };
 
-        $scope.execute = (paragraph) => {
+        $scope.executeLocal = (paragraph) => {
+            return Nodes.selectNode(cacheNodes(paragraph.cacheName), paragraph.cacheName)
+                .then((selectedNids) => $scope.execute(paragraph, _.head(selectedNids)));
+        };
+
+        $scope.execute = (paragraph, localNid) => {
             if (!$scope.actionAvailable(paragraph, true))
                 return;
+
+            const local = !!localNid;
+            const nid = localNid || cacheNode(paragraph.cacheName);
 
             Notebook.save($scope.notebook)
                 .catch(Messages.showError);
@@ -1260,7 +1286,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
 
             _showLoading(paragraph, true);
 
-            _closeOldQuery(paragraph)
+            return _closeOldQuery(paragraph)
                 .then(() => {
                     const args = paragraph.queryArgs = {
                         cacheName: paragraph.cacheName,
@@ -1269,7 +1295,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
                         type: 'QUERY'
                     };
 
-                    return agentMonitor.query(cacheNode(paragraph.cacheName), args.cacheName, args.query, false, args.pageSize);
+                    return agentMonitor.query(nid, args.cacheName, args.query, local, args.pageSize);
                 })
                 .then((res) => {
                     _processQueryResult(paragraph, res);
