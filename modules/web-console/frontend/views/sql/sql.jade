@@ -98,7 +98,7 @@ mixin query-actions
     a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='explain(paragraph)' data-placement='bottom' bs-tooltip='' data-title='{{actionTooltip(paragraph, "explain", true)}}') Explain
     .btn-group(bs-tooltip='' data-title='{{actionTooltip(paragraph, "execute scan", false)}}' data-placement='bottom')
         button.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, false)' ng-click='scan(paragraph)') Scan
-        button.btn.btn-primary.dropdown-toggle(ng-disabled='!actionAvailable(paragraph, false)' data-toggle='dropdown' data-container='body' bs-dropdown='[{ text: "Scan with filter", click: "actionAvailable(paragraph, false) && scanWithFilter(paragraph)" }]')
+        button.btn.btn-primary.dropdown-toggle(ng-disabled='!actionAvailable(paragraph, false)' data-toggle='dropdown' data-container='body' bs-dropdown='[{ text: "Scan with filter", click: "actionAvailable(paragraph, false) && scanWithFilter(paragraph)" }]' data-placement='bottom-right')
             span.caret
 
 mixin query-controls
