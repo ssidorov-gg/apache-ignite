@@ -309,8 +309,8 @@ export default [
             const serverXml = 'config/' + cluster.name + '-server.xml';
             const clientXml = 'config/' + cluster.name + '-client.xml';
 
-            zip.file(serverXml, $generatorXml.cluster(cluster));
-            zip.file(clientXml, $generatorXml.cluster(cluster, clientNearCfg));
+            zip.file(serverXml, $generatorSpring.cluster(cluster));
+            zip.file(clientXml, $generatorSpring.cluster(cluster, clientNearCfg));
 
             zip.file(srcPath + 'config/ServerConfigurationFactory.java', $generatorJava.cluster(cluster, 'config', 'ServerConfigurationFactory', null));
             zip.file(srcPath + 'config/ClientConfigurationFactory.java', $generatorJava.cluster(cluster, 'config', 'ClientConfigurationFactory', clientNearCfg));

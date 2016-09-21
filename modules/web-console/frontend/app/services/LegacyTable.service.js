@@ -190,7 +190,7 @@ export default ['IgniteLegacyTable',
                     }
                 }
 
-                return valid;
+                return valid || stopEdit;
             },
             tablePairSaveVisible(field, index) {
                 const pairValue = _tablePairValue(field, index);

@@ -89,10 +89,10 @@ mixin table-db-field-edit(tbl, prefix, focusId, index)
                                 tbody
                                     tr(ng-repeat='item in #{keyFields}')
                                         td
-                                            div(ng-show='!tableEditing(keysTbl, $index)')
+                                            div(ng-hide='tableEditing(keysTbl, $index)')
                                                 a.labelFormField(ng-click='tableStartEdit(backupItem, keysTbl, $index)') {{$index + 1}}) {{item.databaseFieldName}} / {{item.databaseFieldType}} / {{item.javaFieldName}} / {{item.javaFieldType}}
                                                 +btn-remove('tableRemove(backupItem, keysTbl, $index)', '"Remove key field"')
-                                            div(ng-show='tableEditing(keysTbl, $index)')
+                                            div(ng-if='tableEditing(keysTbl, $index)')
                                                 +table-db-field-edit('keysTbl', 'cur', '{{::keysTbl.focusId + $index}}', '$index')
                                 tfoot(ng-show='tableNewItemActive(keysTbl)')
                                     tr
@@ -112,10 +112,10 @@ mixin table-db-field-edit(tbl, prefix, focusId, index)
                                 tbody
                                     tr(ng-repeat='item in #{valueFields}')
                                         td
-                                            div(ng-show='!tableEditing(valuesTbl, $index)')
+                                            div(ng-hide='tableEditing(valuesTbl, $index)')
                                                 a.labelFormField(ng-click='tableStartEdit(backupItem, valuesTbl, $index)') {{$index + 1}}) {{item.databaseFieldName}} / {{item.databaseFieldType}} / {{item.javaFieldName}} / {{item.javaFieldType}}
                                                 +btn-remove('tableRemove(backupItem, valuesTbl, $index)', '"Remove key field"')
-                                            div(ng-show='tableEditing(valuesTbl, $index)')
+                                            div(ng-if='tableEditing(valuesTbl, $index)')
                                                 +table-db-field-edit('valuesTbl', 'cur', '{{::valuesTbl.focusId + $index}}', '$index')
                                 tfoot(ng-show='tableNewItemActive(valuesTbl)')
                                     tr

@@ -18,7 +18,7 @@
 const SERVER_CFG = 'ServerConfigurationFactory';
 const CLIENT_CFG = 'ClientConfigurationFactory';
 
-export default ['$scope', 'GeneratorJava', function($scope, generator) {
+export default ['$scope', 'JavaTransformer', function($scope, generator) {
     const ctrl = this;
 
     delete ctrl.data;

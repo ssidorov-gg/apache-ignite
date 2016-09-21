@@ -15,7 +15,13 @@
  * limitations under the License.
  */
 
-// TODO IGNITE-2052: need move $generatorXml to services.
-export default ['GeneratorXml', () => {
-    return $generatorXml;
+export default ['$scope', 'SpringTransformer', function($scope, generator) {
+    const ctrl = this;
+
+    delete ctrl.data;
+
+    // Set default generator
+    ctrl.generator = (cluster) => {
+        return generator.cluster(cluster, $scope.cfg);
+    };
 }];

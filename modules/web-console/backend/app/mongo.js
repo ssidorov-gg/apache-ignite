@@ -148,9 +148,6 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
             IGFS: {
                 igfs: {type: ObjectId, ref: 'Igfs'}
             },
-            OnNodes: {
-                nodeIds: [String]
-            },
             Custom: {
                 className: String
             }
@@ -218,7 +215,7 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                 deleteQuery: String
             },
             CacheHibernateBlobStoreFactory: {
-                hibernateProperties: [String]
+                hibernateProperties: [{name: String, value: String}]
             }
         },
         storeKeepBinary: Boolean,

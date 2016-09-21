@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-import templateUrl from './ui-ace-java.jade';
-import controller from './ui-ace-java.controller';
+import templateUrl from './ui-ace-spring.jade';
+import controller from './ui-ace-spring.controller';
 
-export default ['igniteUiAceJava', ['JavaTransformer', (generator) => {
+export default ['igniteUiAceSpring', ['SpringTransformer', (generator) => {
     const link = (scope, $el, attrs, [ctrl, igniteUiAceTabs, formCtrl, ngModelCtrl]) => {
         if (formCtrl && ngModelCtrl)
             formCtrl.$removeControl(ngModelCtrl);
@@ -71,7 +71,7 @@ export default ['igniteUiAceJava', ['JavaTransformer', (generator) => {
                             return acc;
                         }, []);
 
-                        return generator.igfss(igfss, 'cfg').asString();
+                        return generator.igfss(igfss).asString();
                     };
 
                     break;
@@ -142,6 +142,6 @@ export default ['igniteUiAceJava', ['JavaTransformer', (generator) => {
         templateUrl,
         controller,
         controllerAs: 'ctrl',
-        require: ['igniteUiAceJava', '?^igniteUiAceTabs', '?^form', '?ngModel']
+        require: ['igniteUiAceSpring', '?^igniteUiAceTabs', '?^form', '?ngModel']
     };
 }]];

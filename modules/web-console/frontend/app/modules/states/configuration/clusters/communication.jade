@@ -96,4 +96,4 @@ include ../../../../../app/helpers/jade/mixins.jade
                 .settings-row
                     +checkbox('TCP_NODELAY option', communication + '.tcpNoDelay', '"tcpNoDelay"', 'Value for TCP_NODELAY socket option')
             .col-sm-6
-                +preview-xml-java(model, 'clusterCommunication')
+                +preview(model, 'clusterCommunication')

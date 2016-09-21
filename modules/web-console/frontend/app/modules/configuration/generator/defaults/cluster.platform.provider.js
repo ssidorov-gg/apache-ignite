@@ -15,13 +15,25 @@
  * limitations under the License.
  */
 
-export default ['$scope', 'GeneratorXml', function($scope, generator) {
-    const ctrl = this;
+import _ from 'lodash';
 
-    delete ctrl.data;
+const enumValueMapper = (val) => _.capitalize(val);
 
-    // Set default generator
-    ctrl.generator = (cluster) => {
-        return generator.cluster(cluster, $scope.cfg);
+const DFLT_CLUSTER = {
+    atomics: {
+        cacheMode: {
+            clsName: 'Apache.Ignite.Core.Cache.Configuration.CacheMode',
+            mapper: enumValueMapper
+        }
+    }
+};
+
+export default function() {
+    this.append = (dflts) => {
+        _.merge(DFLT_CLUSTER, dflts);
     };
-}];
+
+    this.$get = ['igniteClusterDefaults', (clusterDefaults) => {
+        return _.merge({}, clusterDefaults, DFLT_CLUSTER);
+    }];
+}
