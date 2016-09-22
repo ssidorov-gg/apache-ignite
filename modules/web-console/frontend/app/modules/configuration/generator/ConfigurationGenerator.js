@@ -856,7 +856,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
         static _evictionPolicy(cfg, name, src, dflt) {
             let bean;
 
-            switch (src.kind) {
+            switch (_.get(src, 'kind')) {
                 case 'LRU':
                     bean = new Bean('org.apache.ignite.cache.eviction.lru.LruEvictionPolicy', 'evictionPlc',
                         src.LRU, dflt.LRU);
@@ -1113,6 +1113,23 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                     bean.valueOf('nearEvictionPolicy'), cacheDflts.evictionPolicy);
 
                 cfg.beanProperty('nearConfiguration', bean);
+            }
+
+            return cfg;
+        }
+
+        // Generate client near cache group.
+        static cacheClientNearCache(cache, cfg = this.cacheConfigurationBean(cache)) {
+            if (cache.cacheMode === 'PARTITIONED' && _.get(cache, 'clientNearConfiguration.clientNearCacheEnabled')) {
+                const bean = new Bean('org.apache.ignite.configuration.NearCacheConfiguration', 'clientNearConfiguration',
+                    cache.clientNearConfiguration, {nearStartSize: 375000});
+
+                bean.intProperty('nearStartSize');
+
+                this._evictionPolicy(bean, 'nearEvictionPolicy',
+                    bean.valueOf('nearEvictionPolicy'), cacheDflts.evictionPolicy);
+
+                return bean;
             }
 
             return cfg;

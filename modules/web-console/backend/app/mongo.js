@@ -267,6 +267,28 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                 }
             }
         },
+        clientNearConfiguration: {
+            clientNearCacheEnabled: Boolean,
+            nearStartSize: Number,
+            nearEvictionPolicy: {
+                kind: {type: String, enum: ['LRU', 'FIFO', 'SORTED']},
+                LRU: {
+                    batchSize: Number,
+                    maxMemorySize: Number,
+                    maxSize: Number
+                },
+                FIFO: {
+                    batchSize: Number,
+                    maxMemorySize: Number,
+                    maxSize: Number
+                },
+                SORTED: {
+                    batchSize: Number,
+                    maxMemorySize: Number,
+                    maxSize: Number
+                }
+            }
+        },
         demo: Boolean
     });
 
