@@ -181,6 +181,9 @@ public class GridBinaryMarshaller {
     public static final byte LINKED_HASH_MAP = 2;
 
     /** */
+    public static final byte PLATFORM_JAVA_OBJECT_FACTORY_PROXY = 99;
+
+    /** */
     public static final int OBJECT_TYPE_ID = -1;
 
     /** */
@@ -302,6 +305,15 @@ public class GridBinaryMarshaller {
     /**
      * Push binary context and return the old one.
      *
+     * @return Old binary context.
+     */
+    public BinaryContext pushContext() {
+        return pushContext(ctx);
+    }
+
+    /**
+     * Push binary context and return the old one.
+     *
      * @param ctx Binary context.
      * @return Old binary context.
      */
@@ -318,7 +330,7 @@ public class GridBinaryMarshaller {
      *
      * @param oldCtx Old binary context.
      */
-    private static void popContext(@Nullable BinaryContext oldCtx) {
+    public static void popContext(@Nullable BinaryContext oldCtx) {
         if (oldCtx == null)
             BINARY_CTX.remove();
         else

@@ -507,7 +507,7 @@ public class GridDhtLocalPartition implements Comparable<GridDhtLocalPartition>,
     /**
      * @return {@code true} If there is a group reservation.
      */
-    private boolean groupReserved() {
+    public boolean groupReserved() {
         for (GridDhtPartitionsReservation reservation : reservations) {
             if (!reservation.invalidate())
                 return true; // Failed to invalidate reservation -> we are reserved.
@@ -569,7 +569,7 @@ public class GridDhtLocalPartition implements Comparable<GridDhtLocalPartition>,
 
                     KeyCacheObject key = cctx.toCacheKeyObject(keyBytes);
 
-                    cctx.swap().remove(key);
+                    cctx.swap().remove(key, id);
 
                     if (isLocStore)
                         cctx.store().remove(null, key.value(cctx.cacheObjectContext(), false));
