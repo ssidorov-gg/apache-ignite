@@ -69,7 +69,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
             this.clusterTime(cluster, cfg);
             this.clusterPools(cluster, cfg);
             this.clusterTransactions(cluster.transactionConfiguration, cfg);
-            this.clusterCaches(cluster, cluster.caches, cluster.igfss, serve, cfg);
+            this.clusterCaches(cluster, cluster.caches, cluster.igfss, server, cfg);
             this.clusterSsl(cluster, cfg);
 
             // TODO IGNITE-2052
@@ -1194,7 +1194,8 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
         // Generate client near cache group.
         static cacheNearClient(cache, ccfg = this.cacheConfigurationBean(cache)) {
             if (ccfg.valueOf('cacheMode') === 'PARTITIONED' && _.get(cache, 'clientNearConfiguration.enabled')) {
-                const bean = new Bean('org.apache.ignite.configuration.NearCacheConfiguration', 'clientNearConfiguration',
+                const bean = new Bean('org.apache.ignite.configuration.NearCacheConfiguration',
+                    JavaTypes.toJavaName('nearConfiguration', ccfg.valueOf('name')),
                     cache.clientNearConfiguration, cacheDflts.clientNearConfiguration);
 
                 bean.intProperty('nearStartSize');

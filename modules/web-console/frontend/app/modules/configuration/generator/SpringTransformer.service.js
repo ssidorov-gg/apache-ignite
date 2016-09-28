@@ -279,6 +279,16 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
                 });
             }
 
+            const nearCaches = _.filter(cluster.caches, (cache) => _.get(cache, 'clientNearConfiguration.enabled'));
+
+            _.forEach(nearCaches, (cache) => {
+                this.comment(sb, 'Configuration of near cache for cache "' + cache.name + '"');
+
+                this.appendBean(sb, generator.cacheNearClient(cache), true);
+
+                sb.emptyLine();
+            });
+
             // 3. Add main content.
             this.appendBean(sb, cfg);
 
