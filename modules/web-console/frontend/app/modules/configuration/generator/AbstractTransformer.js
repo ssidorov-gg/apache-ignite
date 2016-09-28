@@ -317,8 +317,17 @@ export default class AbstractTransformer {
     }
 
     // Generate server near cache group.
-    static cacheServerNearCache(cache, sb = new StringBuilder()) {
-        const cfg = this.generator.cacheServerNearCache(cache);
+    static cacheNearServer(cache, sb = new StringBuilder()) {
+        const cfg = this.generator.cacheNearServer(cache);
+
+        this._setProperties(sb, cfg);
+
+        return sb;
+    }
+
+    // Generate client near cache group.
+    static cacheNearClient(cache, sb = new StringBuilder()) {
+        const cfg = this.generator.cacheNearClient(cache);
 
         this._setProperties(sb, cfg);
 

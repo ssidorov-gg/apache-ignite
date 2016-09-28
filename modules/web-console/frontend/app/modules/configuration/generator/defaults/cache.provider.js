@@ -66,6 +66,12 @@ const DFLT_CACHE = {
     rebalanceThrottle: 0,
     statisticsEnabled: false,
     managementEnabled: false,
+    nearConfiguration: {
+        nearStartSize: 375000
+    },
+    clientNearConfiguration: {
+        nearStartSize: 375000
+    },
     evictionPolicy: {
         LRU: {
             batchSize: 1,

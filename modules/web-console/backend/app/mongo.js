@@ -245,8 +245,8 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
         readFromBackup: Boolean,
         copyOnRead: Boolean,
         maxConcurrentAsyncOperations: Number,
-        nearCacheEnabled: Boolean,
         nearConfiguration: {
+            enabled: Boolean,
             nearStartSize: Number,
             nearEvictionPolicy: {
                 kind: {type: String, enum: ['LRU', 'FIFO', 'SORTED']},
@@ -268,7 +268,7 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
             }
         },
         clientNearConfiguration: {
-            clientNearCacheEnabled: Boolean,
+            enabled: Boolean,
             nearStartSize: Number,
             nearEvictionPolicy: {
                 kind: {type: String, enum: ['LRU', 'FIFO', 'SORTED']},

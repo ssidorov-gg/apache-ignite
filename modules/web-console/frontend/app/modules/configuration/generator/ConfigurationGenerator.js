@@ -1102,10 +1102,10 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
         }
 
         // Generate server near cache group.
-        static cacheServerNearCache(cache, cfg = this.cacheConfigurationBean(cache)) {
-            if (cache.cacheMode === 'PARTITIONED' && cache.nearCacheEnabled) {
+        static cacheNearServer(cache, ccfg = this.cacheConfigurationBean(cache)) {
+            if (ccfg.valueOf('cacheMode') === 'PARTITIONED' && _.get(cache, 'nearConfiguration.enabled')) {
                 const bean = new Bean('org.apache.ignite.configuration.NearCacheConfiguration', 'nearConfiguration',
-                    cache.nearConfiguration, {nearStartSize: 375000});
+                    cache.nearConfiguration, cacheDflts.nearConfiguration);
 
                 bean.intProperty('nearStartSize');
 
@@ -1115,14 +1115,14 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                 cfg.beanProperty('nearConfiguration', bean);
             }
 
-            return cfg;
+            return ccfg;
         }
 
         // Generate client near cache group.
-        static cacheClientNearCache(cache, cfg = this.cacheConfigurationBean(cache)) {
-            if (cache.cacheMode === 'PARTITIONED' && _.get(cache, 'clientNearConfiguration.clientNearCacheEnabled')) {
+        static cacheNearClient(cache, ccfg = this.cacheConfigurationBean(cache)) {
+            if (ccfg.valueOf('cacheMode') === 'PARTITIONED' && _.get(cache, 'clientNearConfiguration.enabled')) {
                 const bean = new Bean('org.apache.ignite.configuration.NearCacheConfiguration', 'clientNearConfiguration',
-                    cache.clientNearConfiguration, {nearStartSize: 375000});
+                    cache.clientNearConfiguration, cacheDflts.clientNearConfiguration);
 
                 bean.intProperty('nearStartSize');
 
@@ -1132,7 +1132,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                 return bean;
             }
 
-            return cfg;
+            return ccfg;
         }
 
         // Generate cache statistics group.
