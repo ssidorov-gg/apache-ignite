@@ -19,6 +19,7 @@ import angular from 'angular';
 
 import igniteEventGroups from './EventGroups.provider';
 import igniteSidebar from './Sidebar.provider';
+import Version from './Version.service';
 
 import clusterDefaults from './generator/defaults/cluster.provider';
 import clusterPlatformDefaults from './generator/defaults/cluster.platform.provider';
@@ -48,6 +49,7 @@ angular
 .provider(...igniteEventGroups)
 .provider(...igniteSidebar)
 .directive(...igniteSidebarDirective)
+.service('IgniteVersion', Version)
 .service('IgniteConfigurationGenerator', ConfigurationGenerator)
 .service('IgnitePlatformGenerator', PlatformGenerator)
 .service('SpringTransformer', SpringTransformer)

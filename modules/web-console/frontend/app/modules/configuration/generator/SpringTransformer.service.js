@@ -20,26 +20,27 @@ import _ from 'lodash';
 import AbstractTransformer from './AbstractTransformer';
 import StringBuilder from './StringBuilder';
 
-import $generatorSpring from './generator-spring';
-
 export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator', (JavaTypes, eventGroups, generator) => {
     return class SpringTransformer extends AbstractTransformer {
         static generator = generator;
 
         static comment(sb, ...lines) {
-            _.forEach(lines, (line) => sb.append(`<!-- ${line} -->`));
+            if (lines.length > 1) {
+                sb.append('<!--');
+
+                _.forEach(lines, (line) => sb.append(`  ${line}`));
+
+                sb.append('-->');
+            }
+            else
+                sb.append(`<!-- ${_.head(lines)} -->`);
         }
 
-        static commentBlock(sb, ...lines) {
-            sb.append('<!--');
-
-            _.forEach(lines, (line) => sb.append(`  ${line}`));
-
-            sb.append('-->');
-        }
-
-        static appendBean(sb, bean) {
-            sb.startBlock(`<bean class="${bean.clsName}">`);
+        static appendBean(sb, bean, appendId) {
+            if (appendId)
+                sb.startBlock(`<bean id="${bean.id}" class="${bean.clsName}">`);
+            else
+                sb.startBlock(`<bean class="${bean.clsName}">`);
 
             _.forEach(bean.arguments, (arg) => {
                 if (_.isNil(arg.value)) {
@@ -75,10 +76,7 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
                     case 'java.lang.Class':
                         return JavaTypes.fullClassName(item);
                     default:
-                        if (JavaTypes.nonEnum(clsName))
-                            return item;
-
-                        return `${clsName}.${item}`;
+                        return item;
                 }
             });
         }
@@ -230,11 +228,13 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
         }
 
         /**
-         * @param {Bean} root
-         * @returns {String}
+         * Build final XML.
+         *
+         * @param {Object} cluster
+         * @returns {StringBuilder}
          */
-        static generate(root) {
-            // Build final XML:
+        static cluster(cluster) {
+            const cfg = generator.igniteConfiguration(cluster);
             const sb = new StringBuilder();
 
             // 0. Add header.
@@ -245,41 +245,46 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
             sb.emptyLine();
 
             // 1. Start beans section.
-            sb.startBlock(
+            sb.startBlock([
                 '<beans xmlns="http://www.springframework.org/schema/beans"',
                 '       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
                 '       xmlns:util="http://www.springframework.org/schema/util"',
                 '       xsi:schemaLocation="http://www.springframework.org/schema/beans',
                 '                           http://www.springframework.org/schema/beans/spring-beans.xsd',
                 '                           http://www.springframework.org/schema/util',
-                '                           http://www.springframework.org/schema/util/spring-util.xsd">');
+                '                           http://www.springframework.org/schema/util/spring-util.xsd">']);
 
             // 2. Add external property file
-            // TODO
+            if (this.hasProperties(cfg)) {
+                this.comment(sb, 'Load external properties file.');
+
+                sb.startBlock('<bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">');
+                sb.append('<property name="location" value="classpath:secret.properties"/>');
+                sb.endBlock('</bean>');
+
+                sb.emptyLine();
+            }
 
             // 3. Add data sources.
-            // TODO
+            const dataSources = this.collectDataSources(cfg);
+
+            if (dataSources.length) {
+                this.comment(sb, 'Data source beans will be initialized from external properties file.');
+
+                _.forEach(dataSources, (ds) => {
+                    this.appendBean(sb, ds, true);
+
+                    sb.emptyLine();
+                });
+            }
 
             // 3. Add main content.
-            this.appendBean(sb, root);
+            this.appendBean(sb, cfg);
 
             // 4. Close beans section.
             sb.endBlock('</beans>');
 
             return sb.asString();
-        }
-
-        static cluster(cluster, clientNearCfg) {
-            return $generatorSpring.cluster(cluster, clientNearCfg);
-        }
-
-        static clusterConfiguration(cluster, clientNearCfg, res) {
-            return $generatorSpring.clusterConfiguration(cluster, clientNearCfg, res);
-        }
-
-        // Generate IGFSs configs.
-        static igfss(igfss, res) {
-            return $generatorSpring.igfss(igfss, res);
         }
     };
 }];

@@ -17,7 +17,7 @@
 
 export default ['javaPackageName', ['JavaTypes', (JavaTypes) => {
     const link = (scope, el, attrs, [ngModel]) => {
-        if (_.isNil(attrs.javaPackageName) || attrs.javaPackageName !== 'true')
+        if (_.isNil(attrs.javaPackageName) || attrs.javaPackageName === 'false')
             return;
 
         ngModel.$validators.javaPackageName = (value) => _.isEmpty(value) || JavaTypes.validPackage(value);

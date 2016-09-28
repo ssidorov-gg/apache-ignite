@@ -403,6 +403,32 @@ module.exports.factory = (_, socketio, agentMgr, configure) => {
                         .catch((err) => cb(_errorToJson(err)));
                 });
 
+                // Stops given node IDs
+                socket.on('node:stop', (nids, cb) => {
+                    agentMgr.findAgent(accountId())
+                        .then((agent) => agent.stopNodes(demo, nids))
+                        .then((data) => {
+                            if (data.finished)
+                                return cb(null, data.result);
+
+                            cb(_errorToJson(data.error));
+                        })
+                        .catch((err) => cb(_errorToJson(err)));
+                });
+
+                // Restarts given node IDs.
+                socket.on('node:restart', (nids, cb) => {
+                    agentMgr.findAgent(accountId())
+                        .then((agent) => agent.restartNodes(demo, nids))
+                        .then((data) => {
+                            if (data.finished)
+                                return cb(null, data.result);
+
+                            cb(_errorToJson(data.error));
+                        })
+                        .catch((err) => cb(_errorToJson(err)));
+                });
+
                 const count = agentMgr.addAgentListener(user._id, socket);
 
                 socket.emit('agent:count', {count});

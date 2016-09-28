@@ -445,22 +445,19 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
             const classes = [bean.clsName];
 
             _.forEach(bean.properties, (prop) => {
-                switch (prop.type) {
+                switch (prop.clsName) {
                     case 'ENUM':
                         classes.push(prop.clsName);
 
                         break;
-
                     case 'BEAN':
                         classes.push(...this.collectClasses(prop.value));
 
                         break;
-
                     case 'MAP':
                         classes.push('java.util.Map', 'java.util.HashMap', prop.keyClsName, prop.valClsName);
 
                         break;
-
                     default:
                     // No-op.
                 }
@@ -476,11 +473,10 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
          * @param pkg Package name.
          * @param clsName Class name for generate factory class otherwise generate code snippet.
          * @param clientNearCfg Optional near cache configuration for client node.
+         * @param sb
          * @returns {String}
          */
-        static toClassFile(cfg, pkg, clsName) {
-            const sb = new StringBuilder();
-
+        static cluster(cfg, pkg, clsName, clientNearCfg, sb = new StringBuilder()) {
             sb.append(`package ${pkg};`);
             sb.emptyLine();
 

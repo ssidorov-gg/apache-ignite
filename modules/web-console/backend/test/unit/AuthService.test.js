@@ -15,46 +15,28 @@
  * limitations under the License.
  */
 
-
-import {assert} from 'chai';
-import injector from '../injector';
-import testAccounts from '../data/accounts.json';
+const assert = require('chai').assert;
+const injector = require('../injector');
+const testAccounts = require('../data/accounts.json');
 
 let authService;
-let mongo;
 let errors;
+let db;
 
 suite('AuthServiceTestsSuite', () => {
-    const prepareUserSpaces = () => {
-        return mongo.Account.create(testAccounts)
-            .then((accounts) => {
-                return Promise.all(
-                    accounts.map((account) => mongo.Space.create(
-                        [
-                            {name: 'Personal space', owner: account._id, demo: false},
-                            {name: 'Demo space', owner: account._id, demo: true}
-                        ]
-                    )))
-                    .then((spaces) => [accounts, spaces]);
-            });
-    };
-
     suiteSetup(() => {
         return Promise.all([injector('services/auth'),
-            injector('mongo'),
-            injector('errors')])
-            .then(([_authService, _mongo, _errors]) => {
-                mongo = _mongo;
+            injector('errors'),
+            injector('dbHelper')])
+            .then(([_authService, _errors, _db]) => {
                 authService = _authService;
                 errors = _errors;
+                db = _db;
             });
     });
 
     setup(() => {
-        return Promise.all([
-            mongo.Account.remove().exec(),
-            mongo.Space.remove().exec()
-        ]);
+        return db.init();
     });
 
     test('Check token generator', () => {
@@ -77,13 +59,10 @@ suite('AuthServiceTestsSuite', () => {
     });
 
     test('Reset password token for existing user', (done) => {
-        prepareUserSpaces()
-            .then(() => {
-                return authService.resetPasswordToken(testAccounts[0].email)
-                    .then((account) => {
-                        assert.notEqual(account.resetPasswordToken.length, 0);
-                        assert.notEqual(account.resetPasswordToken, testAccounts[0].resetPasswordToken);
-                    });
+        authService.resetPasswordToken(testAccounts[0].email)
+            .then((account) => {
+                assert.notEqual(account.resetPasswordToken.length, 0);
+                assert.notEqual(account.resetPasswordToken, testAccounts[0].resetPasswordToken);
             })
             .then(done)
             .catch(done);
@@ -98,14 +77,11 @@ suite('AuthServiceTestsSuite', () => {
     });
 
     test('Reset password by token for existing user', (done) => {
-        prepareUserSpaces()
-            .then(() => {
-                return authService.resetPasswordByToken(testAccounts[0].resetPasswordToken, 'NewUniquePassword$1')
-                    .then((account) => {
-                        assert.isUndefined(account.resetPasswordToken);
-                        assert.notEqual(account.hash, 0);
-                        assert.notEqual(account.hash, testAccounts[0].hash);
-                    });
+        authService.resetPasswordByToken(testAccounts[0].resetPasswordToken, 'NewUniquePassword$1')
+            .then((account) => {
+                assert.isUndefined(account.resetPasswordToken);
+                assert.notEqual(account.hash, 0);
+                assert.notEqual(account.hash, testAccounts[0].hash);
             })
             .then(done)
             .catch(done);
@@ -120,13 +96,10 @@ suite('AuthServiceTestsSuite', () => {
     });
 
     test('Validate reset token', (done) => {
-        prepareUserSpaces()
-            .then(() => {
-                return authService.validateResetToken(testAccounts[0].resetPasswordToken)
-                    .then(({token, email}) => {
-                        assert.equal(email, testAccounts[0].email);
-                        assert.equal(token, testAccounts[0].resetPasswordToken);
-                    });
+        authService.validateResetToken(testAccounts[0].resetPasswordToken)
+            .then(({token, email}) => {
+                assert.equal(email, testAccounts[0].email);
+                assert.equal(token, testAccounts[0].resetPasswordToken);
             })
             .then(done)
             .catch(done);

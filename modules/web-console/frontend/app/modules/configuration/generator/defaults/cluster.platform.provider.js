@@ -25,6 +25,16 @@ const DFLT_CLUSTER = {
             clsName: 'Apache.Ignite.Core.Cache.Configuration.CacheMode',
             mapper: enumValueMapper
         }
+    },
+    transactionConfiguration: {
+        defaultTxConcurrency: {
+            clsName: 'Apache.Ignite.Core.Transactions.TransactionConcurrency',
+            mapper: enumValueMapper
+        },
+        defaultTxIsolation: {
+            clsName: 'Apache.Ignite.Core.Transactions.TransactionIsolation',
+            mapper: enumValueMapper
+        }
     }
 };
 

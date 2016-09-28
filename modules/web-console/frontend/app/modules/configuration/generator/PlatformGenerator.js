@@ -199,11 +199,45 @@ export default ['JavaTypes', 'igniteClusterPlatformDefaults', (JavaTypes, cluste
 
         // Generate discovery group.
         static clusterDiscovery(discovery, cfg = this.igniteConfigurationBean()) {
+            if (discovery) {
+                let discoveryCfg = cfg.findProperty('discovery');
+
+                if (_.isNil(discoveryCfg)) {
+                    discoveryCfg = new Bean('Apache.Ignite.Core.Discovery.Tcp.TcpDiscoverySpi', 'discovery',
+                        discovery, clusterDflts.discovery);
+                }
+
+                discoveryCfg.stringProperty('localAddress', 'LocalAddress')
+                    .intProperty('localPort', 'LocalPort')
+                    .intProperty('localPortRange', 'LocalPortRange')
+                    .intProperty('socketTimeout', 'SocketTimeout')
+                    .intProperty('ackTimeout', 'AckTimeout')
+                    .intProperty('maxAckTimeout', 'MaxAckTimeout')
+                    .intProperty('networkTimeout', 'NetworkTimeout')
+                    .intProperty('joinTimeout', 'JoinTimeout')
+                    .intProperty('threadPriority', 'ThreadPriority')
+                    .intProperty('heartbeatFrequency', 'HeartbeatFrequency')
+                    .intProperty('maxMissedHeartbeats', 'MaxMissedHeartbeats')
+                    .intProperty('maxMissedClientHeartbeats', 'MaxMissedClientHeartbeats')
+                    .intProperty('topHistorySize', 'TopologyHistorySize')
+                    .intProperty('reconnectCount', 'ReconnectCount')
+                    .intProperty('statisticsPrintFrequency', 'StatisticsPrintFrequency')
+                    .intProperty('ipFinderCleanFrequency', 'IpFinderCleanFrequency')
+                    .intProperty('forceServerMode', 'ForceServerMode')
+                    .intProperty('clientReconnectDisabled', 'ClientReconnectDisabled');
+
+                if (discoveryCfg.nonEmpty())
+                    cfg.beanProperty('discoverySpi', discoveryCfg);
+            }
+
             return cfg;
         }
 
         // Generate events group.
         static clusterEvents(cluster, cfg = this.igniteConfigurationBean(cluster)) {
+            if (_.nonEmpty(cluster.includeEventTypes))
+                cfg.eventTypes('events', 'includeEventTypes', cluster.includeEventTypes);
+
             return cfg;
         }
 
@@ -224,6 +258,11 @@ export default ['JavaTypes', 'igniteClusterPlatformDefaults', (JavaTypes, cluste
 
         // Generate metrics group.
         static clusterMetrics(cluster, cfg = this.igniteConfigurationBean(cluster)) {
+            cfg.intProperty('metricsExpireTime', 'MetricsExpireTime')
+                .intProperty('metricsHistorySize', 'MetricsHistorySize')
+                .intProperty('metricsLogFrequency', 'MetricsLogFrequency')
+                .intProperty('metricsUpdateFrequency', 'MetricsUpdateFrequency');
+
             return cfg;
         }
 
@@ -254,11 +293,25 @@ export default ['JavaTypes', 'igniteClusterPlatformDefaults', (JavaTypes, cluste
 
         // Generate transactions group.
         static clusterTransactions(transactionConfiguration, cfg = this.igniteConfigurationBean()) {
+            const bean = new Bean('Apache.Ignite.Core.Transactions.TransactionConfiguration', 'TransactionConfiguration',
+                transactionConfiguration, clusterDflts.transactionConfiguration);
+
+            bean.enumProperty('defaultTxConcurrency', 'DefaultTransactionConcurrency')
+                .enumProperty('defaultTxIsolation', 'DefaultTransactionIsolation')
+                .intProperty('defaultTxTimeout', 'DefaultTimeout')
+                .intProperty('pessimisticTxLogLinger', 'PessimisticTransactionLogLinger')
+                .intProperty('pessimisticTxLogSize', 'PessimisticTransactionLogSize');
+
+            if (bean.nonEmpty())
+                cfg.beanProperty('transactionConfiguration', bean);
+
             return cfg;
         }
 
         // Generate user attributes group.
         static clusterUserAttributes(cluster, cfg = this.igniteConfigurationBean(cluster)) {
+            cfg.mapProperty('attributes', 'attributes', 'UserAttributes');
+
             return cfg;
         }
 

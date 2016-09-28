@@ -139,7 +139,7 @@ export default ['JavaTypes', 'IgnitePlatformGenerator', (JavaTypes, generator) =
                         if (colTypeClsName === 'String') {
                             const items = this._toObject(colTypeClsName, prop.items);
 
-                            sb.append(`${bean.id}.${prop.name} = {${items.join(', ')}};`);
+                            sb.append(`${bean.id}.${prop.name} = new {${items.join(', ')}};`);
                         }
                         // else {
                         //     if (_.includes(vars, prop.id))

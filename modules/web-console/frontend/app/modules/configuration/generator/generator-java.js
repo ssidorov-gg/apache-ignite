@@ -2347,7 +2347,7 @@ $generatorJava.javaClassCode = function(domain, key, pkg, useConstructor, includ
     res.line('/**');
     res.line(' * ' + type + ' definition.');
     res.line(' *');
-    res.line(' * ' + $generatorCommon.mainComment());
+    res.line(' * ' + $generatorCommon.mainComment('POJO'));
     res.line(' */');
 
     res.startBlock('public class ' + type + ' implements ' + res.importClass('java.io.Serializable') + ' {');
@@ -2552,7 +2552,7 @@ $generatorJava.javaClassCode = function(domain, key, pkg, useConstructor, includ
 
     res.endBlock('}');
 
-    return 'package ' + pkg + ';' + '\n\n' + res.generateImports() + '\n\n' + res.generateStaticImports() + '\n\n' + res.asString();
+    return 'package ' + pkg + ';' + '\n\n' + res.generateImports() + '\n' + res.generateStaticImports() + '\n' + res.asString();
 };
 
 /**
@@ -2955,7 +2955,7 @@ $generatorJava.cluster = function(cluster, pkg, javaClass, clientNearCfg) {
         res.mergeProps(resCfg);
 
         res.line('/**');
-        res.line(' * ' + $generatorCommon.mainComment());
+        res.line(' * ' + $generatorCommon.mainComment('configuration'));
         res.line(' */');
         res.startBlock('public class ' + javaClass + ' {');
 
@@ -3019,7 +3019,7 @@ $generatorJava.cluster = function(cluster, pkg, javaClass, clientNearCfg) {
 
         res.endBlock('}');
 
-        return 'package ' + pkg + ';\n\n' + res.generateImports() + '\n\n' + res.generateStaticImports() + '\n\n' + res.asString();
+        return 'package ' + pkg + ';\n\n' + res.generateImports() + '\n' + res.generateStaticImports() + '\n' + res.asString();
     }
 
     return res.asString();
@@ -3464,7 +3464,7 @@ $generatorJava.nodeStartup = function(cluster, pkg, cls, cfg, factoryCls, client
     const res = $generatorCommon.builder();
 
     res.line('/**');
-    res.line(' * ' + $generatorCommon.mainComment());
+    res.line(' * ' + $generatorCommon.mainComment('node start up'));
 
     if (demo) {
         res.line(' *');
@@ -3545,7 +3545,67 @@ $generatorJava.nodeStartup = function(cluster, pkg, cls, cfg, factoryCls, client
 
     res.endBlock('}');
 
-    return 'package ' + pkg + ';\n\n' + res.generateImports() + '\n\n' + res.generateStaticImports() + '\n\n' + res.asString();
+    return 'package ' + pkg + ';\n\n' + res.generateImports() + '\n' + res.generateStaticImports() + '\n' + res.asString();
 };
+
+/**
+ * Function to generate java class for load caches.
+ *
+ * @param caches Caches to load.
+ * @param pkg Class package name.
+ * @param cls Class name.
+ * @param cfg Config.
+ */
+$generatorJava.loadCaches = function(caches, pkg, cls, cfg) {
+    const res = $generatorCommon.builder();
+
+    res.line('/**');
+    res.line(' * ' + $generatorCommon.mainComment('utility'));
+    res.line(' */');
+    res.startBlock('public class ' + cls + ' {');
+
+    res.line('/**');
+    res.line(' * <p>');
+    res.line(' * Utility to load caches from database.');
+    res.line(' * <p>');
+    res.line(' * How to use:');
+    res.line(' * <ul>');
+    res.line(' *    <li>Start cluster.</li>');
+    res.line(' *    <li>Start this utility and wait while load complete.</li>');
+    res.line(' * </ul>');
+    res.line(' *');
+    res.line(' * @param args Command line arguments, none required.');
+    res.line(' * @throws Exception If failed.');
+    res.line(' */');
+
+    res.startBlock('public static void main(String[] args) throws Exception {');
+
+    res.startBlock('try (' + res.importClass('org.apache.ignite.Ignite') + ' ignite = ' +
+        res.importClass('org.apache.ignite.Ignition') + '.start(' + cfg + ')) {');
+
+    res.line('System.out.println(">>> Loading caches...");');
+
+    res.needEmptyLine = true;
+
+    _.forEach(caches, (cache) => {
+        res.line('System.out.println(">>> Loading cache: ' + cache.name + '");');
+        res.line('ignite.cache("' + cache.name + '").loadCache(null);');
+
+        res.needEmptyLine = true;
+    });
+
+    res.needEmptyLine = true;
+
+    res.line('System.out.println(">>> All caches loaded!");');
+
+    res.endBlock('}');
+
+    res.endBlock('}');
+
+    res.endBlock('}');
+
+    return 'package ' + pkg + ';\n\n' + res.generateImports() + '\n' + res.generateStaticImports() + '\n' + res.asString();
+};
+
 
 export default $generatorJava;

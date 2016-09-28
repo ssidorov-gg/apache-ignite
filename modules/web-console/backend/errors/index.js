@@ -19,13 +19,13 @@
 
 // Fire me up!
 
-import AppErrorException from './AppErrorException';
-import IllegalArgumentException from './IllegalArgumentException';
-import IllegalAccessError from './IllegalAccessError';
-import DuplicateKeyException from './DuplicateKeyException';
-import ServerErrorException from './ServerErrorException';
-import MissingResourceException from './MissingResourceException';
-import AuthFailedException from './AuthFailedException';
+const AppErrorException = require('./AppErrorException');
+const IllegalArgumentException = require('./IllegalArgumentException');
+const IllegalAccessError = require('./IllegalAccessError');
+const DuplicateKeyException = require('./DuplicateKeyException');
+const ServerErrorException = require('./ServerErrorException');
+const MissingResourceException = require('./MissingResourceException');
+const AuthFailedException = require('./AuthFailedException');
 
 module.exports = {
     implements: 'errors',

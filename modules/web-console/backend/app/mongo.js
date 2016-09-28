@@ -24,7 +24,7 @@
  */
 module.exports = {
     implements: 'mongo',
-    inject: ['require(passport-local-mongoose)', 'settings', 'ignite_modules/mongo:*', 'require(mongoose)']
+    inject: ['require(passport-local-mongoose)', 'settings', 'ignite_modules/mongo:*', 'mongoose']
 };
 
 module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose) {

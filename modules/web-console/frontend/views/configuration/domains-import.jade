@@ -53,7 +53,7 @@ mixin td-ellipses-lbl(w, lbl)
                                 li Copy h2-x.x.x.jar into agent 'jdbc-drivers' folder and try again
                                 li Refer to agent README.txt for more information
                 .import-domain-model-wizard-page(ng-if='importDomain.action == "connect" && !importDomain.demo')
-                    - var form = 'connectForm'
+                    -var form = 'connectForm'
 
                     form.form-horizontal(name=form novalidate)
                         .settings-row.settings-row_small-label
@@ -62,8 +62,7 @@ mixin td-ellipses-lbl(w, lbl)
                                 'Select appropriate JAR with JDBC driver<br> To add another driver you need to place it into "/jdbc-drivers" folder of Ignite Web Agent<br> Refer to Ignite Web Agent README.txt for for more information'
                             )(data-container='.modal-domain-import')
                         .settings-row.settings-row_small-label
-                            - var name = '"jdbcDriverClass"'
-                            +java-class('JDBC driver', 'selectedPreset.jdbcDriverClass', name, true, true, 'Fully qualified class name of JDBC driver that will be used to connect to database')
+                            +java-class('JDBC driver:', 'selectedPreset.jdbcDriverClass', '"jdbcDriverClass"', true, true, 'Fully qualified class name of JDBC driver that will be used to connect to database')
                         .settings-row.settings-row_small-label
                             +text('JDBC URL:', 'selectedPreset.jdbcUrl', '"jdbcUrl"', true, 'JDBC URL', 'JDBC URL for connecting to database<br>Refer to your database documentation for details')
                         .settings-row.settings-row_small-label
@@ -142,24 +141,11 @@ mixin td-ellipses-lbl(w, lbl)
                         .col-sm-1(style='padding-left: 5px')
                             button.btn.btn-primary(ng-click='applyDefaults()') Apply
                 .import-domain-model-wizard-page(ng-show='importDomain.action == "options"')
-                    - var form = 'optionsForm'
-                    form.form-horizontal(name='optionsForm' novalidate)
-                        .settings-row
-                            .col-xs-4.col-sm-2.col-md-2.required
-                                label.required Package:
-                            .col-xs-8.col-sm-10.col-md-10
-                                - var name = '"domainPackageName"'
-                                i.tipField.fa.fa-question-circle(bs-tooltip='' data-title='Package that will be used for POJOs generation')
+                    -var form = 'optionsForm'
 
-                                +form-field-feedback(name, 'javaPackageName', 'Package name is invalid')
-                                +form-field-feedback(name, 'javaKeywords', 'Package name could not contains reserved java keyword')
-
-                                .input-tip
-                                    +ignite-form-field-input(name, 'ui.packageName', false, true, 'Enter package name')(
-                                        data-java-keywords='true'
-                                        data-java-package-name='package-only'
-                                        ng-model-options='{allowInvalid: true}'
-                                    )
+                    form.form-horizontal(name=form novalidate)
+                        .settings-row.settings-row_small-label
+                            +java-package('Package:', 'ui.packageName', '"domainPackageName"', true, true, 'Package that will be used for POJOs generation')(data-container='.modal-domain-import')
                         .settings-row
                             +checkbox('Use Java built-in types for keys', 'ui.builtinKeys', '"domainBuiltinKeys"', 'Use Java built-in types like "Integer", "Long", "String" instead of POJO generation in case when table primary key contains only one field')
                         .settings-row

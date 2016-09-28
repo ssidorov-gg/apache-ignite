@@ -54,4 +54,4 @@ include ../../../../../app/helpers/jade/mixins.jade
                                         td.col-sm-12
                                             +table-pair-edit('attributesTbl', 'new', 'Attribute name', 'Attribute value', false, false, '{{::attributesTbl.focusId + $index}}', '-1', '=')
             .col-sm-6
-                +preview-xml-java(model, 'clusterUserAttributes')
+                +preview(model, 'clusterUserAttributes')

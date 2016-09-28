@@ -306,10 +306,11 @@ export class Bean extends EmptyBean {
     /**
      * @param {String} id
      * @param {String} name
-     * @param {String} dialect
+     * @param {Bean} value
      */
-    dataSource(id, name, dialect) {
-        this.properties.push({clsName: 'DataSource', id, name, dialect});
+    dataSource(id, name, value) {
+        if (value)
+            this.properties.push({clsName: 'DataSource', id, name, value});
 
         return this;
     }

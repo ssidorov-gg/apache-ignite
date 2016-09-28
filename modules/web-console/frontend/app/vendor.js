@@ -47,7 +47,6 @@ import 'brace/ext/searchbox';
 import 'file-saver';
 import 'jszip';
 import 'nvd3';
-import 'query-command-supported';
 import 'angular-gridster/dist/angular-gridster.min.css';
 import 'angular-tree-control/css/tree-control-attribute.css';
 import 'angular-tree-control/css/tree-control.css';

@@ -43,7 +43,6 @@ import './modules/navbar/navbar.module';
 import './modules/configuration/configuration.module';
 import './modules/getting-started/GettingStarted.provider';
 import './modules/dialog/dialog.module';
-import './modules/version/Version.provider';
 import './modules/ace.module';
 import './modules/socket.module';
 import './modules/loading/loading.module';
@@ -82,6 +81,7 @@ import Focus from './services/Focus.service';
 import FormUtils from './services/FormUtils.service';
 import InetAddress from './services/InetAddress.service';
 import JavaTypes from './services/JavaTypes.service';
+import SqlTypes from './services/SqlTypes.service';
 import LegacyTable from './services/LegacyTable.service';
 import LegacyUtils from './services/LegacyUtils.service';
 import Messages from './services/Messages.service';
@@ -167,7 +167,6 @@ angular
     'ignite-console.navbar',
     'ignite-console.configuration',
     'ignite-console.getting-started',
-    'ignite-console.version',
     'ignite-console.loading',
     // Ignite configuration module.
     'ignite-console.config',
@@ -195,8 +194,9 @@ angular
 .directive(...igniteUiAceTabs)
 .directive(...igniteRetainSelection)
 // Services.
-.service('JavaTypes', JavaTypes)
 .service('IgniteErrorPopover', ErrorPopover)
+.service('JavaTypes', JavaTypes)
+.service('SqlTypes', SqlTypes)
 .service(...ChartColors)
 .service(...Clone)
 .service(...Confirm)
@@ -256,16 +256,17 @@ angular
         _.forEach(angular.element('.modal'), (m) => angular.element(m).scope().$hide());
     });
 }])
-.run(['$rootScope', '$http', '$state', 'IgniteMessages', 'User',
-    ($root, $http, $state, Messages, User) => { // eslint-disable-line no-shadow
+.run(['$rootScope', '$http', '$state', 'IgniteMessages', 'User', 'IgniteNotebookData',
+    ($root, $http, $state, Messages, User, Notebook) => { // eslint-disable-line no-shadow
         $root.revertIdentity = () => {
             $http.get('/api/v1/admin/revert/identity')
-                .then(User.load)
+                .then(() => User.load())
                 .then((user) => {
                     $root.$broadcast('user', user);
 
                     $state.go('settings.admin');
                 })
+                .then(() => Notebook.load())
                 .catch(Messages.showError);
         };
     }
