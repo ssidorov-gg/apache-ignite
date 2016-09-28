@@ -45,9 +45,10 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
          * Function to generate ignite configuration.
          *
          * @param {Object} cluster Cluster to process.
+         * @param {Boolean} server
          * @return {Bean} Generated ignite configuration.
          */
-        static igniteConfiguration(cluster, serve) {
+        static igniteConfiguration(cluster, server) {
             const cfg = this.igniteConfigurationBean(cluster);
 
             this.clusterGeneral(cluster, cfg);
@@ -72,7 +73,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
             this.clusterSsl(cluster, cfg);
 
             // TODO IGNITE-2052
-            // if (serve)
+            // if (server)
             //     $generatorSpring.igfss(cluster.igfss, res);
 
             this.clusterUserAttributes(cluster, cfg);
@@ -1225,7 +1226,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
             this.cacheNodeFilter(cache, igfs ? [igfs] : [], ccfg);
             this.cacheConcurrency(cache, ccfg);
             this.cacheRebalance(cache, ccfg);
-            this.cacheServerNearCache(cache, ccfg);
+            this.cacheNearServer(cache, ccfg);
             this.cacheStatistics(cache, ccfg);
             // this.cacheDomains(cache.domains, cfg);
 

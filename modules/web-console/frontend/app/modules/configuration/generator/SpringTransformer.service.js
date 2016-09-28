@@ -231,10 +231,11 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
          * Build final XML.
          *
          * @param {Object} cluster
+         * @param {Boolean} server
          * @returns {StringBuilder}
          */
-        static cluster(cluster) {
-            const cfg = generator.igniteConfiguration(cluster);
+        static cluster(cluster, server) {
+            const cfg = generator.igniteConfiguration(cluster, server);
             const sb = new StringBuilder();
 
             // 0. Add header.
