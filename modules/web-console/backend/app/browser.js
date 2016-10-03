@@ -98,9 +98,9 @@ module.exports.factory = (_, socketio, agentMgr, configure) => {
                 });
 
                 // Execute query on node and return first page to browser.
-                socket.on('node:query', (nid, cacheName, query, local, pageSize, cb) => {
+                socket.on('node:query', (nid, cacheName, query, distributedJoins, local, pageSize, cb) => {
                     agentMgr.findAgent(accountId())
-                        .then((agent) => agent.fieldsQuery(demo, nid, cacheName, query, local, pageSize))
+                        .then((agent) => agent.fieldsQuery(demo, nid, cacheName, query, distributedJoins, local, pageSize))
                         .then((res) => cb(null, res))
                         .catch((err) => cb(_errorToJson(err)));
                 });

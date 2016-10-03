@@ -1285,10 +1285,10 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
 
         $scope.executeLocal = (paragraph) => {
             return Nodes.selectNode(cacheNodes(paragraph.cacheName), paragraph.cacheName)
-                .then((selectedNids) => $scope.execute(paragraph, _.head(selectedNids)));
+                .then((selectedNids) => $scope.execute(paragraph, false, _.head(selectedNids)));
         };
 
-        $scope.execute = (paragraph, localNid) => {
+        $scope.execute = (paragraph, distributedJoins = false, localNid) => {
             if (!$scope.actionAvailable(paragraph, true))
                 return;
 
@@ -1311,7 +1311,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
                         type: 'QUERY'
                     };
 
-                    return agentMonitor.query(nid, args.cacheName, args.query, local, args.pageSize);
+                    return agentMonitor.query(nid, args.cacheName, args.query, distributedJoins, local, args.pageSize);
                 })
                 .then((res) => {
                     _processQueryResult(paragraph, res);
