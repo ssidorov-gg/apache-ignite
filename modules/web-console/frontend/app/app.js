@@ -89,6 +89,7 @@ import LegacyUtils from './services/LegacyUtils.service';
 import Messages from './services/Messages.service';
 import ModelNormalizer from './services/ModelNormalizer.service.js';
 import UnsavedChangesGuard from './services/UnsavedChangesGuard.service';
+import Version from './services/Version.service';
 
 // Filters.
 import byName from './filters/byName.filter';
@@ -201,6 +202,7 @@ angular
 .service('IgniteErrorPopover', ErrorPopover)
 .service('JavaTypes', JavaTypes)
 .service('SqlTypes', SqlTypes)
+.service('Version', Version)
 .service(...ChartColors)
 .service(...Clone)
 .service(...Confirm)

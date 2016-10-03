@@ -154,8 +154,8 @@ class Paragraph {
 }
 
 // Controller for SQL notebook screen.
-export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', '$animate', '$location', '$anchorScroll', '$state', '$modal', '$popover', 'IgniteLoading', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteConfirm', 'IgniteAgentMonitor', 'IgniteChartColors', 'IgniteNotebook', 'IgniteScanFilterInput', 'IgniteNodes', 'uiGridExporterConstants',
-    function($root, $scope, $http, $q, $timeout, $interval, $animate, $location, $anchorScroll, $state, $modal, $popover, Loading, LegacyUtils, Messages, Confirm, agentMonitor, IgniteChartColors, Notebook, ScanFilterInput, Nodes, uiGridExporterConstants) {
+export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', '$animate', '$location', '$anchorScroll', '$state', '$modal', '$popover', 'IgniteLoading', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteConfirm', 'IgniteAgentMonitor', 'IgniteChartColors', 'IgniteNotebook', 'IgniteScanFilterInput', 'IgniteNodes', 'uiGridExporterConstants', 'Version',
+    function($root, $scope, $http, $q, $timeout, $interval, $animate, $location, $anchorScroll, $state, $modal, $popover, Loading, LegacyUtils, Messages, Confirm, agentMonitor, IgniteChartColors, Notebook, ScanFilterInput, Nodes, uiGridExporterConstants, versionService) {
         let stopTopology = null;
 
         const _tryStopRefresh = function(paragraph) {
@@ -1265,6 +1265,22 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
 
                 paragraph.rate.stopTime = $interval(_executeRefresh, delay, 0, false, paragraph);
             }
+        };
+
+        $scope.distributedJoinAvailable = (paragraph) => {
+            const MIN_SUPPORT_VERSION = '1.7.0';
+            const cache = _.find($scope.caches, {name: paragraph.cacheName});
+            let available = true;
+
+            if (cache)
+                _.forEach(cache.nodes, (node) => available = available && versionService.compare(node.version, MIN_SUPPORT_VERSION) >= 0);
+            else
+                available = false;
+
+            return available;
+        };
+
+        $scope.executeDistribution = (paragraph) => {
         };
 
         $scope.executeLocal = (paragraph) => {
