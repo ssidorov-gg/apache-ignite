@@ -353,7 +353,7 @@ public class HadoopAbstractMapReduceTest extends HadoopAbstractWordCountTest {
      * @return Started grid instance.
      * @throws Exception If failed.
      */
-    protected Ignite startGridWithIgfs(String gridName, String igfsName, IgfsMode mode,
+    protected final Ignite startGridWithIgfs(String gridName, String igfsName, IgfsMode mode,
         @Nullable IgfsSecondaryFileSystem secondaryFs, @Nullable IgfsIpcEndpointConfiguration restCfg) throws Exception {
         FileSystemConfiguration igfsCfg = new FileSystemConfiguration();
 

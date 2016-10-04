@@ -84,17 +84,28 @@ public class GridUnsafeMemory {
      * @return {@code True} if memory is under allowed size, {@code false} otherwise.
      */
     public boolean reserve(long size) {
-        if (total == 0) {
-            allocated.addAndGet(size);
+        try {
+            if (total == 0) {
+                allocated.addAndGet(size);
 
-            return true;
+                return true;
+            }
+
+            long mem = allocated.addAndGet(size);
+
+            long max = total;
+
+            return mem <= max;
         }
+        finally {
+            long mem = allocated.get();
 
-        long mem = allocated.addAndGet(size);
+            if (mem > 4 * 1024) {
+                Thread.dumpStack();
 
-        long max = total;
-
-        return mem <= max;
+                throw new Error("Allocated too much native memory: " + mem);
+            }
+        }
     }
 
     /**

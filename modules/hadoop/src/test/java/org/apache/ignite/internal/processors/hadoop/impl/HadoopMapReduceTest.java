@@ -63,4 +63,8 @@ public class HadoopMapReduceTest extends HadoopAbstractMapReduceTest {
             { true,  true,  true },
         };
     }
+
+    @Override protected void beforeTest() throws Exception {
+        super.beforeTest();
+    }
 }
