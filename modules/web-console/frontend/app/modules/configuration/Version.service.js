@@ -25,6 +25,11 @@ const numberCompare = (a, b) => a > b ? 1 : a < b ? -1 : 0;
 
 export default class Version {
 
+    /**
+     * Tries to parse product version from it's string representation.
+     * @param verStr - String representation of version.
+     * @returns {{major: Number, minor: Number, maintenance: Number, stage: String, revTs: Number, revHash: String}} - object that contains product version fields
+     */
     parse(verStr) {
         // Development or built from source ZIP.
         verStr = verStr.replace(/(-DEV|-n\/a)$/i, '');
@@ -53,7 +58,9 @@ export default class Version {
             revHash
         };
     }
+
     /**
+     * Compare to version
      * @param a {String} first compared version
      * @param b {String} second compared version
      * @returns {Integer} 1 if a > b, 0 if versions equals, -1 if a < b
@@ -90,6 +97,12 @@ export default class Version {
         };
     }
 
+    /**
+     * Check if node version is newer or same
+     * @param nodeVer
+     * @param sinceVer
+     * @returns {boolean}
+     */
     since(nodeVer, sinceVer) {
         return this.compare(nodeVer, sinceVer) >= 0;
     }
