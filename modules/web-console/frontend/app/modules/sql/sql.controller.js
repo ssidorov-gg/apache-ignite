@@ -1268,19 +1268,20 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
         };
 
         $scope.distributedJoinAvailable = (paragraph) => {
-            const MIN_SUPPORT_VERSION = '1.7.0';
+            const MIN_SUPPORTED_VERSION = '1.7.0';
             const cache = _.find($scope.caches, {name: paragraph.cacheName});
-            let available = true;
 
             if (cache)
-                _.forEach(cache.nodes, (node) => available = available && versionService.compare(node.version, MIN_SUPPORT_VERSION) >= 0);
-            else
-                available = false;
+                return !!_.find(cache.nodes, (node) => versionService.since(node.version, MIN_SUPPORTED_VERSION));
 
-            return available;
+            return false;
         };
 
         $scope.executeDistribution = (paragraph) => {
+            if (!$scope.distributedJoinAvailable(paragraph))
+                return Promise.reject();
+
+            return $scope.execute(paragraph, true);
         };
 
         $scope.executeLocal = (paragraph) => {
@@ -1290,7 +1291,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
 
         $scope.execute = (paragraph, distributedJoins = false, localNid) => {
             if (!$scope.actionAvailable(paragraph, true))
-                return;
+                return Promise.reject();
 
             const local = !!localNid;
             const nid = localNid || cacheNode(paragraph.cacheName);

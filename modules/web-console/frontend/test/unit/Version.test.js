@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import VersionService from '../../app/services/Version.service.js';
+import VersionService from '../../app/modules/configuration/Version.service.js';
 
 const INSTANCE = new VersionService();
 
@@ -44,5 +44,21 @@ suite('VersionServiceTestsSuite', () => {
 
     test('Version a < b', () => {
         assert.equal(INSTANCE.compare('1.5.1', '1.5.2'), -1);
+    });
+
+    test('Check since call', () => {
+        assert.equal(INSTANCE.since('1.6.0', '1.5.0'), true);
+    });
+
+    test('Check wrong since call', () => {
+        assert.equal(INSTANCE.since('1.3.0', '1.5.0'), false);
+    });
+
+    test('Parse 1.7.0-SNAPSHOT', () => {
+        const version = INSTANCE.parse('1.7.0');
+        assert.equal(version.major, 1);
+        assert.equal(version.minor, 7);
+        assert.equal(version.maintence, 0);
+        assert.equal(version.stage, 'SNAPSHOT');
     });
 });
