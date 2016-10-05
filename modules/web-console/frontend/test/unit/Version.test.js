@@ -55,10 +55,28 @@ suite('VersionServiceTestsSuite', () => {
     });
 
     test('Parse 1.7.0-SNAPSHOT', () => {
-        const version = INSTANCE.parse('1.7.0');
+        const version = INSTANCE.parse('1.7.0-SNAPSHOT');
         assert.equal(version.major, 1);
         assert.equal(version.minor, 7);
-        assert.equal(version.maintence, 0);
+        assert.equal(version.maintenance, 0);
         assert.equal(version.stage, 'SNAPSHOT');
+        assert.equal(version.revTs, 0);
+        assert.isUndefined(version.revHash);
+    });
+
+    test('Parse strip -DEV 1.7.0-DEV', () => {
+        const version = INSTANCE.parse('1.7.0-DEV');
+        assert.equal(version.major, 1);
+        assert.equal(version.minor, 7);
+        assert.equal(version.maintenance, 0);
+        assert.equal(version.stage, '');
+    });
+
+    test('Parse strip -n/a 1.7.0-n/a', () => {
+        const version = INSTANCE.parse('1.7.0-n/a');
+        assert.equal(version.major, 1);
+        assert.equal(version.minor, 7);
+        assert.equal(version.maintenance, 0);
+        assert.equal(version.stage, '');
     });
 });

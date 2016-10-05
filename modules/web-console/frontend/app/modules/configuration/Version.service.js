@@ -16,45 +16,42 @@
  */
 
 /**
- * Utility service for version compare
+ * Utility service for version parsing and comparing
  */
 const VERSION_MATCHER = /(\d+)\.(\d+)\.(\d+)([-.]([^0123456789][^-]+)(-SNAPSHOT)?)?(-(\d+))?(-([\da-f]+))?/i;
+
+
+const numberCompare = (a, b) => a > b ? 1 : a < b ? -1 : 0;
 
 export default class Version {
 
     parse(verStr) {
         // Development or built from source ZIP.
-        verStr = verStr.replace(/-DEV|-n\/a$/, '');
+        verStr = verStr.replace(/(-DEV|-n\/a)$/i, '');
 
-        const [major, minor, maintenance, stage, ...chunks] = verStr.match(VERSION_MATCHER);
-        console.log(chunks);
+        let [, major, minor, maintenance, stage, ...chunks] = verStr.match(VERSION_MATCHER);
+        let revTs = 0;
+        let revHash;
 
-        // if (match.matches()) {
-        //     try {
-        //
-        //         String stage = "";
-        //
-        //         if (match.group(4) != null)
-        //             stage = match.group(4).substring(1);
-        //
-        //         long revTs = 0;
-        //
-        //         if (match.group(7) != null)
-        //             revTs = Long.parseLong(match.group(8));
-        //
-        //         byte[] revHash = null;
-        //
-        //         if (match.group(9) != null)
-        //             revHash = U.decodeHex(match.group(10).toCharArray());
-        //
-        //         return new IgniteProductVersion(major, minor, maintenance, stage, revTs, revHash);
-        //     }
-        //     catch (IllegalStateException | IndexOutOfBoundsException | NumberFormatException | IgniteCheckedException e) {
-        //         throw new IllegalStateException("Failed to parse version: " + verStr, e);
-        //     }
-        // }
-        // else
-        //     throw new IllegalStateException("Failed to parse version: " + verStr);
+        major = parseInt(major, 10);
+        minor = parseInt(minor, 10);
+        maintenance = parseInt(maintenance, 10);
+        stage = (stage || '').substring(1);
+
+        if (chunks[2])
+            revTs = parseInt(chunks[3], 10);
+
+        if (chunks[4])
+            revHash = chunks[5];
+
+        return {
+            major,
+            minor,
+            maintenance,
+            stage,
+            revTs,
+            revHash
+        };
     }
     /**
      * @param a {String} first compared version
@@ -62,19 +59,25 @@ export default class Version {
      * @returns {Integer} 1 if a > b, 0 if versions equals, -1 if a < b
      */
     compare(a, b) {
-        let pa = a.split('.');
-        let pb = b.split('.');
+        const pa = this.parse(a);
+        const pb = this.parse(b);
 
-        for (let i = 0; i < 3; i++) {
-            let na = Number(pa[i]);
-            let nb = Number(pb[i]);
-            if (na > nb) return 1;
-            if (nb > na) return -1;
-            if (!isNaN(na) && isNaN(nb)) return 1;
-            if (isNaN(na) && !isNaN(nb)) return -1;
-        }
+        let res = numberCompare(pa.major, pb.major);
 
-        return 0;
+        if (res !== 0)
+            return res;
+
+        res = numberCompare(pa.minor, pb.minor);
+
+        if (res !== 0)
+            return res;
+
+        res = numberCompare(pa.maintenance, pb.maintenance);
+
+        if (res !== 0)
+            return res;
+
+        return numberCompare(pa.revTs, pb.maintenance);
     }
 
     /**

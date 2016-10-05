@@ -154,8 +154,8 @@ class Paragraph {
 }
 
 // Controller for SQL notebook screen.
-export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', '$animate', '$location', '$anchorScroll', '$state', '$modal', '$popover', 'IgniteLoading', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteConfirm', 'IgniteAgentMonitor', 'IgniteChartColors', 'IgniteNotebook', 'IgniteScanFilterInput', 'IgniteNodes', 'uiGridExporterConstants', 'Version',
-    function($root, $scope, $http, $q, $timeout, $interval, $animate, $location, $anchorScroll, $state, $modal, $popover, Loading, LegacyUtils, Messages, Confirm, agentMonitor, IgniteChartColors, Notebook, ScanFilterInput, Nodes, uiGridExporterConstants, versionService) {
+export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', '$animate', '$location', '$anchorScroll', '$state', '$modal', '$popover', 'IgniteLoading', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteConfirm', 'IgniteAgentMonitor', 'IgniteChartColors', 'IgniteNotebook', 'IgniteScanFilterInput', 'IgniteNodes', 'uiGridExporterConstants', 'IgniteVersion',
+    function($root, $scope, $http, $q, $timeout, $interval, $animate, $location, $anchorScroll, $state, $modal, $popover, Loading, LegacyUtils, Messages, Confirm, agentMonitor, IgniteChartColors, Notebook, ScanFilterInput, Nodes, uiGridExporterConstants, Version) {
         let stopTopology = null;
 
         const _tryStopRefresh = function(paragraph) {
@@ -1272,14 +1272,14 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
             const cache = _.find($scope.caches, {name: paragraph.cacheName});
 
             if (cache)
-                return !!_.find(cache.nodes, (node) => versionService.since(node.version, MIN_SUPPORTED_VERSION));
+                return !!_.find(cache.nodes, (node) => Version.since(node.version, MIN_SUPPORTED_VERSION));
 
             return false;
         };
 
         $scope.executeDistribution = (paragraph) => {
             if (!$scope.distributedJoinAvailable(paragraph))
-                return Promise.reject();
+                return;
 
             return $scope.execute(paragraph, true);
         };
@@ -1291,7 +1291,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
 
         $scope.execute = (paragraph, distributedJoins = false, localNid) => {
             if (!$scope.actionAvailable(paragraph, true))
-                return Promise.reject();
+                return;
 
             const local = !!localNid;
             const nid = localNid || cacheNode(paragraph.cacheName);
