@@ -111,7 +111,7 @@ mixin checkbox-enabled(lbl, model, name, enabled, tip)
     +form-field-checkbox(lbl, model, name, enabledToDisabled(enabled), false, tip)
 
 //- Mixin for Java class name field with auto focus condition.
-mixin java-class-autofocus(lbl, model, name, enabled, required, autofocus, tip)
+mixin java-class-autofocus(lbl, model, name, enabled, required, autofocus, tip, validationActive)
     -var errLbl = lbl.substring(0, lbl.length - 1)
 
     +ignite-form-field-text(lbl, model, name, enabledToDisabled(enabled), required, 'Enter fully qualified class name', tip)(
@@ -120,6 +120,7 @@ mixin java-class-autofocus(lbl, model, name, enabled, required, autofocus, tip)
         data-java-keywords='true'
         data-java-built-in-class='true'
         data-ignite-form-field-input-autofocus=autofocus
+        data-validation-active=validationActive ? '{{ #{validationActive} }}' : '"always"'
     )
         if  block
             block
@@ -130,17 +131,18 @@ mixin java-class-autofocus(lbl, model, name, enabled, required, autofocus, tip)
         +form-field-feedback(name, 'javaIdentifier', errLbl + ' is invalid Java identifier!')
 
 //- Mixin for Java class name field.
-mixin java-class(lbl, model, name, enabled, required, tip)
-    +java-class-autofocus(lbl, model, name, enabled, required, 'false', tip)
+mixin java-class(lbl, model, name, enabled, required, tip, validationActive)
+    +java-class-autofocus(lbl, model, name, enabled, required, 'false', tip, validationActive)
 
 //- Mixin for text field with enabled condition with options.
-mixin java-class-typeahead(lbl, model, name, options, enabled, required, placeholder, tip)
+mixin java-class-typeahead(lbl, model, name, options, enabled, required, placeholder, tip, validationActive)
     -var errLbl = lbl.substring(0, lbl.length - 1)
 
     +form-field-datalist(lbl, model, name, enabledToDisabled(enabled), required, placeholder, options, tip)(
         data-java-identifier='true'
         data-java-package-specified='allow-built-in'
         data-java-keywords='true'
+        data-validation-active=validationActive ? '{{ #{validationActive} }}' : '"always"'
     )
         +form-field-feedback(name, 'javaKeywords', errLbl + ' could not contains reserved Java keyword!')
         +form-field-feedback(name, 'javaPackageSpecified', errLbl + ' does not have package specified!')

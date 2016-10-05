@@ -32,6 +32,8 @@ include ../../../../../app/helpers/jade/mixins.jade
         .panel-body
             .col-sm-6
                 .settings-row
+                    +checkbox('Generate POJO classes', model + '.generatePojo', '"generatePojo"', 'If selected then POJO classes will be generated from database tables')
+                .settings-row
                     +caches(model, 'Select caches to associate domain model with cache')
                 .settings-row
                     +dropdown-required('Query metadata:', model + '.queryMetadata', '"queryMetadata"', 'true', 'true', '', 'queryMetadataVariants',
@@ -40,9 +42,17 @@ include ../../../../../app/helpers/jade/mixins.jade
                             <li>Java annotations like @QuerySqlField</li>\
                             <li>Configuration via QueryEntity class</li>\
                         </ul>')
-                .settings-row
-                    +java-class-typeahead('Key type:', model + '.keyType', '"keyType"', 'javaBuiltInClasses', 'true', 'true', 'Full class name for Key', 'Key class used to store key in cache')
-                .settings-row
-                    +java-class('Value type:', model + '.valueType', '"valueType"', 'true', 'true', 'Value class used to store value in cache')
+                 -var generatePojo = model + '.generatePojo'
+                 div(ng-show=generatePojo)
+                    .settings-row
+                        +java-class-typeahead('Key type:', model + '.keyType', '"keyTypeClass"', 'javaBuiltInClasses', 'true', generatePojo, 'Full class name for Key', 'Key class used to store key in cache', generatePojo)
+                    .settings-row
+                        +java-class('Value type:', model + '.valueType', '"valueTypeClass"', 'true', generatePojo, 'Value class used to store value in cache', generatePojo)
+                 div(ng-hide=generatePojo)
+                     .settings-row
+                         +text('Key type:', model + '.keyType', '"keyType"', 'true', 'Key type name', 'Key class used to store key in cache')
+                     .settings-row
+                         +text('Value type:', model + '.valueType', '"valueType"', 'true', 'Value type name', 'Value class used to store value in cache')
+
             .col-sm-6
                 +preview-xml-java(model, 'domainModelGeneral')

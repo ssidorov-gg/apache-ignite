@@ -58,6 +58,7 @@ export default ['domainsController', [
 
         $scope.$on('$destroy', $root.$on('user', _packageNameUpdate));
 
+        $scope.ui.generatePojo = true;
         $scope.ui.builtinKeys = true;
         $scope.ui.usePrimitives = true;
         $scope.ui.generateAliases = true;
@@ -75,7 +76,6 @@ export default ['domainsController', [
             return !item.empty && (!item._id || _.find($scope.displayedRows, {_id: item._id}));
         };
 
-        $scope.getModel = LegacyUtils.getModel;
         $scope.javaBuiltInClasses = LegacyUtils.javaBuiltInClasses;
         $scope.compactJavaName = FormUtils.compactJavaName;
         $scope.widthIsSufficient = FormUtils.widthIsSufficient;
@@ -751,20 +751,12 @@ export default ['domainsController', [
                 importDomainModal.hide();
         }
 
-        function _saveDomainModel() {
-            if (LegacyUtils.isEmptyString($scope.ui.packageName)) {
-                ErrorPopover.show('domainPackageNameInput', 'Package could not be empty');
+        function _saveDomainModel(optionsForm) {
+            const generatePojo = $scope.ui.generatePojo;
+            const packageName = $scope.ui.packageName;
 
-                Focus.move('domainPackageNameInput');
-
+            if (generatePojo && !LegacyUtils.checkFieldValidators({inputForm: optionsForm}))
                 return false;
-            }
-
-            if (!LegacyUtils.isValidJavaClass('Package', $scope.ui.packageName, false, 'domainPackageNameInput', true)) {
-                Focus.move('domainPackageNameInput');
-
-                return false;
-            }
 
             const batch = [];
             const checkedCaches = [];
@@ -803,7 +795,7 @@ export default ['domainsController', [
                         containDup = true;
                     }
 
-                    const valType = _toJavaPackage($scope.ui.packageName) + '.' + typeName;
+                    const valType = generatePojo ? _toJavaPackage(packageName) + '.' + typeName : tableName;
 
                     let _containKey = false;
 
@@ -852,7 +844,8 @@ export default ['domainsController', [
                         confirm: false,
                         skip: false,
                         space: $scope.spaces[0],
-                        caches: []
+                        caches: [],
+                        generatePojo
                     };
 
                     if (LegacyUtils.isDefined(domainFound)) {
@@ -985,7 +978,7 @@ export default ['domainsController', [
             }
         }
 
-        $scope.importDomainNext = function() {
+        $scope.importDomainNext = function(form) {
             if (!$scope.importDomainNextAvailable())
                 return;
 
@@ -1000,7 +993,7 @@ export default ['domainsController', [
             else if (act === 'tables')
                 _selectOptions();
             else if (act === 'options')
-                _saveDomainModel();
+                _saveDomainModel(form);
         };
 
         $scope.nextTooltipText = function() {
@@ -1101,11 +1094,14 @@ export default ['domainsController', [
         Resource.read()
             .then(({spaces, clusters, caches, domains}) => {
                 $scope.spaces = spaces;
+
                 $scope.clusters = _.map(clusters, (cluster) => ({
                     label: cluster.name,
                     value: cluster._id
                 }));
+
                 $scope.caches = _mapCaches(caches);
+
                 $scope.domains = _.sortBy(domains, 'valueType');
 
                 _.forEach($scope.clusters, (cluster) => $scope.ui.generatedCachesClusters.push(cluster.value));
@@ -1157,8 +1153,16 @@ export default ['domainsController', [
 
                     if (form.$valid && ModelNormalizer.isEqual(__original_value, val))
                         form.$setPristine();
-                    else
+                    else {
                         form.$setDirty();
+
+                        const general = form.general;
+
+                        FormUtils.markPristineInvalidAsDirty(general.keyType);
+                        FormUtils.markPristineInvalidAsDirty(general.valueType);
+                        FormUtils.markPristineInvalidAsDirty(general.keyTypeClass);
+                        FormUtils.markPristineInvalidAsDirty(general.valueTypeClass);
+                    }
                 }, true);
 
                 $scope.$watch('ui.activePanels.length', () => {

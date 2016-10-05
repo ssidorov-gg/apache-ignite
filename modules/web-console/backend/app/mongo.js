@@ -123,7 +123,7 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
             indexType: {type: String, enum: ['SORTED', 'FULLTEXT', 'GEOSPATIAL']},
             fields: [{name: String, direction: Boolean}]
         }],
-        demo: Boolean
+        generatePojo: Boolean
     });
 
     DomainModelSchema.index({valueType: 1, space: 1}, {unique: true});
@@ -269,8 +269,7 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                     maxSize: Number
                 }
             }
-        },
-        demo: Boolean
+        }
     });
 
     CacheSchema.index({name: 1, space: 1}, {unique: true});
