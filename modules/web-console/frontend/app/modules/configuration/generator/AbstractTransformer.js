@@ -66,6 +66,14 @@ export default class AbstractTransformer {
         return sb;
     }
 
+    static clusterCheckpoint(collision, sb = new StringBuilder()) {
+        const cfg = this.generator.clusterCheckpoint(collision);
+
+        this._setProperties(sb, cfg);
+
+        return sb;
+    }
+
     static clusterCollision(collision, sb = new StringBuilder()) {
         const cfg = this.generator.clusterCollision(collision);
 

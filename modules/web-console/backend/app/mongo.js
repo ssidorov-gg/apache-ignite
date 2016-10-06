@@ -388,7 +388,52 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                 addresses: [String]
             },
             S3: {
-                bucketName: String
+                bucketName: String,
+                clientConfiguration: {
+                    protocol: {type: String, enum: ['http', 'https']},
+                    maxConnections: Number,
+                    userAgent: String,
+                    localAddress: String,
+                    proxyHost: String,
+                    proxyPort: Number,
+                    proxyUsername: String,
+                    proxyDomain: String,
+                    proxyWorkstation: String,
+                    retryPolicy: {
+                        kind: {type: String, enum: ['Default', 'DefaultMaxRetries', 'DynamoDB', 'DynamoDBMaxRetries', 'Custom', 'CustomClass']},
+                        DefaultMaxRetries: {
+                            maxErrorRetry: Number
+                        },
+                        DynamoDBMaxRetries: {
+                            maxErrorRetry: Number
+                        },
+                        Custom: {
+                            retryCondition: String,
+                            backoffStrategy: String,
+                            maxErrorRetry: Number,
+                            honorMaxErrorRetryInClientConfig: Boolean
+                        },
+                        CustomClass: {
+                            className: String
+                        }
+                    },
+                    maxErrorRetry: Number,
+                    socketTimeout: Number,
+                    connectionTimeout: Number,
+                    requestTimeout: Number,
+                    useReaper: Boolean,
+                    useGzip: Boolean,
+                    socketSendBufferSizeHints: Number,
+                    socketReceiveBufferSizeHints: Number,
+                    signerOverride: String,
+                    preemptiveBasicProxyAuth: Boolean,
+                    connectionTTL: Number,
+                    connectionMaxIdleMillis: Number,
+                    useTcpKeepAlive: Boolean,
+                    dnsResolver: String,
+                    responseMetadataCacheSize: Number,
+                    secureRandom: String
+                }
             },
             Cloud: {
                 credential: String,
@@ -646,6 +691,92 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
         cacheKeyConfiguration: [{
             typeName: String,
             affinityKeyFieldName: String
+        }],
+        checkpointSpi: [{
+            kind: {type: String, enum: ['FS', 'Cache', 'S3', 'JDBC', 'Custom']},
+            FS: {
+                dirPaths: [String],
+                checkpointListener: String
+            },
+            Cache: {
+                cacheName: String,
+                checkpointListener: String
+            },
+            S3: {
+                awsCredentials: {type: String, enum: ['Basic', 'Properties', 'Anonymous', 'BasicSession', 'Custom']},
+                Properties: {
+                    path: String
+                },
+                Custom: {
+                    className: String
+                },
+                bucketNameSuffix: String,
+                checkpointListener: String,
+                clientConfiguration: {
+                    protocol: {type: String, enum: ['http', 'https']},
+                    maxConnections: Number,
+                    userAgent: String,
+                    localAddress: String,
+                    proxyHost: String,
+                    proxyPort: Number,
+                    proxyUsername: String,
+                    proxyDomain: String,
+                    proxyWorkstation: String,
+                    retryPolicy: {
+                        kind: {type: String, enum: ['Default', 'DefaultMaxRetries', 'DynamoDB', 'DynamoDBMaxRetries', 'Custom', 'CustomClass']},
+                        DefaultMaxRetries: {
+                            maxErrorRetry: Number
+                        },
+                        DynamoDBMaxRetries: {
+                            maxErrorRetry: Number
+                        },
+                        Custom: {
+                            retryCondition: String,
+                            backoffStrategy: String,
+                            maxErrorRetry: Number,
+                            honorMaxErrorRetryInClientConfig: Boolean
+                        },
+                        CustomClass: {
+                            className: String
+                        }
+                    },
+                    maxErrorRetry: Number,
+                    socketTimeout: Number,
+                    connectionTimeout: Number,
+                    requestTimeout: Number,
+                    useReaper: Boolean,
+                    useGzip: Boolean,
+                    socketSendBufferSizeHints: Number,
+                    socketReceiveBufferSizeHints: Number,
+                    signerOverride: String,
+                    preemptiveBasicProxyAuth: Boolean,
+                    connectionTTL: Number,
+                    connectionMaxIdleMillis: Number,
+                    useTcpKeepAlive: Boolean,
+                    dnsResolver: String,
+                    responseMetadataCacheSize: Number,
+                    secureRandom: String
+                }
+            },
+            JDBC: {
+                dataSourceBean: String,
+                dialect: {
+                    type: String,
+                    enum: ['Generic', 'Oracle', 'DB2', 'SQLServer', 'MySQL', 'PostgreSQL', 'H2']
+                },
+                numberOfRetries: Number,
+                checkpointTableName: String,
+                keyFieldName: String,
+                keyFieldType: String,
+                valueFieldName: String,
+                valueFieldType: String,
+                expireDateFieldName: String,
+                expireDateFieldType: String,
+                clientConfiguration: String
+            },
+            Custom: {
+                className: String
+            }
         }]
     });
 

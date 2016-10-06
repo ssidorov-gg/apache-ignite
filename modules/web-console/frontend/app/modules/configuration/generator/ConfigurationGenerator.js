@@ -393,6 +393,12 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
             return cfg;
         }
 
+        // Generate checkpoint configurations.
+        static clusterCheckpoint(checkpointSpis, cfg = this.igniteConfigurationBean()) {
+
+            return cfg;
+        }
+
         // Generate collision group.
         static clusterCollision(collision, cfg = this.igniteConfigurationBean()) {
             let colSpi;

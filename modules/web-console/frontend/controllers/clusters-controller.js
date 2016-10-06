@@ -103,6 +103,12 @@ export default ['clustersController', [
                     else
                         $scope.backupItem.failoverSpi = {};
                 }
+                else if (field.type === 'checkpointSpi') {
+                    if (LegacyUtils.isDefined($scope.backupItem.checkpointSpi))
+                        $scope.backupItem.checkpointSpi.push({});
+                    else
+                        $scope.backupItem.checkpointSpi = [{}];
+                }
                 else
                     LegacyTable.tableNewItem(field);
             }
