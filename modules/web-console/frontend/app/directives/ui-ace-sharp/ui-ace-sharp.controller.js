@@ -15,13 +15,18 @@
  * limitations under the License.
  */
 
-export default ['$scope', 'GeneratorXml', function($scope, generator) {
+const SERVER_CFG = 'ServerConfigurationFactory';
+const CLIENT_CFG = 'ClientConfigurationFactory';
+
+export default ['$scope', 'IgniteSharpTransformer', function($scope, generator) {
     const ctrl = this;
 
     delete ctrl.data;
 
     // Set default generator
     ctrl.generator = (cluster) => {
-        return generator.cluster(cluster, $scope.cfg);
+        const type = $scope.cfg ? CLIENT_CFG : SERVER_CFG;
+
+        return generator.cluster(cluster, 'config', type, $scope.cfg);
     };
 }];

@@ -15,10 +15,12 @@
  * limitations under the License.
  */
 
-import templateUrl from './ui-ace-java.jade';
-import controller from './ui-ace-java.controller';
+import _ from 'lodash';
 
-export default ['igniteUiAceJava', [() => {
+import templateUrl from './ui-ace-spring.jade';
+import controller from './ui-ace-spring.controller';
+
+export default ['igniteUiAceSpring', [() => {
     const link = (scope, $el, attrs, [ctrl, igniteUiAceTabs, formCtrl, ngModelCtrl]) => {
         if (formCtrl && ngModelCtrl)
             formCtrl.$removeControl(ngModelCtrl);
@@ -27,6 +29,7 @@ export default ['igniteUiAceJava', [() => {
             scope.onLoad = (editor) => {
                 igniteUiAceTabs.onLoad(editor);
 
+                // Disable highlight in model switch.
                 scope.$watch('master', () => editor.attractAttention = false);
             };
         }
@@ -58,6 +61,6 @@ export default ['igniteUiAceJava', [() => {
         templateUrl,
         controller,
         controllerAs: 'ctrl',
-        require: ['igniteUiAceJava', '?^igniteUiAceTabs', '?^form', '?ngModel']
+        require: ['igniteUiAceSpring', '?^igniteUiAceTabs', '?^form', '?ngModel']
     };
 }]];

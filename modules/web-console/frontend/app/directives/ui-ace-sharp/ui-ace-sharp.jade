@@ -13,15 +13,10 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-.popover.summary-project-structure
-    h3.popover-title
-        label.labelField Project structure
-        button.close(id='summary-project-structure-close' ng-click='$hide()') &times;
-    .popover-content
-        treecontrol.tree-classic(tree-model='projectStructure' options='projectStructureOptions' expanded-nodes='projectStructureExpanded')
-            span(ng-switch='node.type')
-                span(ng-switch-when='folder')
-                    label {{node.name}}
-                span(ng-switch-when='file')
-                    i.fa.fa-file-text-o
-                    label {{node.name}}
+
+div(ng-if='ctrl.data' 
+    ignite-ace='{onLoad: onLoad, \
+             onChange: onChange, \
+             renderOptions: renderOptions, \
+             mode: "csharp"}'
+    ng-model='ctrl.data')

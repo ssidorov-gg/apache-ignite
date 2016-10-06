@@ -42,6 +42,28 @@ const VALID_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-
  * Utility service for various check on java types.
  */
 export default class JavaTypes {
+    static $inject = ['igniteClusterDefaults', 'igniteCacheDefaults', 'igniteIgfsDefaults'];
+
+    constructor(clusterDflts, cacheDflts, igfsDflts) {
+        this.enumClasses = _.uniq(this._enumClassesAcc(_.merge(clusterDflts, cacheDflts, igfsDflts), []));
+        this.shortEnumClasses = _.map(this.enumClasses, (cls) => this.shortClassName(cls));
+    }
+
+    _enumClassesAcc(obj, res) {
+        return _.reduce(obj, (acc, val, key) => {
+            if (key === 'clsName')
+                acc.push(val);
+            else if (_.isObject(val))
+                this._enumClassesAcc(val, acc);
+
+            return acc;
+        }, res);
+    }
+
+    nonEnum(shortClsName) {
+        return !_.includes(this.shortEnumClasses, shortClsName) && !_.includes(this.enumClasses, shortClsName);
+    }
+
     /**
      * @param clsName {String} Class name to check.
      * @returns {boolean} 'true' if provided class name is a not Java built in class.
@@ -58,6 +80,17 @@ export default class JavaTypes {
         const type = _.find(JAVA_CLASSES, (clazz) => clsName === clazz.short);
 
         return type ? type.full : clsName;
+    }
+
+    shortClassName(clsName) {
+        if (this.isJavaPrimitive(clsName))
+            return clsName;
+
+        const fullClsName = this.fullClassName(clsName);
+
+        const dotIdx = fullClsName.lastIndexOf('.');
+
+        return dotIdx > 0 ? fullClsName.substr(dotIdx + 1) : fullClsName;
     }
 
     /**
@@ -114,5 +147,18 @@ export default class JavaTypes {
      */
     isJavaPrimitive(clsName) {
         return _.includes(JAVA_PRIMITIVES, clsName);
+    }
+
+    /**
+     * Convert some name to valid java name.
+     *
+     * @param prefix To append to java name.
+     * @param name to convert.
+     * @returns {string} Valid java name.
+     */
+    toJavaName(prefix, name) {
+        const javaName = name ? this.shortClassName(name).replace(/[^A-Za-z_0-9]+/g, '_') : 'dflt';
+
+        return prefix + javaName.charAt(0).toLocaleUpperCase() + javaName.slice(1);
     }
 }

@@ -1627,19 +1627,24 @@ th[st-sort] {
 }
 
 .preview-legend {
-    top: -10px;
+    top: -13px;
     right: 20px;
     position: absolute;
     z-index: 900;
 
     a {
+        color: $input-color-placeholder;
         background-color: white;
         margin-left: 5px;
         font-size: 0.9em;
     }
 
-    .inactive {
-        color: $input-color-placeholder;
+    a + a {
+        margin-left: 10px
+    }
+
+    a.active {
+        color: $brand-primary;
     }
 }
 

@@ -106,4 +106,4 @@ include ../../../../../app/helpers/jade/mixins.jade
                 .settings-row
                     +checkbox('Swap enabled', model + '.swapEnabled', '"swapEnabled"', 'Flag indicating whether swap storage is enabled or not for this cache')
             .col-sm-6
-                +preview-xml-java(model, 'cacheMemory')
+                +preview(model, 'cacheMemory')

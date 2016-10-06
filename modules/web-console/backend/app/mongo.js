@@ -148,9 +148,6 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
             IGFS: {
                 igfs: {type: ObjectId, ref: 'Igfs'}
             },
-            OnNodes: {
-                nodeIds: [String]
-            },
             Custom: {
                 className: String
             }
@@ -218,7 +215,7 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                 deleteQuery: String
             },
             CacheHibernateBlobStoreFactory: {
-                hibernateProperties: [String]
+                hibernateProperties: [{name: String, value: String}]
             }
         },
         storeKeepBinary: Boolean,
@@ -248,8 +245,30 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
         readFromBackup: Boolean,
         copyOnRead: Boolean,
         maxConcurrentAsyncOperations: Number,
-        nearCacheEnabled: Boolean,
         nearConfiguration: {
+            enabled: Boolean,
+            nearStartSize: Number,
+            nearEvictionPolicy: {
+                kind: {type: String, enum: ['LRU', 'FIFO', 'SORTED']},
+                LRU: {
+                    batchSize: Number,
+                    maxMemorySize: Number,
+                    maxSize: Number
+                },
+                FIFO: {
+                    batchSize: Number,
+                    maxMemorySize: Number,
+                    maxSize: Number
+                },
+                SORTED: {
+                    batchSize: Number,
+                    maxMemorySize: Number,
+                    maxSize: Number
+                }
+            }
+        },
+        clientNearConfiguration: {
+            enabled: Boolean,
             nearStartSize: Number,
             nearEvictionPolicy: {
                 kind: {type: String, enum: ['LRU', 'FIFO', 'SORTED']},

@@ -17,8 +17,8 @@
 
 // Controller for Caches screen.
 export default ['cachesController', [
-    '$scope', '$http', '$state', '$filter', '$timeout', '$modal', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteConfirm', 'IgniteClone', 'IgniteLoading', 'IgniteModelNormalizer', 'IgniteUnsavedChangesGuard', 'igniteConfigurationResource', 'IgniteErrorPopover', 'IgniteFormUtils',
-    function($scope, $http, $state, $filter, $timeout, $modal, LegacyUtils, Messages, Confirm, Clone, Loading, ModelNormalizer, UnsavedChangesGuard, Resource, ErrorPopover, FormUtils) {
+    '$scope', '$http', '$state', '$filter', '$timeout', '$modal', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteConfirm', 'IgniteClone', 'IgniteLoading', 'IgniteModelNormalizer', 'IgniteUnsavedChangesGuard', 'IgniteConfigurationResource', 'IgniteErrorPopover', 'IgniteFormUtils', 'IgniteLegacyTable',
+    function($scope, $http, $state, $filter, $timeout, $modal, LegacyUtils, Messages, Confirm, Clone, Loading, ModelNormalizer, UnsavedChangesGuard, Resource, ErrorPopover, FormUtils, LegacyTable) {
         UnsavedChangesGuard.install($scope);
 
         const emptyCache = {empty: true};
@@ -94,6 +94,73 @@ export default ['cachesController', [
                 return item.offHeapMaxMemory = value;
 
             item.offHeapMaxMemory = item.offHeapMaxMemory > 0 ? item.offHeapMaxMemory : null;
+        };
+
+        $scope.tablePairSave = LegacyTable.tablePairSave;
+        $scope.tablePairSaveVisible = LegacyTable.tablePairSaveVisible;
+        $scope.tableNewItem = LegacyTable.tableNewItem;
+        $scope.tableNewItemActive = LegacyTable.tableNewItemActive;
+
+        $scope.tableStartEdit = function(item, field, index) {
+            if ($scope.tableReset(true))
+                LegacyTable.tableStartEdit(item, field, index, $scope.tableSave);
+        };
+
+        $scope.tableEditing = LegacyTable.tableEditing;
+
+        $scope.tableSave = function(field, index, stopEdit) {
+            if (LegacyTable.tablePairSaveVisible(field, index))
+                return LegacyTable.tablePairSave($scope.tablePairValid, $scope.backupItem, field, index, stopEdit);
+
+            return true;
+        };
+
+        $scope.tableRemove = function(item, field, index) {
+            if ($scope.tableReset(true))
+                LegacyTable.tableRemove(item, field, index);
+        };
+
+        $scope.tableReset = (trySave) => {
+            const field = LegacyTable.tableField();
+
+            if (trySave && LegacyUtils.isDefined(field) && !$scope.tableSave(field, LegacyTable.tableEditedRowIndex(), true))
+                return false;
+
+            LegacyTable.tableReset();
+
+            return true;
+        };
+
+        $scope.hibernatePropsTbl = {
+            type: 'hibernate',
+            model: 'cacheStoreFactory.CacheHibernateBlobStoreFactory.hibernateProperties',
+            focusId: 'Property',
+            ui: 'table-pair',
+            keyName: 'name',
+            valueName: 'value',
+            save: $scope.tableSave
+        };
+
+        $scope.tablePairValid = function(item, field, index, stopEdit) {
+            const pairValue = LegacyTable.tablePairValue(field, index);
+
+            const model = _.get(item, field.model);
+
+            if (!_.isNil(model)) {
+                const idx = _.findIndex(model, (pair) => {
+                    return pair.name === pairValue.key;
+                });
+
+                // Found duplicate by key.
+                if (idx >= 0 && idx !== index) {
+                    if (stopEdit)
+                        return false;
+
+                    return ErrorPopover.show(LegacyTable.tableFieldId(index, 'KeyProperty'), 'Property with such name already exists!', $scope.ui, 'query');
+                }
+            }
+
+            return true;
         };
 
         Loading.start('loadingCachesScreen');

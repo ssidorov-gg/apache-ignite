@@ -63,12 +63,13 @@ import igniteOnEnterFocusMove from './directives/on-enter-focus-move.directive.j
 import igniteOnEscape from './directives/on-escape.directive.js';
 import igniteOnFocusOut from './directives/on-focus-out.directive.js';
 import igniteRestoreInputFocus from './directives/restore-input-focus.directive.js';
-import igniteUiAceDocker from './directives/ui-ace-docker/ui-ace-docker.directive';
 import igniteUiAceJava from './directives/ui-ace-java/ui-ace-java.directive';
+import igniteUiAceSpring from './directives/ui-ace-spring/ui-ace-spring.directive';
+import igniteUiAceCSharp from './directives/ui-ace-sharp/ui-ace-sharp.directive';
 import igniteUiAcePojos from './directives/ui-ace-pojos/ui-ace-pojos.directive';
 import igniteUiAcePom from './directives/ui-ace-pom/ui-ace-pom.directive';
+import igniteUiAceDocker from './directives/ui-ace-docker/ui-ace-docker.directive';
 import igniteUiAceTabs from './directives/ui-ace-tabs.directive';
-import igniteUiAceXml from './directives/ui-ace-xml/ui-ace-xml.directive';
 import igniteRetainSelection from './directives/retain-selection.directive';
 
 // Services.
@@ -97,19 +98,19 @@ import hasPojo from './filters/hasPojo.filter';
 import duration from './filters/duration.filter';
 
 // Generators
-import $generatorCommon from 'generator/generator-common';
-import $generatorJava from 'generator/generator-java';
-import $generatorOptional from 'generator/generator-optional';
-import $generatorProperties from 'generator/generator-properties';
-import $generatorReadme from 'generator/generator-readme';
-import $generatorXml from 'generator/generator-xml';
+import $generatorCommon from './modules/configuration/generator/generator-common';
+import $generatorJava from './modules/configuration/generator/generator-java';
+import $generatorOptional from './modules/configuration/generator/generator-optional';
+import $generatorProperties from './modules/configuration/generator/generator-properties';
+import $generatorReadme from './modules/configuration/generator/generator-readme';
+import $generatorSpring from './modules/configuration/generator/generator-spring';
 
 window.$generatorCommon = $generatorCommon;
 window.$generatorJava = $generatorJava;
 window.$generatorOptional = $generatorOptional;
 window.$generatorProperties = $generatorProperties;
 window.$generatorReadme = $generatorReadme;
-window.$generatorXml = $generatorXml;
+window.$generatorSpring = $generatorSpring;
 
 // Controllers
 import admin from 'controllers/admin-controller';
@@ -188,12 +189,13 @@ angular
 .directive(...igniteOnEnter)
 .directive(...igniteOnEnterFocusMove)
 .directive(...igniteOnEscape)
-.directive(...igniteUiAceDocker)
+.directive(...igniteUiAceSpring)
 .directive(...igniteUiAceJava)
+.directive(...igniteUiAceCSharp)
 .directive(...igniteUiAcePojos)
 .directive(...igniteUiAcePom)
+.directive(...igniteUiAceDocker)
 .directive(...igniteUiAceTabs)
-.directive(...igniteUiAceXml)
 .directive(...igniteRetainSelection)
 .directive('igniteOnFocusOut', igniteOnFocusOut)
 .directive('igniteRestoreInputFocus', igniteRestoreInputFocus)

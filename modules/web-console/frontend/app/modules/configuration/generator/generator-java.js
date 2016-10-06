@@ -2919,8 +2919,6 @@ $generatorJava.clusterConfiguration = function(cluster, clientNearCfg, res) {
 // Generate loading of secret properties file.
 $generatorJava.tryLoadSecretProperties = function(cluster, res) {
     if ($generatorCommon.secretPropertiesNeeded(cluster)) {
-        res.importClass('org.apache.ignite.configuration.IgniteConfiguration');
-
         $generatorJava.declareVariableCustom(res, 'props', 'java.util.Properties', 'new Properties()', 'private static final');
 
         res.startBlock('static {');
