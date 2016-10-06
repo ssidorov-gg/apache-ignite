@@ -165,6 +165,7 @@ public class HadoopV2TaskContext extends HadoopTaskContext {
         ClassLoader oldLdr = HadoopCommonUtils.setContextClassLoader(getClass().getClassLoader());
 
         try {
+            final long t0 = System.currentTimeMillis();
             JobConf jobConf = new JobConf();
 
             try {
@@ -173,6 +174,10 @@ public class HadoopV2TaskContext extends HadoopTaskContext {
             catch (IOException e) {
                 throw new IgniteCheckedException(e);
             }
+            final long t = System.currentTimeMillis() - t0;
+
+            if (t > 1000)
+                System.out.println("######## HadoopV2TaskContext cfg creation took " + t + " millis.");
 
             // For map-reduce jobs prefer local writes.
             jobConf.setBooleanIfUnset(PARAM_IGFS_PREFER_LOCAL_WRITES, true);

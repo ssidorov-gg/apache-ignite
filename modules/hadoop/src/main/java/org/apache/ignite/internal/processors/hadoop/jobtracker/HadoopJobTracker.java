@@ -28,7 +28,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.cache.event.CacheEntryEvent;
 import javax.cache.event.CacheEntryUpdatedListener;
@@ -150,7 +152,9 @@ public class HadoopJobTracker extends HadoopComponent {
 
         busyLock = new GridSpinReadWriteLock();
 
-        evtProcSvc = Executors.newFixedThreadPool(1);
+        // TODO: experimantal: limit this executor queue?
+        evtProcSvc = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+        //Executors.newFixedThreadPool(1);
 
         assert jobCls == null;
 
@@ -238,6 +242,16 @@ public class HadoopJobTracker extends HadoopComponent {
                         return;
 
                     try {
+                        int size = ((ThreadPoolExecutor)evtProcSvc).getQueue().size();
+
+                        int sz = -1;
+
+                        if (evts instanceof Collection)
+                            sz = ((Collection)evts).size();
+
+                        System.out.println("evtProcSvc queue size = " + size
+                            + "; submitted processJobMetadataUpdates(" + sz + ");");
+
                         // Must process query callback in a separate thread to avoid deadlocks.
                         evtProcSvc.submit(new EventHandler() {
                             @Override protected void body() throws IgniteCheckedException {

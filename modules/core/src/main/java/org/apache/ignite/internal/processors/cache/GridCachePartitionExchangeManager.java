@@ -1195,7 +1195,7 @@ public class GridCachePartitionExchangeManager<K, V> extends GridCacheSharedMana
 
                         if (longRunningOpsDumpCnt < GridDhtPartitionsExchangeFuture.DUMP_PENDING_OBJECTS_THRESHOLD) {
                             U.warn(log, "Found long running transaction [startTime=" + formatTime(tx.startTime()) +
-                                ", curTime=" + formatTime(curTime) + ", tx=" + tx + ']');
+                                ", curTime=" + formatTime(curTime) /*+ ", tx=" + tx */+ ']');
                         }
                         else
                             break;
@@ -1212,7 +1212,7 @@ public class GridCachePartitionExchangeManager<K, V> extends GridCacheSharedMana
 
                         if (longRunningOpsDumpCnt < GridDhtPartitionsExchangeFuture.DUMP_PENDING_OBJECTS_THRESHOLD) {
                             U.warn(log, "Found long running cache future [startTime=" + formatTime(fut.startTime()) +
-                                ", curTime=" + formatTime(curTime) + ", fut=" + fut + ']');
+                                ", curTime=" + formatTime(curTime) + /*", fut=" + fut +*/ ']');
                         }
                         else
                             break;
@@ -1225,7 +1225,7 @@ public class GridCachePartitionExchangeManager<K, V> extends GridCacheSharedMana
 
                         if (longRunningOpsDumpCnt < GridDhtPartitionsExchangeFuture.DUMP_PENDING_OBJECTS_THRESHOLD) {
                             U.warn(log, "Found long running cache future [startTime=" + formatTime(fut.startTime()) +
-                                ", curTime=" + formatTime(curTime) + ", fut=" + fut + ']');
+                                ", curTime=" + formatTime(curTime) + /*", fut=" + fut + */ ']');
                         }
                         else
                             break;

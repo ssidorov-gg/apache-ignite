@@ -355,8 +355,9 @@ public abstract class GridCacheAdapter<K, V> implements IgniteInternalCache<K, V
             }
         }
 
-        if (ctx.config().getMaxConcurrentAsyncOperations() > 0)
-            asyncOpsSem = new Semaphore(ctx.config().getMaxConcurrentAsyncOperations());
+        // TODO: !! experimantal semaphore is switched off:
+//        if (ctx.config().getMaxConcurrentAsyncOperations() > 0)
+//            asyncOpsSem = new Semaphore(ctx.config().getMaxConcurrentAsyncOperations());
 
         init();
 
@@ -4593,8 +4594,10 @@ public abstract class GridCacheAdapter<K, V> implements IgniteInternalCache<K, V
      */
     @Nullable protected <T> IgniteInternalFuture<T> asyncOpAcquire() {
         try {
-            if (asyncOpsSem != null)
-                asyncOpsSem.acquire();
+            if (asyncOpsSem != null) {
+              asyncOpsSem.acquire();
+              System.out.println("acquired: " + asyncOpsSem.availablePermits() + " == " + Thread.currentThread().getName() );
+            }
 
             return null;
         }

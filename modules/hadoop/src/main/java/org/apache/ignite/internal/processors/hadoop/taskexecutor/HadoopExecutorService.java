@@ -92,7 +92,9 @@ public class HadoopExecutorService {
         assert maxTasks > 0 : maxTasks;
         assert maxQueue > 0 : maxQueue;
 
+        System.out.println("### HadoopExecutorService: Max tasks: " + maxTasks);
         this.maxTasks = maxTasks;
+        System.out.println("### HadoopExecutorService: Max queue: " + maxQueue);
         this.queue = new LinkedBlockingQueue<>(maxQueue);
         this.gridName = gridName;
         this.log = log.getLogger(HadoopExecutorService.class);
@@ -129,6 +131,8 @@ public class HadoopExecutorService {
                 if (shutdown)
                     return; // Rejected due to shutdown.
             }
+
+            System.out.println("HadooExecutorService#submit: queue size = " + queue.size() + ", task = " + task);
         }
         catch (InterruptedException e) {
             Thread.currentThread().interrupt();

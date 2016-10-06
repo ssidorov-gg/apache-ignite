@@ -95,7 +95,11 @@ public class GridUnsafeMemory {
 
             long max = total;
 
-            return mem <= max;
+            boolean ret = (mem <= max);
+
+            System.out.println("## GUM "+mem/(1024 * 1024)+"m  -- reserve: " + size + " -> " + ret);
+
+            return ret;
         }
         finally {
             long mem = allocated.get();

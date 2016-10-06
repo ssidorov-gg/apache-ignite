@@ -90,6 +90,8 @@ public class HadoopPerformanceCounter extends HadoopCounterAdapter {
 
     /** {@inheritDoc} */
     @Override protected void writeValue(ObjectOutput out) throws IOException {
+        System.out.println("##### HadoopPerformanceCounter#writeValue: evts size = " + evts.size());
+
         U.writeCollection(out, evts);
     }
 
@@ -105,7 +107,8 @@ public class HadoopPerformanceCounter extends HadoopCounterAdapter {
 
     /** {@inheritDoc} */
     @Override public void merge(HadoopCounter cntr) {
-        evts.addAll(((HadoopPerformanceCounter)cntr).evts);
+        // TODO : !!! temporary disabled to prevent huge memory consumption.
+        // evts.addAll(((HadoopPerformanceCounter)cntr).evts);
     }
 
     /**

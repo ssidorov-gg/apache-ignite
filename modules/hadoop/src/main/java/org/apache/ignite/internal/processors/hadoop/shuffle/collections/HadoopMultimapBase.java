@@ -105,8 +105,12 @@ public abstract class HadoopMultimapBase implements HadoopMultimap {
 
     /** {@inheritDoc} */
     @Override public void close() {
+        System.out.println("### HadoopMultimapBase# close() ");
+
         for (Page page : allPages)
             deallocate(page);
+
+        allPages.clear(); // NB -- added by Ivan.
     }
 
     /**
@@ -242,8 +246,11 @@ public abstract class HadoopMultimapBase implements HadoopMultimap {
 
             curPage = new Page(newPagePtr, newPageSize);
 
-            if (oldPage != null)
+            if (oldPage != null) {
                 allPages.add(oldPage);
+
+                System.out.println("     HadoopMulimapBase: page added, queue size = " + allPages.size());
+            }
 
             return b.move(requestedSize);
         }
@@ -354,8 +361,11 @@ public abstract class HadoopMultimapBase implements HadoopMultimap {
 
         /** {@inheritDoc} */
         @Override public void close() throws IgniteCheckedException {
-            if (curPage != null)
+            if (curPage != null) {
                 allPages.add(curPage);
+
+                System.out.println("     HadoopMulimapBase: page added (close), queue size = " + allPages.size());
+            }
 
             keySer.close();
             valSer.close();
