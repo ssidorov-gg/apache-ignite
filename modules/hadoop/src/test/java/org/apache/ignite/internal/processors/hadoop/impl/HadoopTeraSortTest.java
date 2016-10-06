@@ -29,10 +29,9 @@ public class HadoopTeraSortTest extends HadoopAbstractSelfTest {
     //protected static final String USER = "ivan";
 
     /**
-     * Data size in bytes X = NUM_LINES * 100;
+     * NB: Job data size in bytes X = NUM_LINES * 100;
      */
-    //private static final int NUM_LINES = 100_000_000;
-    private static final int NUM_LINES = 1_000_000;
+    private static final int NUM_LINES = 60_000_000;
 
     private static final String FS_BASE = "hdfs://localhost:9000";
 
