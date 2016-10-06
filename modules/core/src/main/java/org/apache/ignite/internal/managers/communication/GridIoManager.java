@@ -57,6 +57,8 @@ import org.apache.ignite.internal.managers.GridManagerAdapter;
 import org.apache.ignite.internal.managers.deployment.GridDeployment;
 import org.apache.ignite.internal.managers.eventstorage.GridEventStorageManager;
 import org.apache.ignite.internal.managers.eventstorage.GridLocalEventListener;
+import org.apache.ignite.internal.processors.cache.distributed.dht.atomic.GridDhtAtomicUpdateResponse;
+import org.apache.ignite.internal.processors.cache.distributed.dht.atomic.GridNearAtomicUpdateResponse;
 import org.apache.ignite.internal.processors.platform.message.PlatformMessageFilter;
 import org.apache.ignite.internal.processors.timeout.GridTimeoutObject;
 import org.apache.ignite.internal.util.GridBoundedConcurrentLinkedHashSet;
@@ -220,6 +222,8 @@ public class GridIoManager extends GridManagerAdapter<CommunicationSpi<Serializa
     /** */
     private final AtomicLong ioTestId = new AtomicLong();
 
+    private final ConcurrentLinkedBlockingQueue resQ;
+
     /**
      * @param ctx Grid kernal context.
      */
@@ -236,6 +240,29 @@ public class GridIoManager extends GridManagerAdapter<CommunicationSpi<Serializa
         synchronized (sysLsnrsMux) {
             sysLsnrs = new GridMessageListener[GridTopic.values().length];
         }
+
+        resQ = new ConcurrentLinkedBlockingQueue();
+
+        Thread t = new Thread() {
+            public void run() {
+                try {
+                    while (true) {
+                        Runnable r = (Runnable)resQ.take();
+
+                        r.run();
+                    }
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+
+                    System.exit(1);
+                }
+            }
+        };
+
+        resQ.setConsumerThread(t);
+        t.setDaemon(true);
+        t.start();
     }
 
     /**
@@ -947,15 +974,26 @@ public class GridIoManager extends GridManagerAdapter<CommunicationSpi<Serializa
             }
         };
 
-        if (msg.topicOrdinal() == TOPIC_IO_TEST.ordinal()) {
-            IgniteIoTestMessage msg0 = (IgniteIoTestMessage)msg.message();
+//        if (msg.topicOrdinal() == TOPIC_IO_TEST.ordinal()) {
+//            IgniteIoTestMessage msg0 = (IgniteIoTestMessage)msg.message();
 
-            if (msg0.processFromNioThread()) {
-                c.run();
+//            if (!msg0.request()) {
+//                resQ.offer(c);
+//
+//                return;
+//            }
+//            if (msg0.processFromNioThread()) {
+//                c.run();
+//
+//                return;
+//            }
+//        }
 
-                return;
-            }
-        }
+//        if (msg.message() instanceof GridNearAtomicUpdateResponse || msg.message() instanceof GridDhtAtomicUpdateResponse) {
+//            resQ.offer(c);
+//
+//            return;
+//        }
 
         try {
             pool(plc).execute(c);
