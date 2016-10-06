@@ -500,6 +500,8 @@ public class HadoopJobTracker extends HadoopComponent {
         if (!busyLock.tryReadLock())
             return;
 
+        System.out.println(" ---> task finished callback [info=" + info + ", status=" + status + ']');
+
         try {
             assert status.state() != RUNNING;
 

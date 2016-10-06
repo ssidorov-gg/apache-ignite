@@ -301,8 +301,15 @@ public class TeraGen extends Configured implements Tool {
     return job.waitForCompletion(true) ? 0 : 1;
   }
 
-  public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new Configuration(), new TeraGen(), args);
+  public static void main(String... args) throws Exception {
+    int res = mainImpl(args);
+
     System.exit(res);
   }
+
+    public static int mainImpl(String... args) throws Exception {
+        int res = ToolRunner.run(new Configuration(), new TeraGen(), args);
+
+        return res;
+    }
 }

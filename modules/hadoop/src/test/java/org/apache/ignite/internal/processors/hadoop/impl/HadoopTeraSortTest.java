@@ -11,12 +11,13 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.ignite.configuration.HadoopConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
-import org.apache.ignite.igfs.IgfsPath;
 import org.apache.ignite.internal.IgniteInternalFuture;
 import org.apache.ignite.internal.processors.hadoop.HadoopJobId;
+import org.apache.ignite.internal.processors.hadoop.impl.examples.terasort.TeraGen;
 import org.apache.ignite.internal.processors.hadoop.impl.examples.terasort.TeraInputFormat;
 import org.apache.ignite.internal.processors.hadoop.impl.examples.terasort.TeraOutputFormat;
 import org.apache.ignite.internal.processors.hadoop.impl.examples.terasort.TeraSort;
+import org.apache.ignite.internal.processors.hadoop.impl.examples.terasort.TeraValidate;
 import org.apache.ignite.internal.processors.hadoop.impl.fs.HadoopFileSystemsUtils;
 import static org.apache.ignite.internal.processors.hadoop.impl.HadoopUtils.createJobInfo;
 
@@ -24,23 +25,39 @@ import static org.apache.ignite.internal.processors.hadoop.impl.HadoopUtils.crea
  *
  */
 public class HadoopTeraSortTest extends HadoopAbstractSelfTest {
+    /** The user to run Hadoop job on behalf of. */
+    //protected static final String USER = "ivan";
+
+    /**
+     * Data size in bytes X = NUM_LINES * 100;
+     */
+    //private static final int NUM_LINES = 100_000_000;
+    private static final int NUM_LINES = 1_000_000;
+
+    private static final String FS_BASE = "hdfs://localhost:9000";
+
+    private static final String GENERATE_OUT_DIR = FS_BASE + "/tmp/tera-generated/";
+    private static final String SORT_OUT_DIR     = FS_BASE + "/tmp/tera-sorted/";
+    private static final String VALIDATE_OUT_DIR = FS_BASE + "/tmp/tera-validated/";
+
     /** {@inheritDoc} */
     @Override protected void beforeTestsStarted() throws Exception {
         super.beforeTestsStarted();
 
-        Configuration cfg = new Configuration();
-
-        setupFileSystems(cfg);
-
-        // Init cache by correct LocalFileSystem implementation
-        FileSystem.getLocal(cfg);
+//        Configuration cfg = new Configuration();
+//
+//        setupFileSystems(cfg);
+//
+//        // Init cache by correct LocalFileSystem implementation
+//        FileSystem.getLocal(cfg);
     }
 
     @Override protected void setupFileSystems(Configuration cfg) {
-        cfg.set("fs.defaultFS", "file:///");
-
-        // TODO: Not sere if we really need that:
-        HadoopFileSystemsUtils.setupFileSystems(cfg);
+//        //cfg.set("fs.defaultFS", "file:///");
+//        cfg.set("fs.defaultFS", FS_BASE);
+//
+//        // TODO: Not sure if we really need that:
+//        HadoopFileSystemsUtils.setupFileSystems(cfg);
     }
 
     /** {@inheritDoc} */
@@ -53,28 +70,25 @@ public class HadoopTeraSortTest extends HadoopAbstractSelfTest {
         return false;
     }
 
-    /** The user to run Hadoop job on behalf of. */
-    protected static final String USER = "vasya";
-
     /** {@inheritDoc} */
     @Override protected int gridCount() {
         return 1;
     } // initial was 3
 
     /**
-     * Does actual test job
-     *
-     * @param useNewMapper flag to use new mapper API.
-     * @param useNewCombiner flag to use new combiner API.
-     * @param useNewReducer flag to use new reducer API.
+     * Does actual test TeraSort job Through Ignite API
      */
-    protected final void doTest(IgfsPath inFile, boolean useNewMapper, boolean useNewCombiner, boolean useNewReducer)
-        throws Exception {
+    protected final void teraSort() throws Exception {
+        System.out.println("TeraSort ===============================================================");
+
+        getFileSystem().delete(new Path(SORT_OUT_DIR), true);
+
         JobConf jobConf = new JobConf();
 
-        jobConf.setUser(USER);
+        //jobConf.setUser(USER);
+        jobConf.set("fs.defaultFS", FS_BASE);
 
-        Job job = fillConfig(jobConf); //Job.getInstance(jobConf);
+        Job job = setupConfig(jobConf); //Job.getInstance(jobConf);
 
         HadoopJobId jobId = new HadoopJobId(UUID.randomUUID(), 1);
 
@@ -83,11 +97,27 @@ public class HadoopTeraSortTest extends HadoopAbstractSelfTest {
         fut.get();
     }
 
-    private Job fillConfig(JobConf conf) throws Exception {
+    FileSystem getFileSystem() throws Exception{
+        return FileSystem.get(new URI(FS_BASE), new Configuration());
+    }
+
+    private void teraGenerate() throws Exception {
+        System.out.println("TeraGenerate ===============================================================");
+        getFileSystem().delete(new Path(GENERATE_OUT_DIR), true);
+
+        // Generate input data:
+        int ret = TeraGen.mainImpl(String.valueOf(NUM_LINES), GENERATE_OUT_DIR);
+
+        assertEquals(0, ret);
+
+        //getFileSystem().listStatus(); TODO: list to make sure gen ok.
+    }
+
+    private Job setupConfig(JobConf conf) throws Exception {
             Job job = Job.getInstance(conf);
 
-            Path inputDir = new Path("./tera-generated/");
-            Path outputDir = new Path("./tera-sorted/");
+            Path inputDir = new Path(GENERATE_OUT_DIR);
+            Path outputDir = new Path(SORT_OUT_DIR);
 
             boolean useSimplePartitioner = TeraSort.getUseSimplePartitioner(job);
             TeraInputFormat.setInputPaths(job, inputDir);
@@ -126,6 +156,18 @@ public class HadoopTeraSortTest extends HadoopAbstractSelfTest {
             return job;
         }
 
+    private void teraValidate() throws Exception {
+        System.out.println("TeraValidate ===============================================================");
+
+        getFileSystem().delete(new Path(VALIDATE_OUT_DIR), true);
+
+        // Generate input data:
+        int ret = TeraValidate.mainImpl(SORT_OUT_DIR, VALIDATE_OUT_DIR);
+
+        assertEquals(0, ret);
+    }
+
+
     /** {@inheritDoc} */
     @Override protected void beforeTest() throws Exception {
         super.beforeTest();
@@ -134,7 +176,11 @@ public class HadoopTeraSortTest extends HadoopAbstractSelfTest {
     }
 
     public void testTeraSort() throws Exception {
-         doTest(null, false, false, false);
+        teraGenerate();
+
+        teraSort();
+
+        teraValidate();
     }
 
     @Override protected IgniteConfiguration getConfiguration(String gridName) throws Exception {
@@ -156,5 +202,9 @@ public class HadoopTeraSortTest extends HadoopAbstractSelfTest {
         //hadoopCfg.setMaxParallelTasks(); // 16 = ProcCodes * 2 -- default
 
         return hadoopCfg;
+    }
+
+    @Override protected long getTestTimeout() {
+        return 30 * 60 * 1000; // 30 min
     }
 }

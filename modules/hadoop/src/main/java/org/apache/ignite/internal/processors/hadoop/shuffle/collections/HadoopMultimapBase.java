@@ -47,7 +47,7 @@ public abstract class HadoopMultimapBase implements HadoopMultimap {
     protected final int pageSize;
 
     /** */
-    private final Collection<Page> allPages = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Page> allPages = new ConcurrentLinkedQueue<>();
 
     /**
      * @param jobInfo Job info.
@@ -105,12 +105,18 @@ public abstract class HadoopMultimapBase implements HadoopMultimap {
 
     /** {@inheritDoc} */
     @Override public void close() {
-        System.out.println("### HadoopMultimapBase# close() ");
+        Page page;
 
-        for (Page page : allPages)
+        while (true) {
+            page = allPages.poll();
+
+            if (page == null)
+                break;
+
             deallocate(page);
+        }
 
-        allPages.clear(); // NB -- added by Ivan.
+        System.out.println("### HadoopMultimapBase#close(): " + allPages.size());
     }
 
     /**

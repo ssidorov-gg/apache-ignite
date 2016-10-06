@@ -120,7 +120,11 @@ public class GridUnsafeMemory {
      * @throws GridOffHeapOutOfMemoryException If Memory could not be allocated.
      */
     public long allocate(long size) throws GridOffHeapOutOfMemoryException {
-        return allocate(size, false, false);
+        long x = allocate(size, false, false);
+
+        System.out.println("    allocated: " + allocated.get() / (1024 * 1024) + " m ");
+
+        return x;
     }
 
     /**

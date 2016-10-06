@@ -181,9 +181,19 @@ public class TeraValidate extends Configured implements Tool {
   /**
    * @param args
    */
-  public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new Configuration(), new TeraValidate(), args);
+  public static void main(String... args) throws Exception {
+    int res = mainImpl(args);
+
     System.exit(res);
   }
+
+    /*
+     * To run the tool in tests.
+     */
+    public static int mainImpl(String... args) throws Exception {
+        int res = ToolRunner.run(new Configuration(), new TeraValidate(), args);
+
+        return res;
+    }
 
 }
