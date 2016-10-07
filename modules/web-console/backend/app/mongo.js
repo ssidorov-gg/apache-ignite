@@ -699,7 +699,7 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                 checkpointListener: String
             },
             Cache: {
-                cacheName: String,
+                cache: {type: ObjectId, ref: 'Cache'},
                 checkpointListener: String
             },
             S3: {
@@ -711,7 +711,6 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                     className: String
                 },
                 bucketNameSuffix: String,
-                checkpointListener: String,
                 clientConfiguration: {
                     protocol: {type: String, enum: ['http', 'https']},
                     maxConnections: Number,
@@ -756,7 +755,8 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                     dnsResolver: String,
                     responseMetadataCacheSize: Number,
                     secureRandom: String
-                }
+                },
+                checkpointListener: String
             },
             JDBC: {
                 dataSourceBean: String,
@@ -764,7 +764,6 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                     type: String,
                     enum: ['Generic', 'Oracle', 'DB2', 'SQLServer', 'MySQL', 'PostgreSQL', 'H2']
                 },
-                numberOfRetries: Number,
                 checkpointTableName: String,
                 keyFieldName: String,
                 keyFieldType: String,
@@ -772,7 +771,8 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                 valueFieldType: String,
                 expireDateFieldName: String,
                 expireDateFieldType: String,
-                clientConfiguration: String
+                numberOfRetries: Number,
+                checkpointListener: String
             },
             Custom: {
                 className: String

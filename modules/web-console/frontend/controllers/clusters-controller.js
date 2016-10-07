@@ -155,6 +155,8 @@ export default ['clustersController', [
             $scope.backupItem.failoverSpi.splice(idx, 1);
         };
 
+        $scope.supportedJdbcTypes = LegacyUtils.mkOptions(LegacyUtils.SUPPORTED_JDBC_TYPES);
+
         // We need to initialize backupItem with empty object in order to properly used from angular directives.
         $scope.backupItem = emptyCluster;
 
