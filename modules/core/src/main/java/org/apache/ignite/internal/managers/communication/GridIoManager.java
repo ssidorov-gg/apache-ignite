@@ -989,11 +989,11 @@ public class GridIoManager extends GridManagerAdapter<CommunicationSpi<Serializa
 //            }
 //        }
 
-//        if (msg.message() instanceof GridNearAtomicUpdateResponse || msg.message() instanceof GridDhtAtomicUpdateResponse) {
-//            resQ.offer(c);
-//
-//            return;
-//        }
+        if (msg.message() instanceof GridNearAtomicUpdateResponse || msg.message() instanceof GridDhtAtomicUpdateResponse) {
+            resQ.offer(c);
+
+            return;
+        }
 
         try {
             pool(plc).execute(c);
