@@ -17,7 +17,7 @@
 
 import DFLT_DIALECTS from 'app/data/dialects.json';
 
-import { EmptyBean, Bean, MethodBean } from './Beans';
+import { EmptyBean, Bean } from './Beans';
 
 export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'igniteIgfsDefaults', (JavaTypes, clusterDflts, cacheDflts, igfsDflts) => {
     class ConfigurationGenerator {
@@ -30,11 +30,11 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
         }
 
         static cacheConfigurationBean(cache) {
-            return new Bean('org.apache.ignite.configuration.CacheConfiguration', 'cache', cache, cacheDflts);
+            return new Bean('org.apache.ignite.configuration.CacheConfiguration', 'ccfg', cache, cacheDflts);
         }
 
         static domainConfigurationBean(domain) {
-            return new Bean('org.apache.ignite.cache.store.jdbc.JdbcType', 'type', domain, cacheDflts);
+            return new Bean('org.apache.ignite.cache.QueryEntity', 'qryEntity', domain, cacheDflts);
         }
 
         static discoveryConfigurationBean(discovery) {
@@ -45,10 +45,10 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
          * Function to generate ignite configuration.
          *
          * @param {Object} cluster Cluster to process.
-         * @param {Boolean} server
+         * @param {Boolean} client
          * @return {Bean} Generated ignite configuration.
          */
-        static igniteConfiguration(cluster, server) {
+        static igniteConfiguration(cluster, client) {
             const cfg = this.igniteConfigurationBean(cluster);
 
             this.clusterGeneral(cluster, cfg);
@@ -69,14 +69,13 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
             this.clusterTime(cluster, cfg);
             this.clusterPools(cluster, cfg);
             this.clusterTransactions(cluster.transactionConfiguration, cfg);
-            this.clusterCaches(cluster, cluster.caches, cluster.igfss, server, cfg);
             this.clusterSsl(cluster, cfg);
-
-            // TODO IGNITE-2052
-            // if (server)
-            //     $generatorSpring.igfss(cluster.igfss, res);
-
             this.clusterUserAttributes(cluster, cfg);
+
+            this.clusterCaches(cluster, cluster.caches, cluster.igfss, client, cfg);
+
+            if (!client)
+                this.igfss(cluster.igfss, cfg);
 
             return cfg;
         }
@@ -91,48 +90,48 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
             switch (dialect) {
                 case 'Generic':
                     dsBean = new Bean('com.mchange.v2.c3p0.ComboPooledDataSource', id, {})
-                        .property('Property', 'jdbcUrl', `${id}.jdbc.url`);
+                        .property('PROPERTY', 'jdbcUrl', `${id}.jdbc.url`);
 
                     break;
                 case 'Oracle':
                     dsBean = new Bean('oracle.jdbc.pool.OracleDataSource', id, {})
-                        .property('Property', 'URL', `${id}.jdbc.url`);
+                        .property('PROPERTY', 'URL', `${id}.jdbc.url`);
 
                     break;
                 case 'DB2':
                     dsBean = new Bean('com.ibm.db2.jcc.DB2DataSource', id, {})
-                        .property('Property', 'serverName', `${id}.jdbc.server_name`)
-                        .property('Property', 'portNumber', `${id}.jdbc.port_number`)
-                        .property('Property', 'databaseName', `${id}.jdbc.database_name`)
-                        .property('Property', 'driverType', `${id}.jdbc.driver_type`);
+                        .property('PROPERTY', 'serverName', `${id}.jdbc.server_name`)
+                        .property('PROPERTY', 'portNumber', `${id}.jdbc.port_number`)
+                        .property('PROPERTY', 'databaseName', `${id}.jdbc.database_name`)
+                        .property('PROPERTY', 'driverType', `${id}.jdbc.driver_type`);
 
                     break;
                 case 'SQLServer':
                     dsBean = new Bean('com.microsoft.sqlserver.jdbc.SQLServerDataSource', id, {})
-                        .property('Property', 'URL', `${id}.jdbc.url`);
+                        .property('PROPERTY', 'URL', `${id}.jdbc.url`);
 
                     break;
                 case 'MySQL':
                     dsBean = new Bean('com.mysql.jdbc.jdbc2.optional.MysqlDataSource', id, {})
-                        .property('Property', 'URL', `${id}.jdbc.url`);
+                        .property('PROPERTY', 'URL', `${id}.jdbc.url`);
 
                     break;
                 case 'PostgreSQL':
                     dsBean = new Bean('org.postgresql.ds.PGPoolingDataSource', id, {})
-                        .property('Property', 'url', `${id}.jdbc.url`);
+                        .property('PROPERTY', 'url', `${id}.jdbc.url`);
 
                     break;
                 case 'H2':
                     dsBean = new Bean('org.h2.jdbcx.JdbcDataSource', id, {})
-                        .property('Property', 'URL', `${id}.jdbc.url`);
+                        .property('PROPERTY', 'URL', `${id}.jdbc.url`);
 
                     break;
                 default:
             }
 
             if (dsBean) {
-                dsBean.property('Property', 'user', `${id}.jdbc.username`)
-                    .property('Property', 'password', `${id}.jdbc.password`);
+                dsBean.property('PROPERTY', 'user', `${id}.jdbc.username`)
+                    .property('PROPERTY', 'password', `${id}.jdbc.password`);
             }
 
             return dsBean;
@@ -307,7 +306,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
             return cfg;
         }
 
-        static clusterCaches(cluster, caches, igfss, serve, cfg = this.igniteConfigurationBean(cluster)) {
+        static clusterCaches(cluster, caches, igfss, client, cfg = this.igniteConfigurationBean(cluster)) {
             const ccfgs = _.map(caches, (cache) => this.cacheConfiguration(cache));
 
             cfg.varArgProperty('ccfgs', 'cacheConfiguration', ccfgs, 'org.apache.ignite.configuration.CacheConfiguration');
@@ -346,7 +345,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
             const typeCfgs = [];
 
             _.forEach(binary.typeConfigurations, (type) => {
-                const typeCfg = new MethodBean('org.apache.ignite.binary.BinaryTypeConfiguration',
+                const typeCfg = new Bean('org.apache.ignite.binary.BinaryTypeConfiguration',
                     JavaTypes.toJavaName('binaryType', type.typeName), type, clusterDflts.binary.typeConfigurations);
 
                 typeCfg.stringProperty('typeName')
@@ -359,10 +358,8 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                     typeCfgs.push(typeCfg);
             });
 
-            binaryCfg.collectionProperty('types', 'typeConfigurations', typeCfgs, 'java.util.Collection',
-                'org.apache.ignite.binary.BinaryTypeConfiguration');
-
-            binaryCfg.boolProperty('compactFooter');
+            binaryCfg.collectionProperty('types', 'typeConfigurations', typeCfgs, 'org.apache.ignite.binary.BinaryTypeConfiguration')
+                .boolProperty('compactFooter');
 
             if (binaryCfg.isEmpty())
                 return cfg;
@@ -624,7 +621,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
         // Generate events group.
         static clusterEvents(cluster, cfg = this.igniteConfigurationBean(cluster)) {
             if (_.nonEmpty(cluster.includeEventTypes))
-                cfg.eventTypes('events', 'includeEventTypes', cluster.includeEventTypes);
+                cfg.eventTypes('evts', 'includeEventTypes', cluster.includeEventTypes);
 
             return cfg;
         }
@@ -932,12 +929,11 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                         .mapProperty('indFlds', 'fields', 'fields', true)
                 );
 
-                cfg.collectionProperty('indexes', 'indexes', indexes, 'java.util.Collection', 'org.apache.ignite.cache.QueryIndex');
+                cfg.collectionProperty('indexes', 'indexes', indexes, 'org.apache.ignite.cache.QueryIndex');
             }
 
             return cfg;
         }
-
 
         // Generate domain model db fields.
         static _domainModelDatabaseFields(cfg, propName, domain) {
@@ -964,10 +960,6 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
 
             return cfg;
         }
-
-        // static cacheDomains(domains, ccfg) {
-        //     return ccfg;
-        // }
 
         /**
          * Generate eviction policy object.
@@ -1094,7 +1086,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                             if (_.isNil(domain.databaseTable))
                                 return acc;
 
-                            const typeBean = new MethodBean('org.apache.ignite.cache.store.jdbc.JdbcType', 'type',
+                            const typeBean = new Bean('org.apache.ignite.cache.store.jdbc.JdbcType', 'type',
                                 _.merge({}, domain, {cacheName: cache.name}))
                                 .stringProperty('cacheName');
 
@@ -1120,7 +1112,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                         else {
                             ccfg.stringProperty('connectionUrl')
                                 .stringProperty('user')
-                                .property('Property', 'password', `ds.${storeFactory.user}.password`);
+                                .property('PROPERTY', 'password', `ds.${storeFactory.user}.password`);
                         }
 
                         bean.boolProperty('initSchema')
@@ -1269,6 +1261,23 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
             return ccfg;
         }
 
+        // Generate domain models configs.
+        static cacheDomains(domains, ccfg) {
+            const qryEntities = _.reduce(domains, (acc, domain) => {
+                if (_.isNil(domain.queryMetadata) || domain.queryMetadata === 'Configuration') {
+                    const qryEntity = this.domainModelGeneral(domain);
+
+                    this.domainModelQuery(domain, qryEntity);
+
+                    acc.push(qryEntity);
+                }
+
+                return acc;
+            }, []);
+
+            ccfg.collectionProperty('qryEntities', 'queryEntities', qryEntities, 'org.apache.ignite.cache.QueryEntity');
+        }
+
         static cacheConfiguration(cache, ccfg = this.cacheConfigurationBean(cache)) {
             this.cacheGeneral(cache, ccfg);
             this.cacheMemory(cache, ccfg);
@@ -1281,7 +1290,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
             this.cacheRebalance(cache, ccfg);
             this.cacheNearServer(cache, ccfg);
             this.cacheStatistics(cache, ccfg);
-            // this.cacheDomains(cache.domains, cfg);
+            this.cacheDomains(cache.domains, ccfg);
 
             return ccfg;
         }
@@ -1381,6 +1390,23 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                 .mapProperty('pathModes', 'pathModes');
 
             return cfg;
+        }
+
+        // Generate IGFSs configs.
+        static igfss(igfss, cfg) {
+            const igfsCfgs = _.map(igfss, (igfs) => {
+                const igfsCfg = this.igfsGeneral(igfs);
+
+                this.igfsIPC(igfs, igfsCfg);
+                this.igfsFragmentizer(igfs, igfsCfg);
+                this.igfsDualMode(igfs, igfsCfg);
+                this.igfsSecondFS(igfs, igfsCfg);
+                this.igfsMisc(igfs, igfsCfg);
+
+                return igfsCfg;
+            });
+
+            cfg.varArgProperty('igfsCfgs', 'fileSystemConfiguration', igfsCfgs, 'org.apache.ignite.configuration.FileSystemConfiguration');
         }
     }
 

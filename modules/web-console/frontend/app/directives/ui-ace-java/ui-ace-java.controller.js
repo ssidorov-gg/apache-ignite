@@ -39,7 +39,9 @@ export default ['$scope', 'JavaTransformer', function($scope, generator) {
                     return acc;
                 }, []);
 
-                return generator.clusterCaches(cluster, clusterCaches, null, client);
+                const cfg = generator.clusterGeneral(cluster);
+
+                return generator.clusterCaches(cluster, clusterCaches, null, false, cfg);
             };
 
             break;

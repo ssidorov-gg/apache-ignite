@@ -16,7 +16,7 @@
  */
 
 // import _ from 'lodash';
-import { Bean } from './Beans';
+import { EmptyBean, Bean, MethodBean } from './Beans';
 
 export default ['JavaTypes', 'igniteClusterPlatformDefaults', 'igniteCachePlatformDefaults', (JavaTypes, clusterDflts, cacheDflts) => {
     class PlatformGenerator {
@@ -369,7 +369,7 @@ export default ['JavaTypes', 'igniteClusterPlatformDefaults', 'igniteCachePlatfo
                         else {
                             ccfg.stringProperty('connectionUrl')
                                 .stringProperty('user')
-                                .property('Property', 'password', `ds.${storeFactory.user}.password`);
+                                .property('PROPERTY', 'password', `ds.${storeFactory.user}.password`);
                         }
 
                         bean.boolProperty('initSchema')

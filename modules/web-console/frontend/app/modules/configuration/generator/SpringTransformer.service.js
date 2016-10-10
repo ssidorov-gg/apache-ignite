@@ -43,7 +43,12 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
                 sb.startBlock(`<bean class="${bean.clsName}">`);
 
             _.forEach(bean.arguments, (arg) => {
-                if (_.isNil(arg.value)) {
+                if (arg.clsName === 'MAP') {
+                    sb.startBlock('<constructor-arg>');
+                    this._constructMap(sb, arg);
+                    sb.endBlock('</constructor-arg>');
+                }
+                else if (_.isNil(arg.value)) {
                     sb.startBlock('<constructor-arg>');
                     sb.append('<null/>');
                     sb.endBlock('</constructor-arg>');
@@ -53,7 +58,7 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
                     sb.append(`<util:constant static-field="${arg.clsName}.${arg.value}"/>`);
                     sb.endBlock('</constructor-arg>');
                 }
-                else if (arg.clsName === 'Bean') {
+                else if (this._isBean(arg.clsName)) {
                     sb.startBlock('<constructor-arg>');
                     this.appendBean(sb, arg.value);
                     sb.endBlock('</constructor-arg>');
@@ -70,8 +75,8 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
         static _toObject(clsName, items) {
             return _.map(_.isArray(items) ? items : [items], (item) => {
                 switch (clsName) {
-                    case 'Property':
-                    case 'PropertyChar':
+                    case 'PROPERTY':
+                    case 'PROPERTY_CHAR':
                         return `\${${item}}`;
                     case 'java.lang.Class':
                         return JavaTypes.fullClassName(item);
@@ -82,7 +87,7 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
         }
 
         static _isBean(clsName) {
-            return JavaTypes.nonBuiltInClass(clsName) && JavaTypes.nonEnum(clsName) && !JavaTypes.isJavaPrimitive(clsName);
+            return JavaTypes.nonBuiltInClass(clsName) && JavaTypes.nonEnum(clsName) && _.includes(clsName, '.');
         }
 
         static _setCollection(sb, prop, tag) {
@@ -100,6 +105,44 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
             sb.endBlock('</property>');
         }
 
+        static _constructMap(sb, map) {
+            sb.startBlock('<map>');
+
+            _.forEach(map.entries, (entry) => {
+                const key = entry[map.keyField];
+                const val = entry[map.valField];
+
+                const isKeyBean = this._isBean(map.keyClsName);
+                const isValBean = this._isBean(map.valClsName);
+
+
+                if (isKeyBean || isValBean) {
+                    sb.startBlock('<entry>');
+
+                    sb.startBlock('<key>');
+                    if (isKeyBean)
+                        this.appendBean(sb, key);
+                    else
+                        sb.append(this._toObject(map.keyClsName, key));
+                    sb.endBlock('</key>');
+
+                    sb.startBlock('<value>');
+                    if (isValBean)
+                        this.appendBean(sb, val);
+                    else
+                        sb.append(this._toObject(map.valClsName, val));
+                    sb.endBlock('</value>');
+
+                    sb.endBlock('</entry>');
+                }
+                else
+                    sb.append(`<entry key="${this._toObject(map.keyClsName, key)}" value="${this._toObject(map.valClsName, val)}"/>`);
+            });
+
+            sb.endBlock('</map>');
+        }
+
+
         /**
          *
          * @param {StringBuilder} sb
@@ -108,7 +151,7 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
          */
         static _setProperties(sb, bean) {
             _.forEach(bean.properties, (prop, idx) => {
-                switch (JavaTypes.shortClassName(prop.clsName).toUpperCase()) {
+                switch (prop.clsName) {
                     case 'DATA_SOURCE':
                         sb.append(`<property name="${prop.name}" ref="${prop.id}"/>`);
 
@@ -153,36 +196,9 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
                         break;
                     case 'MAP':
                         sb.startBlock(`<property name="${prop.name}">`);
-                        sb.startBlock('<map>');
 
-                        const keyClsName = JavaTypes.shortClassName(prop.keyClsName);
-                        const valClsName = JavaTypes.shortClassName(prop.valClsName);
+                        this._constructMap(sb, prop);
 
-                        _.forEach(prop.entries, (entry) => {
-                            const key = entry[prop.keyField];
-                            const val = entry[prop.valField];
-
-                            if (keyClsName === 'Bean' || valClsName === 'Bean') {
-                                sb.startBlock('<entry>');
-                                sb.startBlock('<key>');
-                                if (keyClsName === 'Bean')
-                                    this.appendBean(sb, key);
-                                else
-                                    sb.append(this._toObject(keyClsName, key));
-                                sb.endBlock('</key>');
-                                sb.startBlock('<value>');
-                                if (valClsName === 'Bean')
-                                    this.appendBean(sb, val);
-                                else
-                                    sb.append(this._toObject(valClsName, val));
-                                sb.endBlock('</value>');
-                                sb.endBlock('</entry>');
-                            }
-                            else
-                                sb.append(`<entry key="${this._toObject(keyClsName, key)}" value="${this._toObject(valClsName, val)}"/>`);
-                        });
-
-                        sb.endBlock('</map>');
                         sb.endBlock('</property>');
 
                         break;

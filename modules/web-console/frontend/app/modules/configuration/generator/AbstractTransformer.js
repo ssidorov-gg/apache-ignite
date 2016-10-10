@@ -406,15 +406,15 @@ export default class AbstractTransformer {
      */
     static hasProperties(bean) {
         return !!_.find(bean.properties, (prop) => {
-            switch (prop.clsName.toUpperCase()) {
+            switch (prop.clsName) {
                 case 'BEAN':
                     if (this.hasProperties(prop.value))
                         return true;
 
                     break;
-                case 'DATASOURCE':
+                case 'DATA_SOURCE':
                 case 'PROPERTY':
-                case 'PROPERTYCHAR':
+                case 'PROPERTY_CHAR':
                     return true;
                 default:
             }
@@ -430,7 +430,6 @@ export default class AbstractTransformer {
         const dataSources = _.reduce(bean.properties, (acc, prop) => {
             switch (prop.clsName.toUpperCase()) {
                 case 'ARRAY':
-                case 'VARARG':
                     if (this._isBean(prop.typeClsName))
                         _.forEach(prop.items, (item) => acc.push(...this.collectDataSources(item)));
 
@@ -439,7 +438,7 @@ export default class AbstractTransformer {
                     acc.push(...this.collectDataSources(prop.value));
 
                     break;
-                case 'DATASOURCE':
+                case 'DATA_SOURCE':
                     acc.push(prop.value);
 
                     break;
