@@ -722,7 +722,7 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                     proxyDomain: String,
                     proxyWorkstation: String,
                     retryPolicy: {
-                        kind: {type: String, enum: ['Default', 'DefaultMaxRetries', 'DynamoDB', 'DynamoDBMaxRetries', 'Custom', 'CustomClass']},
+                        kind: {type: String, enum: ['Default', 'DefaultMaxRetries', 'DynamoDB', 'DynamoDBMaxRetries', 'Custom']},
                         DefaultMaxRetries: {
                             maxErrorRetry: Number
                         },
@@ -734,9 +734,6 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                             backoffStrategy: String,
                             maxErrorRetry: Number,
                             honorMaxErrorRetryInClientConfig: Boolean
-                        },
-                        CustomClass: {
-                            className: String
                         }
                     },
                     maxErrorRetry: Number,

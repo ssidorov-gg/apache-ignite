@@ -394,7 +394,53 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
         }
 
         // Generate checkpoint configurations.
-        static clusterCheckpoint(checkpointSpis, cfg = this.igniteConfigurationBean()) {
+        static clusterCheckpoint(checkpointSpis, caches, cfg = this.igniteConfigurationBean()) {
+            const cfgs = _.map(checkpointSpis, (spi) => {
+                switch (spi.kind) {
+                    case 'FS':
+                        const fsBean = new Bean('org.apache.ignite.spi.checkpoint.sharedfs.SharedFsCheckpointSpi',
+                            'checkpointSpi', spi.FS);
+
+                        fsBean.arrayProperty('dirPaths', 'dirPaths', spi.FS.dirPaths);
+                        fsBean.emptyBeanProperty('checkpointListener');
+
+                        return fsBean;
+
+                    case 'Cache':
+                        const cacheBean = new Bean('org.apache.ignite.spi.checkpoint.cache.CacheCheckpointSpi',
+                            'checkpointSpi', spi.Cache);
+
+                        _.forEach(_.find(caches, (cache) => cache._id === spi.Cache), (cache) => {
+                            spi.Cache.cacheName = cache.name;
+                        });
+
+                        cacheBean.stringProperty('cacheName');
+                        cacheBean.emptyBeanProperty('checkpointListener');
+
+                        return cacheBean;
+
+                    case 'S3':
+                        const s3Bean = new Bean('org.apache.ignite.spi.checkpoint.s3.S3CheckpointSpi',
+                            'checkpointSpi', spi.S3);
+
+                        s3Bean.emptyBeanProperty('checkpointListener');
+
+                        return s3Bean;
+
+                    case 'JDBC':
+                        const jdbcBean = new Bean('org.apache.ignite.spi.checkpoint.jdbc.JdbcCheckpointSpi',
+                            'checkpointSpi', spi.JDBC);
+
+                        jdbcBean.emptyBeanProperty('checkpointListener');
+
+                        return jdbcBean;
+
+                    default:
+                        return new Bean(spi.Custom.className, 'checkpointSpi', spi.Cache);
+                }
+            });
+
+            cfg.arrayProperty('checkpointSpi', 'checkpointSpi', cfgs, 'org.apache.ignite.spi.checkpoint.CheckpointSpi');
 
             return cfg;
         }
