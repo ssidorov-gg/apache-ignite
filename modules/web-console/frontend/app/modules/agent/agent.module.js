@@ -277,12 +277,13 @@ class IgniteAgentMonitor {
      * @param {String} nid Node id.
      * @param {String} cacheName Cache name.
      * @param {String} [query] Query if null then scan query.
+     * @param {Boolean} distributedJoins Flag whether to execute distributed joins.
      * @param {Boolean} local Flag whether to execute query locally.
      * @param {int} pageSize
      * @returns {Promise}
      */
-    query(nid, cacheName, query, local, pageSize) {
-        return this._rest('node:query', nid, maskNull(cacheName), maskNull(query), local, pageSize)
+    query(nid, cacheName, query, distributedJoins, local, pageSize) {
+        return this._rest('node:query', nid, maskNull(cacheName), maskNull(query), distributedJoins, local, pageSize)
             .then(({result}) => {
                 if (_.isEmpty(result.key))
                     return result.value;

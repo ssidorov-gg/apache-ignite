@@ -334,7 +334,7 @@ export default [
             zip.file(srcPath + 'startup/ClientNodeCodeStartup.java', $generatorJava.nodeStartup(cluster, 'startup', 'ClientNodeCodeStartup',
                 'ClientConfigurationFactory.createConfiguration()', 'config.ClientConfigurationFactory', clientNearCfg));
 
-            zip.file('pom.xml', pom.generate(cluster, Version.ignite).asString());
+            zip.file('pom.xml', pom.generate(cluster, Version.productVersion().ignite).asString());
 
             zip.file('README.txt', $generatorReadme.readme().asString());
             zip.file('jdbc-drivers/README.txt', $generatorReadme.readmeJdbc().asString());

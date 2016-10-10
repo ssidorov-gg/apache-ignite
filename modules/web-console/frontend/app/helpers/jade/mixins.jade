@@ -432,7 +432,7 @@ mixin evictionPolicy(model, name, enabled, required, tip)
         a.customize(ng-hide='__.expanded' ng-click='__.expanded = true') Show settings
         .panel-details(ng-if='__.expanded')
             .details-row
-                +number('Batch size', policy + '.batchSize', name + '+ "batchSize"', enabled, '1', '0',
+                +number('Batch size', policy + '.batchSize', name + '+ "batchSize"', enabled, '1', '1',
                     'Number of entries to remove on shrink')
             .details-row
                 +number('Max memory size', policy + '.maxMemorySize', name + '+ "maxMemorySize"', enabled, '0', '0',

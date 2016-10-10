@@ -83,6 +83,8 @@ mixin paragraph-rename
             input.form-control(id='paragraph-name-{{paragraph.id}}' ng-model='paragraph.editName' required ng-click='$event.stopPropagation();' ignite-on-enter='renameParagraph(paragraph, paragraph.editName)' ignite-on-escape='paragraph.edit = false')
 
 mixin query-settings
+    label.tipLabel First page only:
+    a.btn.btn-default.fa.fa-file-o.tipLabel(ng-class='{"btn-info": paragraph.fetchFirstPage}' ng-click='paragraph.fetchFirstPage = !paragraph.fetchFirstPage' bs-tooltip data-title='Fetch first page only on execute query')
     label.tipLabel System columns:
     a.btn.btn-default.fa.fa-bars.tipLabel(ng-class='{"btn-info": paragraph.systemColumns}' ng-click='toggleSystemColumns(paragraph)' ng-disabled='paragraph.disabledSystemColumns' bs-tooltip data-title='Show "_KEY", "_VAL" columns')
     label.tipLabel Refresh rate:
@@ -93,8 +95,18 @@ mixin query-settings
 mixin query-actions
     .btn-group(bs-tooltip='' data-title='{{actionTooltip(paragraph, "execute", true)}}' data-placement='bottom')
         button.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='execute(paragraph)') Execute
-        button.btn.btn-primary.dropdown-toggle(ng-disabled='!actionAvailable(paragraph, true)' data-toggle='dropdown' data-container='body' bs-dropdown='[{ text: "Execute local", click: "executeLocal(paragraph)" }]' data-placement='bottom-right')
+        button.btn.btn-primary.dropdown-toggle(
+            aria-haspopup='true' aria-expanded='expanded' data-auto-close='1'
+            ng-disabled='!actionAvailable(paragraph, true)'
+            data-container='body'
+            bs-dropdown=''
+            data-placement='bottom-right'
+        )
             span.caret
+        ul.dropdown-menu(role='menu')
+            li #[a(href='javascript:void(0)' ng-click='executeLocal(paragraph)') Execute local]
+            li #[a(href='javascript:void(0)' ng-if='distributedJoinAvailable(paragraph)' ng-click='executeDistribution(paragraph)') Execute distributed join]
+
     a.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, true)' ng-click='explain(paragraph)' data-placement='bottom' bs-tooltip='' data-title='{{actionTooltip(paragraph, "explain", true)}}') Explain
     .btn-group(bs-tooltip='' data-title='{{actionTooltip(paragraph, "execute scan", false)}}' data-placement='bottom')
         button.btn.btn-primary(ng-disabled='!actionAvailable(paragraph, false)' ng-click='scan(paragraph)') Scan

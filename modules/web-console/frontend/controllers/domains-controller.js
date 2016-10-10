@@ -91,7 +91,7 @@ export default ['domainsController', [
                     case 'fields':
                     case 'aliases':
                         if (LegacyTable.tablePairSaveVisible(field, index))
-                            return LegacyTable.tablePairSave($scope.tablePairValid, $scope.backupItem, field, index, stopEdit);
+                            return LegacyTable.tablePairSave($scope.tablePairValid, $scope.backupItem, field, index, stopEdit) || stopEdit;
 
                         break;
 
@@ -140,11 +140,43 @@ export default ['domainsController', [
         $scope.tableEditing = LegacyTable.tableEditing;
 
         $scope.tableRemove = function(item, field, index) {
-            if ($scope.tableReset(true))
+            if ($scope.tableReset(true)) {
+                // Remove field from indexes.
+                if (field.type === 'fields') {
+                    _.forEach($scope.backupItem.indexes, (modelIndex) => {
+                        modelIndex.fields = _.filter(modelIndex.fields, (indexField) => {
+                            return indexField.name !== $scope.backupItem.fields[index].name;
+                        });
+                    });
+                }
+
                 LegacyTable.tableRemove(item, field, index);
+            }
         };
 
-        $scope.tablePairSave = LegacyTable.tablePairSave;
+        $scope.tablePairSave = (pairValid, item, field, index, stopEdit) => {
+            // On change of field name update that field in index fields.
+            if (index >= 0 && field.type === 'fields') {
+                const newName = LegacyTable.tablePairValue(field, index).key;
+                const oldName = _.get(item, field.model)[index][field.keyName];
+
+                const saved = LegacyTable.tablePairSave(pairValid, item, field, index, stopEdit);
+
+                if (saved && oldName !== newName) {
+                    _.forEach($scope.backupItem.indexes, (idx) => {
+                        _.forEach(idx.fields, (fld) => {
+                            if (fld.name === oldName)
+                                fld.name = newName;
+                        });
+                    });
+                }
+
+                return saved;
+            }
+
+            return LegacyTable.tablePairSave(pairValid, item, field, index, stopEdit);
+        };
+
         $scope.tablePairSaveVisible = LegacyTable.tablePairSaveVisible;
 
         $scope.queryFieldsTbl = {
@@ -168,6 +200,19 @@ export default ['domainsController', [
         };
 
         $scope.queryMetadataVariants = LegacyUtils.mkOptions(['Annotations', 'Configuration']);
+
+        // Create list of fields to show in index fields dropdown.
+        $scope.fields = (prefix, cur) => {
+            const fields = _.map($scope.backupItem.fields, (field) => ({value: field.name, label: field.name}));
+
+            if (prefix === 'new')
+                return fields;
+
+            if (cur && !_.find(fields, {value: cur}))
+                fields.push({value: cur, label: cur + ' (Unknown field)'});
+
+            return fields;
+        };
 
         const INFO_CONNECT_TO_DB = 'Configure connection to database';
         const INFO_SELECT_SCHEMAS = 'Select schemas to load tables from';
@@ -215,6 +260,12 @@ export default ['domainsController', [
                 user: 'root'
             },
             {
+                db: 'MySQL',
+                jdbcDriverClass: 'org.mariadb.jdbc.Driver',
+                jdbcUrl: 'jdbc:mariadb://[host]:[port]/[database]',
+                user: 'root'
+            },
+            {
                 db: 'H2',
                 jdbcDriverClass: 'org.h2.Driver',
                 jdbcUrl: 'jdbc:h2:tcp://[host]/[database]',
@@ -223,7 +274,7 @@ export default ['domainsController', [
         ];
 
         $scope.selectedPreset = {
-            db: 'General',
+            db: 'Generic',
             jdbcDriverJar: '',
             jdbcDriverClass: '',
             jdbcUrl: 'jdbc:[database]',
@@ -283,7 +334,7 @@ export default ['domainsController', [
             });
 
             if (!result)
-                result = {db: 'General', jdbcUrl: 'jdbc:[database]', user: 'admin'};
+                result = {db: 'Generic', jdbcUrl: 'jdbc:[database]', user: 'admin'};
 
             result.jdbcDriverJar = selectedJdbcJar.jdbcDriverJar;
             result.jdbcDriverClass = selectedJdbcJar.jdbcDriverClass;
@@ -751,25 +802,12 @@ export default ['domainsController', [
                 importDomainModal.hide();
         }
 
-        function _saveDomainModel() {
+        function _saveDomainModel(optionsForm) {
             const generatePojo = $scope.ui.generatePojo;
             const packageName = $scope.ui.packageName;
 
-            if (generatePojo) {
-                if (LegacyUtils.isEmptyString(packageName)) {
-                    ErrorPopover.show('domainPackageNameInput', 'Package could not be empty');
-
-                    Focus.move('domainPackageNameInput');
-
-                    return false;
-                }
-
-                if (!LegacyUtils.isValidJavaClass('Package', packageName, false, 'domainPackageNameInput', true)) {
-                    Focus.move('domainPackageNameInput');
-
-                    return false;
-                }
-            }
+            if (generatePojo && !LegacyUtils.checkFieldValidators({inputForm: optionsForm}))
+                return false;
 
             const batch = [];
             const checkedCaches = [];
@@ -991,7 +1029,7 @@ export default ['domainsController', [
             }
         }
 
-        $scope.importDomainNext = function() {
+        $scope.importDomainNext = function(form) {
             if (!$scope.importDomainNextAvailable())
                 return;
 
@@ -1006,7 +1044,7 @@ export default ['domainsController', [
             else if (act === 'tables')
                 _selectOptions();
             else if (act === 'options')
-                _saveDomainModel();
+                _saveDomainModel(form);
         };
 
         $scope.nextTooltipText = function() {
@@ -1269,9 +1307,12 @@ export default ['domainsController', [
                 const indexes = item.indexes;
 
                 if (indexes && indexes.length > 0) {
-                    if (_.find(indexes, function(index, i) {
+                    if (_.find(indexes, function(index, idx) {
                         if (_.isEmpty(index.fields))
-                            return !ErrorPopover.show('indexes' + i, 'Index fields are not specified', $scope.ui, 'query');
+                            return !ErrorPopover.show('indexes' + idx, 'Index fields are not specified', $scope.ui, 'query');
+
+                        if (_.find(index.fields, (field) => !_.find(item.fields, (configuredField) => configuredField.name === field.name)))
+                            return !ErrorPopover.show('indexes' + idx, 'Index contains not configured fields', $scope.ui, 'query');
                     }))
                         return false;
                 }
@@ -1692,10 +1733,8 @@ export default ['domainsController', [
 
         $scope.tableIndexNewItem = function(field, indexIdx) {
             if ($scope.tableReset(true)) {
-                const index = $scope.backupItem.indexes[indexIdx];
-
                 LegacyTable.tableState(field, -1, 'table-index-fields');
-                LegacyTable.tableFocusInvalidField(-1, 'FieldName' + (index.indexType === 'SORTED' ? 'S' : '') + indexIdx);
+                LegacyTable.tableFocusInvalidField(-1, 'FieldName' + indexIdx);
 
                 field.newFieldName = null;
                 field.newDirection = true;
@@ -1751,7 +1790,7 @@ export default ['domainsController', [
                 field.curDirection = indexItem.direction;
                 field.indexIdx = indexIdx;
 
-                Focus.move('curFieldName' + (index.indexType === 'SORTED' ? 'S' : '') + field.indexIdx + '-' + curIdx);
+                Focus.move('curFieldName' + field.indexIdx + '-' + curIdx);
             }
         };
 
@@ -1770,8 +1809,14 @@ export default ['domainsController', [
                 const idx = _.findIndex(fields, (fld) => fld.name === indexItemValue.name);
 
                 // Found duplicate.
-                if (idx >= 0 && idx !== curIdx)
-                    return ErrorPopover.show(LegacyTable.tableFieldId(curIdx, 'FieldName' + (index.indexType === 'SORTED' ? 'S' : '') + indexIdx + (curIdx >= 0 ? '-' : '')), 'Field with such name already exists in index!', $scope.ui, 'query');
+                if (idx >= 0 && idx !== curIdx) {
+                    if (stopEdit)
+                        return true;
+
+                    return ErrorPopover.show(LegacyTable.tableFieldId(curIdx,
+                        'FieldName' + indexIdx + (curIdx >= 0 ? '-' : '')),
+                        'Field with such name already exists in index!', $scope.ui, 'query');
+                }
             }
 
             LegacyTable.tableReset();

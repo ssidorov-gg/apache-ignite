@@ -473,7 +473,10 @@ export default ['IgniteLegacyUtils', ['IgniteErrorPopover', (ErrorPopover) => {
                 const firstErrorKey = errKeys[0];
 
                 const firstError = errors[firstErrorKey][0];
-                const actualError = firstError.$error[firstErrorKey][0];
+
+                const err = firstError.$error[firstErrorKey];
+
+                const actualError = _.isArray(err) ? err[0] : firstError;
 
                 const errNameFull = actualError.$name;
                 const errNameShort = errNameFull.endsWith('TextInput') ? errNameFull.substring(0, errNameFull.length - 9) : errNameFull;
@@ -482,12 +485,17 @@ export default ['IgniteLegacyUtils', ['IgniteErrorPopover', (ErrorPopover) => {
                     try {
                         return errors[firstErrorKey][0].$errorMessages[errName][firstErrorKey];
                     }
-                    catch (ignored) {
+                    catch (ignored1) {
                         try {
                             return form[firstError.$name].$errorMessages[errName][firstErrorKey];
                         }
-                        catch (ignited) {
-                            return false;
+                        catch (ignored2) {
+                            try {
+                                return form.$errorMessages[errName][firstErrorKey];
+                            }
+                            catch (ignored3) {
+                                return false;
+                            }
                         }
                     }
                 };

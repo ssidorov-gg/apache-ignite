@@ -162,4 +162,4 @@ mixin td-ellipses-lbl(w, lbl)
             .modal-footer
                 label(ng-hide='importDomain.action == "drivers" || (importDomain.action == "connect" && importDomain.demo)').labelField {{importDomain.info}}
                 a.btn.btn-primary(ng-hide='importDomain.action == "drivers" || importDomain.action == "connect"' ng-click='importDomainPrev()' bs-tooltip='' data-title='{{prevTooltipText()}}' data-placement='bottom') Prev
-                a.btn.btn-primary(ng-click='importDomainNext()' ng-disabled='!importDomainNextAvailable()' bs-tooltip='' data-title='{{nextTooltipText()}}' data-placement='bottom') {{importDomain.button}}
+                a.btn.btn-primary(ng-click='importDomainNext(optionsForm)' ng-disabled='!importDomainNextAvailable()' bs-tooltip='' data-title='{{nextTooltipText()}}' data-placement='bottom') {{importDomain.button}}
