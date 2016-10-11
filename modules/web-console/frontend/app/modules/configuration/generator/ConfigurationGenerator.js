@@ -392,14 +392,14 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
 
         // Generate checkpoint configurations.
         static clusterCheckpoint(checkpointSpis, caches, cfg = this.igniteConfigurationBean()) {
-            const cfgs = _.map(checkpointSpis, (spi) => {
+            const cfgs = _.filter(_.map(checkpointSpis, (spi) => {
                 switch (spi.kind) {
                     case 'FS':
                         const fsBean = new Bean('org.apache.ignite.spi.checkpoint.sharedfs.SharedFsCheckpointSpi',
                             'checkpointSpi', spi.FS);
 
-                        fsBean.arrayProperty('dirPaths', 'dirPaths', spi.FS.dirPaths);
-                        fsBean.emptyBeanProperty('checkpointListener');
+                        fsBean.arrayProperty('dirPaths', 'dirPaths', spi.FS.dirPaths)
+                            .emptyBeanProperty('checkpointListener');
 
                         return fsBean;
 
@@ -411,14 +411,194 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                             spi.Cache.cacheName = cache.name;
                         });
 
-                        cacheBean.stringProperty('cacheName');
-                        cacheBean.emptyBeanProperty('checkpointListener');
+                        cacheBean.stringProperty('cacheName')
+                            .emptyBeanProperty('checkpointListener');
 
                         return cacheBean;
 
                     case 'S3':
                         const s3Bean = new Bean('org.apache.ignite.spi.checkpoint.s3.S3CheckpointSpi',
-                            'checkpointSpi', spi.S3);
+                            'checkpointSpi', spi.S3, clusterDflts.checkpointSpi.S3);
+
+                        let credentialsBean = null;
+
+                        switch (_.get(spi.S3, 'awsCredentials.kind')) {
+                            case 'Basic':
+                                credentialsBean = new Bean('com.amazonaws.auth.BasicAWSCredentials', 'awsCredentials', {});
+
+                                credentialsBean.constructorArgument('PROPERTY', 'checkpoint.s3.credentials.accessKey')
+                                    .constructorArgument('PROPERTY', 'checkpoint.s3.credentials.secretKey');
+
+                                break;
+
+                            case 'Properties':
+                                credentialsBean = new Bean('com.amazonaws.auth.PropertiesCredentials', 'awsCredentials', {});
+
+                                const fileBean = new Bean('java.io.File', '', spi.S3.awsCredentials.Properties);
+
+                                fileBean.pathConstructorArgument('path');
+
+                                // TODO 2052 Show invalid value [object Object]
+                                credentialsBean.beanConstructorArgument('file', fileBean);
+
+                                break;
+
+                            case 'Anonymous':
+                                credentialsBean = new Bean('com.amazonaws.auth.AnonymousAWSCredentials', 'awsCredentials', {});
+
+                                break;
+
+                            case 'BasicSession':
+                                credentialsBean = new Bean('com.amazonaws.auth.BasicSessionCredentials', 'awsCredentials', {});
+
+                                // TODO 2052 Arguments in one line is very long string.
+                                credentialsBean.constructorArgument('PROPERTY', 'checkpoint.s3.credentials.accessKey')
+                                    .constructorArgument('PROPERTY', 'checkpoint.s3.credentials.secretKey')
+                                    .constructorArgument('PROPERTY', 'checkpoint.s3.credentials.sessionToken');
+
+                                break;
+
+                            case 'Custom':
+                                const className = _.get(spi.S3.awsCredentials, 'Custom.className');
+
+                                credentialsBean = new Bean(className, 'awsCredentials', {});
+
+                                break;
+
+                            default:
+                                break;
+                        }
+
+                        if (credentialsBean)
+                            s3Bean.beanProperty('awsCredentials', credentialsBean);
+
+                        s3Bean.stringProperty('bucketNameSuffix');
+
+                        const clientBean = new Bean('com.amazonaws.ClientConfiguration', 'clientCfg', spi.S3.clientConfiguration,
+                            clusterDflts.checkpointSpi.S3.clientConfiguration);
+
+                        clientBean.enumProperty('protocol')
+                            .intProperty('maxConnections')
+                            .stringProperty('userAgent')
+                            .stringProperty('localAddress')
+                            .stringProperty('proxyHost')
+                            .intProperty('proxyPort')
+                            .stringProperty('proxyUsername');
+
+                        const userName = clientBean.valueOf('proxyUsername');
+
+                        if (userName)
+                            clientBean.property('PROPERTY', 'proxyPassword', `checkpoint.s3.proxy.${userName}.password`);
+
+                        clientBean.stringProperty('proxyDomain')
+                            .stringProperty('proxyWorkstation');
+
+                        const retryPolicy = spi.S3.clientConfiguration.retryPolicy;
+
+                        if (retryPolicy) {
+                            const kind = retryPolicy.kind;
+
+                            const policy = retryPolicy[kind];
+
+                            let retryBean;
+
+                            switch (kind) {
+                                case 'Default':
+                                    retryBean = new Bean('com.amazonaws.retry.RetryPolicy.RetryPolicy', 'retryPolicy', {
+                                        retryCondition: 'DEFAULT_RETRY_CONDITION',
+                                        backoffStrategy: 'DEFAULT_BACKOFF_STRATEGY',
+                                        maxErrorRetry: 'DEFAULT_MAX_ERROR_RETRY',
+                                        honorMaxErrorRetryInClientConfig: true
+                                    });
+
+                                    retryBean.constantConstructorArgument('retryCondition')
+                                        .constantConstructorArgument('backoffStrategy')
+                                        .constantConstructorArgument('maxErrorRetry')
+                                        .constructorArgument('java.lang.Boolean', 'honorMaxErrorRetryInClientConfig');
+
+                                    break;
+
+                                case 'DefaultMaxRetries':
+                                    retryBean = new Bean('com.amazonaws.retry.RetryPolicy.RetryPolicy', 'retryPolicy', {
+                                        retryCondition: 'DEFAULT_RETRY_CONDITION',
+                                        backoffStrategy: 'DEFAULT_BACKOFF_STRATEGY',
+                                        maxErrorRetry: _.get(policy, 'maxErrorRetry'),
+                                        honorMaxErrorRetryInClientConfig: true
+                                    });
+
+                                    retryBean.constantConstructorArgument('retryCondition')
+                                        .constantConstructorArgument('backoffStrategy')
+                                        .intConstructorArgument('maxErrorRetry')
+                                        .constructorArgument('java.lang.Boolean', 'honorMaxErrorRetryInClientConfig');
+
+                                    break;
+
+                                case 'DynamoDB':
+                                    retryBean = new Bean('com.amazonaws.retry.RetryPolicy.RetryPolicy', 'retryPolicy', {
+                                        retryCondition: 'DEFAULT_RETRY_CONDITION',
+                                        backoffStrategy: 'DYNAMODB_DEFAULT_BACKOFF_STRATEGY',
+                                        maxErrorRetry: 'DYNAMODB_DEFAULT_MAX_ERROR_RETRY',
+                                        honorMaxErrorRetryInClientConfig: true
+                                    });
+
+                                    retryBean.constantConstructorArgument('retryCondition')
+                                        .constantConstructorArgument('backoffStrategy')
+                                        .constantConstructorArgument('maxErrorRetry')
+                                        .constructorArgument('java.lang.Boolean', 'honorMaxErrorRetryInClientConfig');
+
+                                    break;
+
+                                case 'DynamoDBMaxRetries':
+                                    retryBean = new Bean('com.amazonaws.retry.RetryPolicy.RetryPolicy', 'retryPolicy', {
+                                        retryCondition: 'DEFAULT_RETRY_CONDITION',
+                                        backoffStrategy: 'DYNAMODB_DEFAULT_BACKOFF_STRATEGY',
+                                        maxErrorRetry: _.get(policy, 'maxErrorRetry'),
+                                        honorMaxErrorRetryInClientConfig: true
+                                    });
+
+                                    retryBean.constantConstructorArgument('retryCondition')
+                                        .constantConstructorArgument('backoffStrategy')
+                                        .intConstructorArgument('maxErrorRetry')
+                                        .constructorArgument('java.lang.Boolean', 'honorMaxErrorRetryInClientConfig');
+
+                                    break;
+
+                                case 'Custom':
+                                    retryBean.emptyBeanProperty('retryCondition')
+                                        .emptyBeanProperty('backoffStrategy')
+                                        .intConstructorArgument('maxErrorRetry')
+                                        .constructorArgument('java.lang.Boolean', 'honorMaxErrorRetryInClientConfig');
+
+                                    break;
+
+                                default:
+                                    break;
+                            }
+
+                            if (retryBean)
+                                clientBean.beanProperty('retryPolicy', retryBean);
+                        }
+
+                        // TODO 2052 RetryPolicy.
+
+                        clientBean.intProperty('maxErrorRetry')
+                            .intProperty('socketTimeout')
+                            .intProperty('connectionTimeout')
+                            .intProperty('requestTimeout')
+                            .intProperty('socketSendBufferSizeHints')
+                            .stringProperty('signerOverride')
+                            .intProperty('connectionTTL')
+                            .intProperty('connectionMaxIdleMillis')
+                            .emptyBeanProperty('dnsResolver')
+                            .intProperty('responseMetadataCacheSize')
+                            .emptyBeanProperty('secureRandom')
+                            .boolProperty('useReaper')
+                            .boolProperty('useGzip')
+                            .boolProperty('preemptiveBasicProxyAuth')
+                            .boolProperty('useTcpKeepAlive');
+
+                        if (clientBean.nonEmpty())
+                            s3Bean.beanProperty('clientConfiguration', clientBean);
 
                         s3Bean.emptyBeanProperty('checkpointListener');
 
@@ -426,16 +606,38 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
 
                     case 'JDBC':
                         const jdbcBean = new Bean('org.apache.ignite.spi.checkpoint.jdbc.JdbcCheckpointSpi',
-                            'checkpointSpi', spi.JDBC);
+                            'checkpointSpi', spi.JDBC, clusterDflts.checkpointSpi.JDBC);
 
-                        jdbcBean.emptyBeanProperty('checkpointListener');
+                        const id = jdbcBean.valueOf('dataSourceBean');
+                        const dialect = _.get(spi.JDBC, 'dialect');
+
+                        jdbcBean.dataSource(id, 'dataSourceBean', this.dataSourceBean(id, dialect))
+                            .beanProperty('dialect', new EmptyBean(this.dialectClsName(dialect)));
+
+                        jdbcBean.stringProperty('checkpointTableName')
+                            .stringProperty('keyFieldName')
+                            .stringProperty('keyFieldType')
+                            .stringProperty('valueFieldName')
+                            .stringProperty('valueFieldType')
+                            .stringProperty('expireDateFieldName')
+                            .stringProperty('expireDateFieldType')
+                            .intProperty('numberOfRetries')
+                            .emptyBeanProperty('checkpointListener');
 
                         return jdbcBean;
 
+                    case 'Custom':
+                        const clsName = _.get(spi, 'Custom.className');
+
+                        if (clsName)
+                            return new Bean(clsName, 'checkpointSpi', spi.Cache);
+
+                        break;
+
                     default:
-                        return new Bean(spi.Custom.className, 'checkpointSpi', spi.Cache);
+                        return null;
                 }
-            });
+            }), (checkpointBean) => _.nonNil(checkpointBean));
 
             cfg.arrayProperty('checkpointSpi', 'checkpointSpi', cfgs, 'org.apache.ignite.spi.checkpoint.CheckpointSpi');
 

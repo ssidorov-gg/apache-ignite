@@ -104,10 +104,12 @@ export default ['clustersController', [
                         $scope.backupItem.failoverSpi = {};
                 }
                 else if (field.type === 'checkpointSpi') {
+                    const newCheckpointCfg = { S3: { clientConfiguration: { useReaper: true } } };
+
                     if (LegacyUtils.isDefined($scope.backupItem.checkpointSpi))
-                        $scope.backupItem.checkpointSpi.push({});
+                        $scope.backupItem.checkpointSpi.push(newCheckpointCfg);
                     else
-                        $scope.backupItem.checkpointSpi = [{}];
+                        $scope.backupItem.checkpointSpi = [newCheckpointCfg];
                 }
                 else
                     LegacyTable.tableNewItem(field);

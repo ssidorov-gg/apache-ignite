@@ -205,6 +205,48 @@ const DFLT_CLUSTER = {
     odbcConfiguration: {
         endpointAddress: '0.0.0.0:10800..10810',
         maxOpenCursors: 128
+    },
+    checkpointSpi: {
+        S3: {
+            bucketNameSuffix: 'default-bucket',
+            clientConfiguration: {
+                protocol: {
+                    clsName: 'com.amazonaws.Protocol',
+                    value: 'HTTPS'
+                },
+                maxConnections: 50,
+                retryPolicy: {
+                    retryCondition: {
+                        clsName: 'com.amazonaws.retry.PredefinedRetryPolicies'
+                    },
+                    backoffStrategy: {
+                        clsName: 'com.amazonaws.retry.PredefinedRetryPolicies'
+                    }
+                },
+                maxErrorRetry: -1,
+                socketTimeout: 50000,
+                connectionTimeout: 50000,
+                requestTimeout: 0,
+                socketSendBufferSizeHints: 0,
+                connectionTTL: -1,
+                connectionMaxIdleMillis: 60000,
+                responseMetadataCacheSize: 50,
+                useReaper: true,
+                useGzip: false,
+                preemptiveBasicProxyAuth: false,
+                useTcpKeepAlive: false
+            }
+        },
+        JDBC: {
+            checkpointTableName: 'CHECKPOINTS',
+            keyFieldName: 'NAME',
+            keyFieldType: 'VARCHAR',
+            valueFieldName: 'VALUE',
+            valueFieldType: 'BLOB',
+            expireDateFieldName: 'EXPIRE_DATE',
+            expireDateFieldType: 'DATETIME',
+            numberOfRetries: 2
+        }
     }
 };
 

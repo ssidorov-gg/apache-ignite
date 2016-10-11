@@ -18,13 +18,14 @@ include ../../../../../app/helpers/jade/mixins.jade
 
 -var form = 'checkpoint'
 -var model = 'backupItem.checkpointSpi'
+-var credentialsModel = 'checkpoint.S3.awsCredentials'
 -var clientCfgModel = 'checkpoint.S3.clientConfiguration'
 -var clientRetryModel = clientCfgModel + '.retryPolicy'
 -var checkpointFs = 'checkpoint.kind === "FS"'
 -var checkpointCache = 'checkpoint.kind === "Cache"'
 -var checkpointS3 = 'checkpoint.kind === "S3"'
--var checkpointS3Path = 'checkpoint.kind === "S3" && checkpoint.S3.awsCredentials === "Properties"'
--var checkpointS3Custom = 'checkpoint.kind === "S3" && checkpoint.S3.awsCredentials === "Custom"'
+-var checkpointS3Path = 'checkpoint.kind === "S3" && checkpoint.S3.awsCredentials.kind === "Properties"'
+-var checkpointS3Custom = 'checkpoint.kind === "S3" && checkpoint.S3.awsCredentials.kind === "Custom"'
 -var checkpointJDBC = 'checkpoint.kind === "JDBC"'
 -var checkpointCustom = 'checkpoint.kind === "Custom"'
 
@@ -126,7 +127,7 @@ include ../../../../../app/helpers/jade/mixins.jade
                                 +java-class('Listener:', 'checkpoint.Cache.checkpointListener', '"checkpointCacheListener" + $index', 'true', 'false',
                                     'Checkpoint listener implementation class name')
                             .settings-row(ng-show=checkpointS3)
-                                +dropdown-required('AWS credentials:', 'checkpoint.awsCredentials', '"checkpointS3AwsCredentials"', 'true', 'true', 'Custom', '[\
+                                +dropdown-required('AWS credentials:', 'checkpoint.S3.awsCredentials.kind', '"checkpointS3AwsCredentials"', 'true', 'true', 'Custom', '[\
                                         {value: "Basic", label: "Basic"},\
                                         {value: "Properties", label: "Properties"},\
                                         {value: "Anonymous", label: "Anonymous"},\
@@ -141,18 +142,20 @@ include ../../../../../app/helpers/jade/mixins.jade
                                     <li>Database - Session credentials with keys and session token</li>\
                                     <li>Custom - Custom AWS credentials provider</li>\
                                 </ul>')
-                            .settings-row(ng-show=checkpointS3Path)
-                                +text('Path:', 'checkpoint.S3.Properties.path', '"checkpointS3PropertiesPath"', checkpointS3Path, 'Input properties file path',
-                                    'The file from which to read the AWS credentials properties')
-                            .settings-row(ng-show=checkpointS3Custom)
-                                +java-class('Class name:', 'checkpoint.S3.Custom.className', '"checkpointS3CustomClassName" + $index', 'true', checkpointS3Custom,
-                                    'Custom AWS credentials provider implementation class')
+                            .panel-details(ng-show=checkpointS3Path)
+                                .details-row
+                                    +text('Path:', credentialsModel + '.Properties.path', '"checkpointS3PropertiesPath"', checkpointS3Path, 'Input properties file path',
+                                        'The file from which to read the AWS credentials properties')
+                            .panel-details(ng-show=checkpointS3Custom)
+                                .details-row
+                                    +java-class('Class name:', credentialsModel + '.Custom.className', '"checkpointS3CustomClassName" + $index', 'true', checkpointS3Custom,
+                                        'Custom AWS credentials provider implementation class')
                             .settings-row(ng-show=checkpointS3)
                                 +text('Bucket name suffix:', 'checkpoint.S3.bucketNameSuffix', '"checkpointS3BucketNameSuffix"', 'false', 'default-bucket', 'Bucket name suffix')
                             .settings-row(ng-show=checkpointS3)
                                 +dropdown('Protocol:', clientCfgModel + '.protocol', '"checkpointS3Protocol"', 'true', 'HTTPS', '[\
-                                        {value: "http", label: "HTTP"},\
-                                        {value: "https", label: "HTTPS"}\
+                                        {value: "HTTP", label: "HTTP"},\
+                                        {value: "HTTPS", label: "HTTPS"}\
                                     ]',
                                 'Provides an ability to save an intermediate job state\
                                 <ul>\
@@ -168,22 +171,22 @@ include ../../../../../app/helpers/jade/mixins.jade
                                 +text('User agent:', clientCfgModel + '.userAgent', '"checkpointS3UserAgent"', 'false', 'System specific header',
                                     'HTTP user agent header to send with all requests')
                             .settings-row(ng-show=checkpointS3)
-                                +text-ip-address('Local address:', clientCfgModel + '.localAddress', '"checkpointS3LocalAddress"', 'true', '',
+                                +text-ip-address('Local address:', clientCfgModel + '.localAddress', '"checkpointS3LocalAddress"', 'true', 'Not specified',
                                     'Optionally specifies the local address to bind to')
                             .settings-row(ng-show=checkpointS3)
-                                +text('Proxy host:', clientCfgModel + '.proxyHost', '"checkpointS3ProxyHost"', 'false', '',
+                                +text('Proxy host:', clientCfgModel + '.proxyHost', '"checkpointS3ProxyHost"', 'false', 'Not specified',
                                     'Optional proxy host the client will connect through')
                             .settings-row(ng-show=checkpointS3)
-                                +number('Proxy port:', clientCfgModel + '.proxyPort', '"checkpointS3ProxyPort"', 'true', '-1', '-1',
+                                +number('Proxy port:', clientCfgModel + '.proxyPort', '"checkpointS3ProxyPort"', 'true', 'Not specified', '0',
                                     'Optional proxy port the client will connect through')
                             .settings-row(ng-show=checkpointS3)
-                                +text('Proxy user:', clientCfgModel + '.proxyUsername', '"checkpointS3ProxyUsername"', 'false', '',
+                                +text('Proxy user:', clientCfgModel + '.proxyUsername', '"checkpointS3ProxyUsername"', 'false', 'Not specified',
                                     'Optional proxy user name to use if connecting through a proxy')
                             .settings-row(ng-show=checkpointS3)
-                                +text('Proxy domain:', clientCfgModel + '.proxyDomain', '"checkpointS3ProxyDomain"', 'false', '',
+                                +text('Proxy domain:', clientCfgModel + '.proxyDomain', '"checkpointS3ProxyDomain"', 'false', 'Not specified',
                                     'Optional Windows domain name for configuring an NTLM proxy')
                             .settings-row(ng-show=checkpointS3)
-                                +text('Proxy workstation:', clientCfgModel + '.proxyWorkstation', '"checkpointS3ProxyWorkstation"', 'false', '',
+                                +text('Proxy workstation:', clientCfgModel + '.proxyWorkstation', '"checkpointS3ProxyWorkstation"', 'false', 'Not specified',
                                     'Optional Windows workstation name for configuring NTLM proxy support')
                             .settings-row(ng-show=checkpointS3)
                                 +dropdown('Retry policy:', clientRetryModel + '.kind', '"checkpointS3RetryPolicy"', 'true', 'Default', '[\
@@ -223,7 +226,7 @@ include ../../../../../app/helpers/jade/mixins.jade
                                     +checkbox('Honor the max error retry set', clientRetryModel + '.Custom.honorMaxErrorRetryInClientConfig', '"checkpointS3CustomHonorMaxErrorRetryInClientConfig"',
                                         'Whether this retry policy should honor the max error retry set by ClientConfiguration#setMaxErrorRetry(int)')
                             .settings-row(ng-show=checkpointS3)
-                                +number('Maximum retry attempts:', clientCfgModel + '.maxErrorRetry', '"checkpointS3MaxErrorRetry"', 'true', '-1', '1',
+                                +number('Maximum retry attempts:', clientCfgModel + '.maxErrorRetry', '"checkpointS3MaxErrorRetry"', 'true', '-1', '0',
                                     'Maximum number of retry attempts for failed retryable requests')
                             .settings-row(ng-show=checkpointS3)
                                 +number('Socket timeout:', clientCfgModel + '.socketTimeout', '"checkpointS3SocketTimeout"', 'true', '50000', '0',
@@ -238,21 +241,8 @@ include ../../../../../app/helpers/jade/mixins.jade
                                     'Amount of time in milliseconds to wait for the request to complete before giving up and timing out<br/>\
                                     A non - positive value means infinity')
                             .settings-row(ng-show=checkpointS3)
-                                +checkbox('Use reaper', clientCfgModel + '.useReaper', '"checkpointS3UseReaper"', 'Checks if the IdleConnectionReaper is to be started')
-                            .settings-row(ng-show=checkpointS3)
-                                +checkbox('Use GZIP', clientCfgModel + '.useGzip', '"checkpointS3UseGzip"', 'Checks if gzip compression is used')
-                            .settings-row(ng-show=checkpointS3)
-                                +number('Send buffer hints size:', clientCfgModel + '.socketSendBufferSizeHints', '"checkpointS3SocketSendBufferSizeHints"', 'true', '0', '0',
-                                    'The optional size in bytes hints for the low level TCP send buffers')
-                            .settings-row(ng-show=checkpointS3)
-                                +number('Receive buffer hints size:', clientCfgModel + '.socketReceiveBufferSizeHints', '"checkpointS3SocketReceiveBufferSizeHints"', 'true', '0', '0',
-                                    'The optional size in bytes hints for the low level TCP send buffers')
-                            .settings-row(ng-show=checkpointS3)
-                                +text('signature algorithm:', clientCfgModel + '.signerOverride', '"checkpointS3SignerOverride"', 'false', '',
+                                +text('Signature algorithm:', clientCfgModel + '.signerOverride', '"checkpointS3SignerOverride"', 'false', 'Not specified',
                                     'Name of the signature algorithm to use for signing requests made by this client')
-                            .settings-row(ng-show=checkpointS3)
-                                +checkbox('Preemptively basic authentication', clientCfgModel + '.preemptiveBasicProxyAuth', '"checkpointS3PreemptiveBasicProxyAuth"',
-                                    'Attempt to authenticate preemptively against proxy servers using basic authentication')
                             .settings-row(ng-show=checkpointS3)
                                 +number('Connection TTL:', clientCfgModel + '.connectionTTL', '"checkpointS3ConnectionTTL"', 'true', '-1', '-1',
                                     'Expiration time in milliseconds for a connection in the connection pool<br/>\
@@ -261,16 +251,23 @@ include ../../../../../app/helpers/jade/mixins.jade
                                 +number('Idle timeout:', clientCfgModel + '.connectionMaxIdleMillis', '"checkpointS3ConnectionMaxIdleMillis"', 'true', '60000', '0',
                                     'Maximum amount of time that an idle connection may sit in the connection pool and still be eligible for reuse')
                             .settings-row(ng-show=checkpointS3)
-                                +checkbox('TCP KeepAlive', clientCfgModel + '.useTcpKeepAlive', '"checkpointS3UseTcpKeepAlive"', 'TCP KeepAlive support is enabled')
-                            .settings-row(ng-show=checkpointS3)
-                                +java-class('DNS resolver:', 'checkpoint.S3.dnsResolver', '"checkpointS3DnsResolver" + $index', 'true', 'false',
+                                +java-class('DNS resolver:', clientCfgModel + '.dnsResolver', '"checkpointS3DnsResolver" + $index', 'true', 'false',
                                     'DNS Resolver that should be used to for resolving AWS IP addresses')
                             .settings-row(ng-show=checkpointS3)
                                 +number('Response metadata cache size:', clientCfgModel + '.responseMetadataCacheSize', '"checkpointS3ResponseMetadataCacheSize"', 'true', '50', '0',
                                     'Response metadata cache size')
                             .settings-row(ng-show=checkpointS3)
-                                +java-class('SecureRandom class name:', 'checkpoint.S3.secureRandom', '"checkpointS3SecureRandom" + $index', 'true', 'false',
+                                +java-class('SecureRandom class name:', clientCfgModel + '.secureRandom', '"checkpointS3SecureRandom" + $index', 'true', 'false',
                                     'SecureRandom to be used by the SDK class name')
+                            .settings-row(ng-show=checkpointS3)
+                                +checkbox('Use reaper', clientCfgModel + '.useReaper', '"checkpointS3UseReaper"', 'Checks if the IdleConnectionReaper is to be started')
+                            .settings-row(ng-show=checkpointS3)
+                                +checkbox('Use GZIP', clientCfgModel + '.useGzip', '"checkpointS3UseGzip"', 'Checks if gzip compression is used')
+                            .settings-row(ng-show=checkpointS3)
+                                +checkbox('Preemptively basic authentication', clientCfgModel + '.preemptiveBasicProxyAuth', '"checkpointS3PreemptiveBasicProxyAuth"',
+                                    'Attempt to authenticate preemptively against proxy servers using basic authentication')
+                            .settings-row(ng-show=checkpointS3)
+                                +checkbox('TCP KeepAlive', clientCfgModel + '.useTcpKeepAlive', '"checkpointS3UseTcpKeepAlive"', 'TCP KeepAlive support is enabled')
                             .settings-row(ng-show=checkpointS3)
                                 +java-class('Listener:', 'checkpoint.S3.checkpointListener', '"checkpointS3Listener" + $index', 'true', 'false',
                                     'Checkpoint listener implementation class name')

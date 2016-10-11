@@ -390,7 +390,7 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
             S3: {
                 bucketName: String,
                 clientConfiguration: {
-                    protocol: {type: String, enum: ['http', 'https']},
+                    protocol: {type: String, enum: ['HTTP', 'HTTPS']},
                     maxConnections: Number,
                     userAgent: String,
                     localAddress: String,
@@ -423,8 +423,6 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                     requestTimeout: Number,
                     useReaper: Boolean,
                     useGzip: Boolean,
-                    socketSendBufferSizeHints: Number,
-                    socketReceiveBufferSizeHints: Number,
                     signerOverride: String,
                     preemptiveBasicProxyAuth: Boolean,
                     connectionTTL: Number,
@@ -703,16 +701,18 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                 checkpointListener: String
             },
             S3: {
-                awsCredentials: {type: String, enum: ['Basic', 'Properties', 'Anonymous', 'BasicSession', 'Custom']},
-                Properties: {
-                    path: String
-                },
-                Custom: {
-                    className: String
+                awsCredentials: {
+                    kind: {type: String, enum: ['Basic', 'Properties', 'Anonymous', 'BasicSession', 'Custom']},
+                    Properties: {
+                        path: String
+                    },
+                    Custom: {
+                        className: String
+                    }
                 },
                 bucketNameSuffix: String,
                 clientConfiguration: {
-                    protocol: {type: String, enum: ['http', 'https']},
+                    protocol: {type: String, enum: ['HTTP', 'HTTPS']},
                     maxConnections: Number,
                     userAgent: String,
                     localAddress: String,
@@ -742,8 +742,6 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                     requestTimeout: Number,
                     useReaper: Boolean,
                     useGzip: Boolean,
-                    socketSendBufferSizeHints: Number,
-                    socketReceiveBufferSizeHints: Number,
                     signerOverride: String,
                     preemptiveBasicProxyAuth: Boolean,
                     connectionTTL: Number,

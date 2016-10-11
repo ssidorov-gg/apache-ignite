@@ -253,7 +253,7 @@ export class Bean extends EmptyBean {
      * @returns {Bean}
      */
     arrayProperty(id, name, items, typeClsName = 'java.lang.String') {
-        if (items.length)
+        if (items && items.length)
             this.properties.push({clsName: 'ARRAY', id, name, items, typeClsName});
 
         return this;
