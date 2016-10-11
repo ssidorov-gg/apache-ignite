@@ -1645,6 +1645,17 @@ public class GridNioServer<T> {
                         }
                     }
 
+//                    int cnt = 0;
+//
+//                    if (writer && selNow) {
+//                        long end = U.currentTimeMillis() + 100;
+//
+//                        do  {
+//                            cnt = selector.selectNow();
+//                        }
+//                        while (cnt == 0 && U.currentTimeMillis() < end && changeReqs.isEmpty());
+//                    }
+
                     if (!writer || (writeSesCnt > 0 || !readSes.isEmpty())) {
                         select = true;
 
