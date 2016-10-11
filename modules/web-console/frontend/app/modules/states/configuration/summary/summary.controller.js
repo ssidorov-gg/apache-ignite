@@ -20,8 +20,8 @@ import JSZip from 'jszip';
 import saver from 'file-saver';
 
 export default [
-    '$rootScope', '$scope', '$http', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteLoading', '$filter', 'IgniteConfigurationResource', 'JavaTypes', 'IgniteVersion', 'GeneratorDocker', 'GeneratorPom', 'IgniteFormUtils',
-    function($root, $scope, $http, LegacyUtils, Messages, Loading, $filter, Resource, JavaTypes, Version, docker, pom, FormUtils) {
+    '$rootScope', '$scope', '$http', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteLoading', '$filter', 'IgniteConfigurationResource', 'JavaTypes', 'IgniteVersion', 'IgniteConfigurationGenerator', 'SpringTransformer', 'JavaTransformer', 'GeneratorDocker', 'GeneratorPom', 'IgnitePropertiesGenerator', 'IgniteFormUtils',
+    function($root, $scope, $http, LegacyUtils, Messages, Loading, $filter, Resource, JavaTypes, Version, generator, spring, java, docker, pom, propsGenerator, FormUtils) {
         const ctrl = this;
 
         $scope.ui = { ready: false };
@@ -299,21 +299,25 @@ export default [
             zip.file('Dockerfile', ctrl.data.docker);
             zip.file('.dockerignore', docker.ignoreFile());
 
-            const builder = $generatorProperties.generateProperties(cluster);
+            const cfg = generator.igniteConfiguration(cluster, true);
+            const clientCfg = generator.igniteConfiguration(cluster, false);
+            const clientNearCaches = _.filter(cluster.caches, (cache) => _.get(cache, 'clientNearConfiguration.enabled'));
 
-            if (builder)
-                zip.file('src/main/resources/secret.properties', builder.asString());
+            const secProps = propsGenerator.generate(cfg);
+
+            if (secProps)
+                zip.file('src/main/resources/secret.properties', secProps);
 
             const srcPath = 'src/main/java/';
 
             const serverXml = 'config/' + cluster.name + '-server.xml';
             const clientXml = 'config/' + cluster.name + '-client.xml';
 
-            zip.file(serverXml, $generatorSpring.cluster(cluster));
-            zip.file(clientXml, $generatorSpring.cluster(cluster, clientNearCfg));
+            zip.file(serverXml, spring.igniteConfiguration(cfg).asString());
+            zip.file(clientXml, spring.igniteConfiguration(clientCfg, clientNearCaches).asString());
 
-            zip.file(srcPath + 'config/ServerConfigurationFactory.java', $generatorJava.cluster(cluster, 'config', 'ServerConfigurationFactory', null));
-            zip.file(srcPath + 'config/ClientConfigurationFactory.java', $generatorJava.cluster(cluster, 'config', 'ClientConfigurationFactory', clientNearCfg));
+            zip.file(srcPath + 'config/ServerConfigurationFactory.java', java.igniteConfiguration(cfg, 'config', 'ServerConfigurationFactory').asString());
+            zip.file(srcPath + 'config/ClientConfigurationFactory.java', java.igniteConfiguration(cfg, 'config', 'ClientConfigurationFactory', clientNearCaches).asString());
 
             if ($generatorJava.isDemoConfigured(cluster, $root.IgniteDemoMode)) {
                 zip.file(srcPath + 'demo/DemoStartup.java', $generatorJava.nodeStartup(cluster, 'demo', 'DemoStartup',
@@ -340,7 +344,7 @@ export default [
             zip.file('jdbc-drivers/README.txt', $generatorReadme.readmeJdbc().asString());
 
             if (!ctrl.data.pojos)
-                ctrl.data.pojos = $generatorJava.pojos(cluster.caches);
+                ctrl.data.pojos = java.pojos(cluster.caches);
 
             for (const pojo of ctrl.data.pojos) {
                 if (pojo.keyClass && JavaTypes.nonBuiltInClass(pojo.keyType))

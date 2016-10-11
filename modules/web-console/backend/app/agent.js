@@ -252,8 +252,6 @@ module.exports.factory = function(_, fs, path, JSZip, socketio, settings, mongo)
                     .addParam('p7', pageSize);
             }
 
-            console.log(cmd);
-
             return this.executeRest(cmd);
         }
 

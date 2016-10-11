@@ -35,6 +35,7 @@ import JavaTransformer from './generator/JavaTransformer.service';
 import SharpTransformer from './generator/SharpTransformer.service';
 import GeneratorDocker from './generator/Docker.service';
 import GeneratorPom from './generator/Pom.service';
+import GeneratorProperties from './generator/Properties.service';
 
 import igniteSidebarDirective from './sidebar.directive';
 
@@ -57,5 +58,6 @@ angular
 .service('SpringTransformer', SpringTransformer)
 .service('JavaTransformer', JavaTransformer)
 .service('IgniteSharpTransformer', SharpTransformer)
+.service('IgnitePropertiesGenerator', GeneratorProperties)
 .service(...GeneratorDocker)
 .service(...GeneratorPom);

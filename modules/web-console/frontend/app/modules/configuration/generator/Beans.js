@@ -184,14 +184,14 @@ export class Bean extends EmptyBean {
         return this._property(this.properties, 'int', model, name, _.nonNil);
     }
 
-    property(clsName, name, value) {
-        this.properties.push({clsName, name, value});
+    property(name, value, hint) {
+        this.properties.push({clsName: 'PROPERTY', name, value, hint});
 
         return this;
     }
 
-    propertyChar(name, value) {
-        this.properties.push({clsName: 'PROPERTY_CHAR', name, value});
+    propertyChar(name, value, hint) {
+        this.properties.push({clsName: 'PROPERTY_CHAR', name, value, hint});
 
         return this;
     }

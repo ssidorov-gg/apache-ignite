@@ -90,48 +90,48 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
             switch (dialect) {
                 case 'Generic':
                     dsBean = new Bean('com.mchange.v2.c3p0.ComboPooledDataSource', id, {})
-                        .property('PROPERTY', 'jdbcUrl', `${id}.jdbc.url`);
+                        .property('jdbcUrl', `${id}.jdbc.url`, 'jdbc:your_database');
 
                     break;
                 case 'Oracle':
                     dsBean = new Bean('oracle.jdbc.pool.OracleDataSource', id, {})
-                        .property('PROPERTY', 'URL', `${id}.jdbc.url`);
+                        .property('URL', `${id}.jdbc.url`, 'jdbc:oracle:thin:@[host]:[port]:[database]');
 
                     break;
                 case 'DB2':
                     dsBean = new Bean('com.ibm.db2.jcc.DB2DataSource', id, {})
-                        .property('PROPERTY', 'serverName', `${id}.jdbc.server_name`)
-                        .property('PROPERTY', 'portNumber', `${id}.jdbc.port_number`)
-                        .property('PROPERTY', 'databaseName', `${id}.jdbc.database_name`)
-                        .property('PROPERTY', 'driverType', `${id}.jdbc.driver_type`);
+                        .property('serverName', `${id}.jdbc.server_name`, 'YOUR_DATABASE_SERVER_NAME')
+                        .property('portNumber', `${id}.jdbc.port_number`, 'YOUR_JDBC_PORT_NUMBER')
+                        .property('databaseName', `${id}.jdbc.database_name`, 'YOUR_JDBC_DRIVER_TYPE')
+                        .property('driverType', `${id}.jdbc.driver_type`, 'YOUR_DATABASE_NAME');
 
                     break;
                 case 'SQLServer':
                     dsBean = new Bean('com.microsoft.sqlserver.jdbc.SQLServerDataSource', id, {})
-                        .property('PROPERTY', 'URL', `${id}.jdbc.url`);
+                        .property('URL', `${id}.jdbc.url`, 'jdbc:sqlserver://[host]:[port][;databaseName=database]');
 
                     break;
                 case 'MySQL':
                     dsBean = new Bean('com.mysql.jdbc.jdbc2.optional.MysqlDataSource', id, {})
-                        .property('PROPERTY', 'URL', `${id}.jdbc.url`);
+                        .property('URL', `${id}.jdbc.url`, 'jdbc:mysql://[host]:[port]/[database]');
 
                     break;
                 case 'PostgreSQL':
                     dsBean = new Bean('org.postgresql.ds.PGPoolingDataSource', id, {})
-                        .property('PROPERTY', 'url', `${id}.jdbc.url`);
+                        .property('url', `${id}.jdbc.url`, 'jdbc:postgresql://[host]:[port]/[database]');
 
                     break;
                 case 'H2':
                     dsBean = new Bean('org.h2.jdbcx.JdbcDataSource', id, {})
-                        .property('PROPERTY', 'URL', `${id}.jdbc.url`);
+                        .property('URL', `${id}.jdbc.url`, 'jdbc:h2:tcp://[host]/[database]');
 
                     break;
                 default:
             }
 
             if (dsBean) {
-                dsBean.property('PROPERTY', 'user', `${id}.jdbc.username`)
-                    .property('PROPERTY', 'password', `${id}.jdbc.password`);
+                dsBean.property('user', `${id}.jdbc.username`, 'YOUR_USER_NAME')
+                    .property('password', `${id}.jdbc.password`, 'YOUR_PASSWORD');
             }
 
             return dsBean;
@@ -1006,7 +1006,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                     .pathProperty('keyStoreFilePath');
 
                 if (_.nonEmpty(bean.valueOf('keyStoreFilePath')))
-                    bean.propertyChar('keyStorePassword', 'ssl.key.storage.password');
+                    bean.propertyChar('keyStorePassword', 'ssl.key.storage.password', 'YOUR_SSL_KEY_STORAGE_PASSWORD');
 
                 bean.intProperty('keyStoreType')
                     .intProperty('protocol');
@@ -1020,7 +1020,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                     bean.pathProperty('trustStoreFilePath');
 
                     if (_.nonEmpty(bean.valueOf('trustStoreFilePath')))
-                        bean.propertyChar('trustStorePassword', 'ssl.trust.storage.password');
+                        bean.propertyChar('trustStorePassword', 'ssl.trust.storage.password', 'YOUR_SSL_TRUST_STORAGE_PASSWORD');
 
                     bean.intProperty('trustStoreType');
                 }
@@ -1314,7 +1314,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                         else {
                             ccfg.stringProperty('connectionUrl')
                                 .stringProperty('user')
-                                .property('PROPERTY', 'password', `ds.${storeFactory.user}.password`);
+                                .property('password', `ds.${storeFactory.user}.password`, 'YOUR_PASSWORD');
                         }
 
                         bean.boolProperty('initSchema')
@@ -1503,8 +1503,8 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                 return cfg;
 
             cfg.stringProperty('name')
-                .property('java.lang.String', 'dataCacheName', igfs.name + '-data')
-                .property('java.lang.String', 'metaCacheName', igfs.name + '-meta')
+                .stringProperty('dataCacheName', igfs.name + '-data')
+                .stringProperty('metaCacheName', igfs.name + '-meta')
                 .enumProperty('defaultMode');
 
             return cfg;

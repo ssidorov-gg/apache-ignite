@@ -369,7 +369,7 @@ export default ['JavaTypes', 'igniteClusterPlatformDefaults', 'igniteCachePlatfo
                         else {
                             ccfg.stringProperty('connectionUrl')
                                 .stringProperty('user')
-                                .property('PROPERTY', 'password', `ds.${storeFactory.user}.password`);
+                                .property('password', `ds.${storeFactory.user}.password`, 'YOUR_PASSWORD');
                         }
 
                         bean.boolProperty('initSchema')

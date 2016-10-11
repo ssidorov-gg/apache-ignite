@@ -27,7 +27,7 @@ export default ['$scope', 'JavaTransformer', function($scope, generator) {
         case 'igniteConfiguration':
             const clsName = client ? 'ClientConfigurationFactory' : 'ServerConfigurationFactory';
 
-            ctrl.generate = (cluster) => generator.igniteConfiguration(cluster, 'config', clsName, client);
+            ctrl.generate = (cluster) => generator.cluster(cluster, 'config', clsName, client);
 
             break;
         case 'clusterCaches':

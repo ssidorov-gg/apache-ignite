@@ -19,20 +19,6 @@ include ../../app/helpers/jade/mixins.jade
 mixin hard-link(ref, txt)
     a(style='color:#ec1c24' href=ref target='_blank') #{txt}
 
-mixin preview-tabs(client)
-    -var tabs = client ? 'tabsClient' : 'tabsServer'
-
-    .summary-tabs(ignite-ui-ace-tabs)
-        div(bs-tabs data-bs-active-pane="#{tabs}.activeTab" template='configuration/summary-tabs.html')
-            div(bs-pane title='XML')
-                ignite-ui-ace-spring(ng-if='#{tabs}.activeTab == 0 || #{tabs}.init[0]' ng-init='#{tabs}.init[0] = true' data-master='cluster' data-generator='igniteConfiguration' data-client='#{client}' data-no-deep-watch)
-            div(bs-pane title='Java')
-                ignite-ui-ace-java(ng-if='#{tabs}.activeTab == 1 || #{tabs}.init[1]' ng-init='#{tabs}.init[1] = true' data-master='cluster' data-generator='igniteConfiguration' data-client='#{client}' data-no-deep-watch)
-            div(bs-pane title='POM')
-                ignite-ui-ace-pom(ng-if='#{tabs}.activeTab == 2 || #{tabs}.init[2]' ng-init='#{tabs}.init[2] = true' data-cluster='cluster' data-generator='igniteConfiguration' data-client='#{client}' data-no-deep-watch)
-            div(bs-pane title='Dockerfile')
-                ignite-ui-ace-docker(ng-if='#{tabs}.activeTab == 3 || #{tabs}.init[3]' ng-init='#{tabs}.init[3] = true' data-cluster='cluster' data-generator='igniteConfiguration' data-client='#{client}' data-no-deep-watch ng-model='ctrl.data.docker')
-
 .docs-header
     h1 Configurations Summary
 .docs-body
@@ -67,7 +53,16 @@ mixin preview-tabs(client)
                         label Server
 
                     .panel-collapse(id='server' role='tabpanel' bs-collapse-target)
-                        +preview-tabs(false)
+                        .summary-tabs(ignite-ui-ace-tabs)
+                            div(bs-tabs data-bs-active-pane="tabsServer.activeTab" template='configuration/summary-tabs.html')
+                                div(bs-pane title='XML')
+                                    ignite-ui-ace-spring(ng-if='tabsServer.activeTab == 0 || tabsServer.init[0]' ng-init='tabsServer.init[0] = true' data-master='cluster' data-generator='igniteConfiguration' data-no-deep-watch)
+                                div(bs-pane title='Java')
+                                    ignite-ui-ace-java(ng-if='tabsServer.activeTab == 1 || tabsServer.init[1]' ng-init='tabsServer.init[1] = true' data-master='cluster' data-generator='igniteConfiguration' data-no-deep-watch)
+                                div(bs-pane title='POM')
+                                    ignite-ui-ace-pom(ng-if='tabsServer.activeTab == 2 || tabsServer.init[2]' ng-init='tabsServer.init[2] = true' data-cluster='cluster' data-generator='igniteConfiguration' data-no-deep-watch)
+                                div(bs-pane title='Dockerfile')
+                                    ignite-ui-ace-docker(ng-if='tabsServer.activeTab == 3 || tabsServer.init[3]' ng-init='tabsServer.init[3] = true' data-cluster='cluster' data-generator='igniteConfiguration' data-no-deep-watch ng-model='ctrl.data.docker')
 
                 .panel.panel-default
                     .panel-heading(role='tab' bs-collapse-toggle)
@@ -75,4 +70,14 @@ mixin preview-tabs(client)
                         label Client
 
                     .panel-collapse(id='client' role='tabpanel' bs-collapse-target)
-                        +preview-tabs(true)
+                        .summary-tabs(ignite-ui-ace-tabs)
+                            div(bs-tabs data-bs-active-pane="tabsClient.activeTab" template='configuration/summary-tabs.html')
+                                div(bs-pane title='XML')
+                                    ignite-ui-ace-spring(ng-if='tabsClient.activeTab == 0 || tabsClient.init[0]' ng-init='tabsClient.init[0] = true' data-master='cluster' data-generator='igniteConfiguration' data-client='true' data-no-deep-watch)
+                                div(bs-pane title='Java')
+                                    ignite-ui-ace-java(ng-if='tabsClient.activeTab == 1 || tabsClient.init[1]' ng-init='tabsClient.init[1] = true' data-master='cluster' data-generator='igniteConfiguration' data-client='true' data-no-deep-watch)
+                                div(bs-pane title='POM')
+                                    ignite-ui-ace-pom(ng-if='tabsClient.activeTab == 2 || tabsClient.init[2]' ng-init='tabsClient.init[2] = true' data-cluster='cluster' data-generator='igniteConfiguration' data-client='true' data-no-deep-watch)
+                                div(bs-pane title='POJO' ng-if='cluster | hasPojo')
+                                    ignite-ui-ace-pojos(ng-if='tabsClient.activeTab == 3 || tabsClient.init[3]' ng-init='tabsClient.init[3] = true' data-cluster='cluster' data-no-deep-watch ng-model='ctrl.data.pojos')
+                        

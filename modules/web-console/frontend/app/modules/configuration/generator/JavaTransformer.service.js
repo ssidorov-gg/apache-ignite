@@ -540,7 +540,7 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
         }
 
         static _prepareImports(imports) {
-            return _.sortedUniq(_.sortBy(_.filter(imports, (cls) => !cls.startsWith('java.lang.') && !JavaTypes.isJavaPrimitive(cls))));
+            return _.sortedUniq(_.sortBy(_.filter(imports, (cls) => !cls.startsWith('java.lang.') && _.includes(cls, '.'))));
         }
 
         /**
@@ -631,14 +631,13 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
         /**
          * Build Java startup class with configuration.
          *
-         * @param {Bean} cluster
+         * @param {Bean} cfg
          * @param pkg Package name.
          * @param {String} clsName Class name for generate factory class otherwise generate code snippet.
-         * @param {Boolean} client Is client node.
+         * @param {Boolean} clientNearCaches Is client node.
          * @returns {StringBuilder}
          */
-        static igniteConfiguration(cluster, pkg, clsName, client) {
-            const cfg = generator.igniteConfiguration(cluster, client);
+        static igniteConfiguration(cfg, pkg, clsName, clientNearCaches) {
             const sb = new StringBuilder();
 
             sb.append(`package ${pkg};`);
@@ -646,7 +645,7 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
 
             const imports = this.collectBeanImports(cfg);
 
-            if (client)
+            if (_.nonEmpty(clientNearCaches))
                 imports.push('org.apache.ignite.configuration.NearCacheConfiguration');
 
             if (_.includes(imports, 'oracle.jdbc.pool.OracleDataSource'))
@@ -723,29 +722,25 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
                 sb.emptyLine();
             }
 
-            if (client) {
-                const nearCaches = _.filter(cluster.caches, (cache) => _.get(cache, 'clientNearConfiguration.enabled'));
+            _.forEach(clientNearCaches, (cache) => {
+                this.commentBlock(sb, `Configuration of near cache for cache: ${cache.name}.`,
+                    '',
+                    '@return Near cache configuration.',
+                    '@throws Exception If failed to construct near cache configuration instance.'
+                );
 
-                _.forEach(nearCaches, (cache) => {
-                    this.commentBlock(sb, `Configuration of near cache for cache: ${cache.name}.`,
-                        '',
-                        '@return Near cache configuration.',
-                        '@throws Exception If failed to construct near cache configuration instance.'
-                    );
+                const nearCacheBean = generator.cacheNearClient(cache);
 
-                    const nearCacheBean = generator.cacheNearClient(cache);
+                sb.startBlock(`public static NearCacheConfiguration ${nearCacheBean.id}() throws Exception {`);
 
-                    sb.startBlock(`public static NearCacheConfiguration ${nearCacheBean.id}() throws Exception {`);
+                this.constructBean(sb, nearCacheBean);
+                sb.emptyLine();
 
-                    this.constructBean(sb, nearCacheBean);
-                    sb.emptyLine();
+                sb.append(`return ${nearCacheBean.id};`);
+                sb.endBlock('}');
 
-                    sb.append(`return ${nearCacheBean.id};`);
-                    sb.endBlock('}');
-
-                    sb.emptyLine();
-                });
-            }
+                sb.emptyLine();
+            });
 
             this.commentBlock(sb, 'Configure grid.',
                 '',
@@ -768,7 +763,7 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
                 _.forEach(complexBeans, (bean, idx) => {
                     switch (bean.clsName) {
                         case 'org.apache.ignite.configuration.CacheConfiguration':
-                            this.cacheConfiguration(sb, bean, client);
+                            this.cacheConfiguration(sb, bean);
 
                             break;
                         default:
@@ -783,6 +778,285 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
             sb.endBlock('}');
 
             return sb;
+        }
+
+        static cluster(cluster, pkg, clsName, client) {
+            const cfg = this.generator.igniteConfiguration(cluster, client);
+
+            const clientNearCaches = client ? _.filter(cluster.caches, (cache) => _.get(cache, 'clientNearConfiguration.enabled')) : [];
+
+            return this.igniteConfiguration(cfg, pkg, clsName, clientNearCaches);
+        }
+
+        /**
+         * Generate java class code.
+         *
+         * @param fullClsName Full class name.
+         * @param fields Fields.
+         * @param addConstructor If 'true' then empty and full constructors should be generated.
+         * @returns {StringBuilder}
+         */
+        static domainClass(fullClsName, fields, addConstructor) {
+            const dotIdx = fullClsName.lastIndexOf('.');
+
+            const pkg = fullClsName.substring(0, dotIdx);
+            const clsName = fullClsName.substring(dotIdx + 1);
+
+            const sb = new StringBuilder();
+
+            sb.append(`package ${pkg};`);
+            sb.emptyLine();
+
+            const imports = ['java.io.Serializable'];
+
+            _.forEach(fields, (field) => imports.push(JavaTypes.fullClassName(field.javaFieldType)));
+
+            _.forEach(this._prepareImports(imports), (cls) => sb.append(`import ${cls};`));
+
+            sb.emptyLine();
+
+            this.mainComment(sb,
+                `${clsName} definition.`,
+                ''
+            );
+            sb.startBlock(`public class ${clsName} implements Serializable {`);
+            sb.append('/** */');
+            sb.append('private static final long serialVersionUID = 0L;');
+            sb.emptyLine();
+
+            // Generate fields declaration.
+            _.forEach(fields, (field) => {
+                const fldName = field.javaFieldName;
+                const fldType = JavaTypes.shortClassName(field.javaFieldType);
+
+                sb.append(`/** Value for ${fldName}. */`);
+                sb.append(`private ${fldType} ${fldName};`);
+
+                sb.emptyLine();
+            });
+
+            // Generate constructors.
+            if (addConstructor) {
+                this.commentBlock(sb, 'Empty constructor.');
+                sb.startBlock(`public ${clsName}() {`);
+                this.comment(sb, 'No-op.');
+                sb.endBlock('}');
+
+                sb.emptyLine();
+
+                this.commentBlock(sb, 'Full constructor.');
+
+                const arg = (field) => {
+                    const fldType = JavaTypes.shortClassName(field.javaFieldType);
+
+                    return `${fldType} ${field.javaFieldName}`;
+                };
+
+                sb.startBlock(`public ${clsName}(${arg(_.head(fields))}${fields.length === 1 ? ') {' : ','}`);
+
+                _.forEach(_.tail(fields), (field, idx) => {
+                    sb.append(`${arg(field)}${idx !== fields.length - 1 ? ',' : ') {'}`);
+                });
+
+                _.forEach(fields, (field) => sb.append(`this.${field.javaFieldName} = ${field.javaFieldName};`));
+
+                sb.endBlock('}');
+
+                sb.emptyLine();
+            }
+
+            // Generate getters and setters methods.
+            _.forEach(fields, (field) => {
+                const fldType = JavaTypes.shortClassName(field.javaFieldType);
+                const fldName = field.javaFieldName;
+
+                this.commentBlock(sb,
+                    `Gets ${fldName}`,
+                    '',
+                    `@return Value for ${fldName}.`
+                );
+                sb.startBlock(`public ${fldType} ${JavaTypes.toJavaName('get', fldName)}() {`);
+                sb.append('return ' + fldName + ';');
+                sb.endBlock('}');
+
+                sb.emptyLine();
+
+                this.commentBlock(sb,
+                    `Sets ${fldName}`,
+                    '',
+                    `@param ${fldName} New value for ${fldName}.`
+                );
+                sb.startBlock(`public void ${JavaTypes.toJavaName('set', fldName)}(${fldType} ${fldName}) {`);
+                sb.append(`this.${fldName} = ${fldName};`);
+                sb.endBlock('}');
+
+                sb.emptyLine();
+            });
+
+            // Generate equals() method.
+            this.commentBlock(sb, '{@inheritDoc}');
+            sb.startBlock('@Override public boolean equals(Object o) {');
+            sb.startBlock('if (this == o)');
+            sb.append('return true;');
+
+            sb.endBlock('');
+
+            sb.startBlock(`if (!(o instanceof ${clsName}))`);
+            sb.append('return false;');
+
+            sb.endBlock('');
+
+            sb.append(`${clsName} that = (${clsName})o;`);
+
+            _.forEach(fields, (field) => {
+                sb.emptyLine();
+
+                const javaName = field.javaFieldName;
+                const javaType = field.javaFieldType;
+
+                switch (javaType) {
+                    case 'float':
+                        sb.startBlock(`if (Float.compare(${javaName}, that.${javaName}) != 0)`);
+
+                        break;
+                    case 'double':
+                        sb.startBlock(`if (Double.compare(${javaName}, that.${javaName}) != 0)`);
+
+                        break;
+                    default:
+                        if (JavaTypes.isJavaPrimitive(javaType))
+                            sb.startBlock('if (' + javaName + ' != that.' + javaName + ')');
+                        else
+                            sb.startBlock('if (' + javaName + ' != null ? !' + javaName + '.equals(that.' + javaName + ') : that.' + javaName + ' != null)');
+                }
+
+                sb.append('return false;');
+
+                sb.endBlock('');
+            });
+
+            sb.append('return true;');
+            sb.endBlock('}');
+
+            sb.emptyLine();
+
+            // Generate hashCode() method.
+            this.commentBlock(sb, '{@inheritDoc}');
+            sb.startBlock('@Override public int hashCode() {');
+
+            let first = true;
+            let tempVar = false;
+
+            _.forEach(fields, (field) => {
+                const javaName = field.javaFieldName;
+                const javaType = field.javaFieldType;
+
+                let fldHashCode;
+
+                switch (javaType) {
+                    case 'boolean':
+                        fldHashCode = `${javaName} ? 1 : 0`;
+
+                        break;
+                    case 'byte':
+                    case 'short':
+                        fldHashCode = `(int)${javaName}`;
+
+                        break;
+                    case 'int':
+                        fldHashCode = `${javaName}`;
+
+                        break;
+                    case 'long':
+                        fldHashCode = `(int)(${javaName} ^ (${javaName} >>> 32))`;
+
+                        break;
+                    case 'float':
+                        fldHashCode = `${javaName} != +0.0f ? Float.floatToIntBits(${javaName}) : 0`;
+
+                        break;
+                    case 'double':
+                        sb.append(`${tempVar ? 'ig_hash_temp' : 'long ig_hash_temp'} = Double.doubleToLongBits(${javaName});`);
+
+                        tempVar = true;
+
+                        fldHashCode = `${javaName} != +0.0f ? Float.floatToIntBits(${javaName}) : 0`;
+
+                        break;
+                    default:
+                        fldHashCode = `${javaName} != null ? ${javaName}.hashCode() : 0`;
+                }
+
+                sb.append(first ? `int res = ${fldHashCode};` : `res = 31 * res + ${fldHashCode.startsWith('(') ? fldHashCode : `(${fldHashCode})`};`);
+
+                first = false;
+
+                sb.emptyLine();
+            });
+
+            sb.append('return res;');
+            sb.endBlock('}');
+
+            sb.emptyLine();
+
+            this.commentBlock(sb, '{@inheritDoc}');
+            sb.startBlock('@Override public String toString() {');
+            sb.startBlock(`return "${clsName} [" + `);
+
+            _.forEach(fields, (field, idx) => {
+                sb.append(`"${field.javaFieldName}=" + ${field.javaFieldName}${idx < fields.length - 1 ? ' + ", " + ' : ' +'}`);
+            });
+
+            sb.endBlock('"]";');
+            sb.endBlock('}');
+
+            sb.endBlock('}');
+
+            return sb.asString();
+        }
+
+        /**
+         * Generate source code for type by its domain models.
+         *
+         * @param caches List of caches to generate POJOs for.
+         * @param addConstructor If 'true' then generate constructors.
+         * @param includeKeyFields If 'true' then include key fields into value POJO.
+         */
+        static pojos(caches, addConstructor, includeKeyFields) {
+            const pojos = [];
+
+            _.forEach(caches, (cache) => {
+                _.forEach(cache.domains, (domain) => {
+                    // Process only  domains with 'generatePojo' flag and skip already generated classes.
+                    if (domain.generatePojo && !_.find(pojos, {valueType: domain.valueType}) &&
+                        // Skip domain models without value fields.
+                        _.nonEmpty(domain.valueFields)) {
+                        const pojo = {};
+
+                        // Key class generation only if key is not build in java class.
+                        if (_.nonNil(domain.keyFields) && domain.keyFields.length > 0) {
+                            pojo.keyType = domain.keyType;
+                            pojo.keyClass = this.domainClass(domain.keyType, domain.keyFields, addConstructor);
+                        }
+
+                        const valueFields = _.clone(domain.valueFields);
+
+                        if (includeKeyFields) {
+                            _.forEach(domain.keyFields, ({fld}) => {
+                                if (!_.find(valueFields, {name: fld.name}))
+                                    valueFields.push(fld);
+                            });
+                        }
+
+                        pojo.valueType = domain.valueType;
+                        pojo.valueClass = this.domainClass(domain.valueType, valueFields, addConstructor);
+
+                        pojos.push(pojo);
+                    }
+                });
+            });
+
+            return pojos;
         }
     }
 

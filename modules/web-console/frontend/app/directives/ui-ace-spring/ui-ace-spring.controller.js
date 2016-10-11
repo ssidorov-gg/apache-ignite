@@ -23,7 +23,7 @@ export default ['$scope', 'SpringTransformer', function($scope, generator) {
     // Setup generator.
     switch (ctrl.generator) {
         case 'igniteConfiguration':
-            ctrl.generate = (cluster) => generator.igniteConfiguration(cluster, ctrl.client === 'true');
+            ctrl.generate = (cluster) => generator.cluster(cluster, ctrl.client === 'true');
 
             break;
         case 'clusterCaches':
