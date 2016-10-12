@@ -160,7 +160,17 @@ export class Bean extends EmptyBean {
     }
 
     valueOf(path) {
-        return _.get(this.src, path) || _.get(this.dflts, path + '.value') || _.get(this.dflts, path);
+        const srcVal = _.get(this.src, path);
+
+        if (_.nonNil(srcVal))
+            return srcVal;
+
+        const dfltVal = _.get(this.dflts, path + '.value');
+
+        if (_.nonNil(dfltVal))
+            return dfltVal;
+
+        return _.get(this.dflts, path);
     }
 
     includes(...paths) {

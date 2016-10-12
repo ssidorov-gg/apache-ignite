@@ -398,7 +398,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                         const fsBean = new Bean('org.apache.ignite.spi.checkpoint.sharedfs.SharedFsCheckpointSpi',
                             'checkpointSpi', spi.FS);
 
-                        fsBean.arrayProperty('dirPaths', 'dirPaths', spi.FS.dirPaths)
+                        fsBean.arrayProperty('dirPaths', 'dirPaths', _.get(spi, 'FS.dirPaths'))
                             .emptyBeanProperty('checkpointListener');
 
                         return fsBean;
@@ -509,12 +509,12 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                                         backoffStrategy: 'DEFAULT_BACKOFF_STRATEGY',
                                         maxErrorRetry: 'DEFAULT_MAX_ERROR_RETRY',
                                         honorMaxErrorRetryInClientConfig: true
-                                    });
+                                    }, clusterDflts.checkpointSpi.S3.clientConfiguration.retryPolicy);
 
                                     retryBean.constantConstructorArgument('retryCondition')
                                         .constantConstructorArgument('backoffStrategy')
                                         .constantConstructorArgument('maxErrorRetry')
-                                        .constructorArgument('java.lang.Boolean', 'honorMaxErrorRetryInClientConfig');
+                                        .constructorArgument('java.lang.Boolean', retryBean.valueOf('honorMaxErrorRetryInClientConfig'));
 
                                     break;
 
@@ -522,14 +522,14 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                                     retryBean = new Bean('com.amazonaws.retry.RetryPolicy.RetryPolicy', 'retryPolicy', {
                                         retryCondition: 'DEFAULT_RETRY_CONDITION',
                                         backoffStrategy: 'DEFAULT_BACKOFF_STRATEGY',
-                                        maxErrorRetry: _.get(policy, 'maxErrorRetry'),
-                                        honorMaxErrorRetryInClientConfig: true
-                                    });
+                                        maxErrorRetry: _.get(policy, 'maxErrorRetry') || -1,
+                                        honorMaxErrorRetryInClientConfig: false
+                                    }, clusterDflts.checkpointSpi.S3.clientConfiguration.retryPolicy);
 
                                     retryBean.constantConstructorArgument('retryCondition')
                                         .constantConstructorArgument('backoffStrategy')
-                                        .intConstructorArgument('maxErrorRetry')
-                                        .constructorArgument('java.lang.Boolean', 'honorMaxErrorRetryInClientConfig');
+                                        .constructorArgument('java.lang.Integer', retryBean.valueOf('maxErrorRetry'))
+                                        .constructorArgument('java.lang.Boolean', retryBean.valueOf('honorMaxErrorRetryInClientConfig'));
 
                                     break;
 
@@ -539,12 +539,12 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                                         backoffStrategy: 'DYNAMODB_DEFAULT_BACKOFF_STRATEGY',
                                         maxErrorRetry: 'DYNAMODB_DEFAULT_MAX_ERROR_RETRY',
                                         honorMaxErrorRetryInClientConfig: true
-                                    });
+                                    }, clusterDflts.checkpointSpi.S3.clientConfiguration.retryPolicy);
 
                                     retryBean.constantConstructorArgument('retryCondition')
                                         .constantConstructorArgument('backoffStrategy')
                                         .constantConstructorArgument('maxErrorRetry')
-                                        .constructorArgument('java.lang.Boolean', 'honorMaxErrorRetryInClientConfig');
+                                        .constructorArgument('java.lang.Boolean', retryBean.valueOf('honorMaxErrorRetryInClientConfig'));
 
                                     break;
 
@@ -552,22 +552,24 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                                     retryBean = new Bean('com.amazonaws.retry.RetryPolicy.RetryPolicy', 'retryPolicy', {
                                         retryCondition: 'DEFAULT_RETRY_CONDITION',
                                         backoffStrategy: 'DYNAMODB_DEFAULT_BACKOFF_STRATEGY',
-                                        maxErrorRetry: _.get(policy, 'maxErrorRetry'),
-                                        honorMaxErrorRetryInClientConfig: true
-                                    });
+                                        maxErrorRetry: _.get(policy, 'maxErrorRetry') || -1,
+                                        honorMaxErrorRetryInClientConfig: false
+                                    }, clusterDflts.checkpointSpi.S3.clientConfiguration.retryPolicy);
 
                                     retryBean.constantConstructorArgument('retryCondition')
                                         .constantConstructorArgument('backoffStrategy')
-                                        .intConstructorArgument('maxErrorRetry')
-                                        .constructorArgument('java.lang.Boolean', 'honorMaxErrorRetryInClientConfig');
+                                        .constructorArgument('java.lang.Integer', retryBean.valueOf('maxErrorRetry'))
+                                        .constructorArgument('java.lang.Boolean', retryBean.valueOf('honorMaxErrorRetryInClientConfig'));
 
                                     break;
 
                                 case 'Custom':
-                                    retryBean.emptyBeanProperty('retryCondition')
-                                        .emptyBeanProperty('backoffStrategy')
-                                        .intConstructorArgument('maxErrorRetry')
-                                        .constructorArgument('java.lang.Boolean', 'honorMaxErrorRetryInClientConfig');
+                                    retryBean = new Bean('com.amazonaws.retry.RetryPolicy.RetryPolicy', 'retryPolicy', policy);
+
+                                    retryBean.beanConstructorArgument('retryCondition', retryBean.valueOf('retryCondition') ? new EmptyBean(retryBean.valueOf('retryCondition')) : null)
+                                        .beanConstructorArgument('backoffStrategy', retryBean.valueOf('backoffStrategy') ? new EmptyBean(retryBean.valueOf('backoffStrategy')) : null)
+                                        .constructorArgument('java.lang.Integer', retryBean.valueOf('maxErrorRetry'))
+                                        .constructorArgument('java.lang.Boolean', retryBean.valueOf('honorMaxErrorRetryInClientConfig'));
 
                                     break;
 
@@ -578,8 +580,6 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                             if (retryBean)
                                 clientBean.beanProperty('retryPolicy', retryBean);
                         }
-
-                        // TODO 2052 RetryPolicy.
 
                         clientBean.intProperty('maxErrorRetry')
                             .intProperty('socketTimeout')
@@ -632,7 +632,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                         if (clsName)
                             return new Bean(clsName, 'checkpointSpi', spi.Cache);
 
-                        break;
+                        return null;
 
                     default:
                         return null;

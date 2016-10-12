@@ -104,7 +104,19 @@ export default ['clustersController', [
                         $scope.backupItem.failoverSpi = {};
                 }
                 else if (field.type === 'checkpointSpi') {
-                    const newCheckpointCfg = { S3: { clientConfiguration: { useReaper: true } } };
+                    const newCheckpointCfg = {
+                        S3: {
+                            awsCredentials: {
+                                kind: 'Basic'
+                            },
+                            clientConfiguration: {
+                                retryPolicy: {
+                                    kind: 'Default'
+                                },
+                                useReaper: true
+                            }
+                        }
+                    };
 
                     if (LegacyUtils.isDefined($scope.backupItem.checkpointSpi))
                         $scope.backupItem.checkpointSpi.push(newCheckpointCfg);
@@ -269,6 +281,12 @@ export default ['clustersController', [
                         form.$setPristine();
                     else
                         form.$setDirty();
+
+                    $scope.clusterCaches = _.filter($scope.caches,
+                        (cache) => _.find($scope.backupItem.caches,
+                            (selCache) => selCache === cache.value
+                        )
+                    );
                 }, true);
 
                 $scope.$watch('ui.activePanels.length', () => {
@@ -288,6 +306,8 @@ export default ['clustersController', [
 
                 Loading.finish('loadingClustersScreen');
             });
+
+        $scope.clusterCaches = [];
 
         $scope.selectItem = function(item, backup) {
             function selectItem() {
@@ -444,6 +464,43 @@ export default ['clustersController', [
             return true;
         }
 
+        function checkCheckpointSpis(item) {
+            const cfgs = item.checkpointSpi;
+
+            if (_.isEmpty(cfgs))
+                return true;
+
+            return _.isNil(_.find(cfgs, (cfg, ix) => {
+                if (_.isNil(cfg.kind)) {
+                    ErrorPopover.show('checkpointKind' + ix, 'Choose checkpoint implementation variant', $scope.ui, 'checkpoint');
+
+                    return true;
+                }
+
+                switch (cfg.kind) {
+                    case 'Cache':
+                        const cache = _.get(cfg, 'Cache.cache');
+
+                        if (_.isNil(cache) || !_.find($scope.backupItem.caches, (selCache) => cache === selCache)) {
+                            ErrorPopover.show('checkpointCacheCache' + ix, 'Choose cache from configured cluster caches', $scope.ui, 'checkpoint');
+
+                            return true;
+                        }
+
+                        break;
+
+                    case 'JDBC':
+
+
+                        break;
+
+                    default: break;
+                }
+
+                return false;
+            }));
+        }
+
         function checkCommunicationConfiguration(item) {
             const c = item.communication;
 
@@ -543,6 +600,9 @@ export default ['clustersController', [
                 return false;
 
             if (!checkCacheKeyConfiguration(item))
+                return false;
+
+            if (!checkCheckpointSpis(item))
                 return false;
 
             if (!checkCommunicationConfiguration(item))

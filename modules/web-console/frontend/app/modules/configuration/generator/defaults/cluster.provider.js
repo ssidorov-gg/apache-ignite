@@ -221,6 +221,9 @@ const DFLT_CLUSTER = {
                     },
                     backoffStrategy: {
                         clsName: 'com.amazonaws.retry.PredefinedRetryPolicies'
+                    },
+                    maxErrorRetry: {
+                        clsName: 'com.amazonaws.retry.PredefinedRetryPolicies'
                     }
                 },
                 maxErrorRetry: -1,
