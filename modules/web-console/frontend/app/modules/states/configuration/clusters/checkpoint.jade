@@ -77,10 +77,10 @@ include ../../../../../app/helpers/jade/mixins.jade
                                     +table-remove-button(model, 'Remove Checkpoint SPI')
                             .settings-row(ng-show=checkpointFs)
                                 -var model2 = 'checkpoint.FS.dirPaths'
-                                -var form2 = 'checkpointFsPathes'
 
-                                +ignite-form-group(ng-form=form2 ng-model='checkpoint.FS.dirPaths.dirPaths')
+                                +ignite-form-group()
                                     -var uniqueTip = 'Such path already exists!'
+                                    -var form = 'checkpointFsPaths'
 
                                     ignite-form-field-label
                                         | Paths
@@ -92,29 +92,29 @@ include ../../../../../app/helpers/jade/mixins.jade
                                     .group-content(ng-if='checkpoint.FS.dirPaths.length')
                                         -var model3 = 'obj.model';
                                         -var name = '"edit" + $index'
-                                        -var valid = form2 + '[' + name + '].$valid'
+                                        -var valid = form + '[' + name + '].$valid'
                                         -var save = 'checkpoint.FS.dirPaths[$index] = ' + model3
-                                        div(ng-repeat='model in #{model3} track by $index' ng-init='obj = {}')
+                                        div(ng-repeat='model in checkpoint.FS.dirPaths track by $index' ng-init='obj = {}')
                                             label.col-xs-12.col-sm-12.col-md-12
                                                 .indexField
                                                     | {{ $index+1 }})
-                                                +table-remove-conditional-button(model3, enabled, 'Remove path')
+                                                +table-remove-conditional-button(model3, 'true', 'Remove path')
                                                 span(ng-hide='field.edit')
-                                                    a.labelFormField(ng-click='#{enabled} && (field.edit = true) && (#{model3} = model)') {{ model }}
+                                                    a.labelFormField(ng-click='(field.edit = true) && (#{model3} = model)') {{ model }}
                                                 span(ng-if='field.edit')
-                                                    +table-text-field(name, name, model3, model3 + '.dirPaths', valid, save, false)
+                                                    +table-text-field(name, model3, 'checkpoint.FS.dirPaths', valid, save, 'Input directory path', false)
                                                         +table-save-button(valid, save, false)
                                                         +unique-feedback(name, uniqueTip)
 
                                     .group-content(ng-repeat='field in group.add')
                                         -var model4 = 'new';
                                         -var name = '"new"'
-                                        -var valid = form2 + '[' + name + '].$valid'
+                                        -var valid = form + '[' + name + '].$valid'
                                         -var save = 'checkpoint.FS.dirPaths.push(' + model4 + ')'
 
                                         div
                                             label.col-xs-12.col-sm-12.col-md-12
-                                                +table-text-field(name, name, model4, model4 + '.dirPaths', valid, save, true)
+                                                +table-text-field(name, model4, 'checkpoint.FS.dirPaths', valid, save, 'Input directory path', true)
                                                     +table-save-button(valid, save, true)
                                                     +unique-feedback(name, uniqueTip)
 
