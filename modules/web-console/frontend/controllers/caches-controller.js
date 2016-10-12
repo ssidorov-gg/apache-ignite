@@ -348,6 +348,15 @@ export default ['cachesController', [
                         $scope.ui, 'store', 10000);
                 }
 
+                if (_.get(checkRes.secondObj, 'kind') === 'JDBC') {
+                    return ErrorPopover.show(checkRes.firstObj.cacheStoreFactory.kind === 'CacheJdbcPojoStoreFactory' ? 'pojoDialectInput' : 'blobDialectInput',
+                        'Found checkpoint configuration in cluster "' + failCluster.name + '" with the same data source bean name "' +
+                        checkRes.secondObj.JDBC.dataSourceBean + '" and different database: "' +
+                        LegacyUtils.cacheStoreJdbcDialectsLabel(checkRes.firstDB) + '" in current cache and "' +
+                        LegacyUtils.cacheStoreJdbcDialectsLabel(checkRes.secondDB) + '" in "' + checkRes.secondObj.label + '" cluster',
+                        $scope.ui, 'general', 10000);
+                }
+
                 return ErrorPopover.show(checkRes.firstObj.cacheStoreFactory.kind === 'CacheJdbcPojoStoreFactory' ? 'pojoDialectInput' : 'blobDialectInput',
                     'Found cache "' + checkRes.secondObj.name + '" in cluster "' + failCluster.label + '" ' +
                     'with the same data source bean name "' + checkRes.firstObj.cacheStoreFactory[checkRes.firstObj.cacheStoreFactory.kind].dataSourceBean +

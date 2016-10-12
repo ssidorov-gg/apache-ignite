@@ -399,6 +399,23 @@ export default ['clustersController', [
                         $scope.ui, 'general', 10000);
                 }
 
+                if (_.get(checkRes.secondObj, 'kind') === 'JDBC') {
+                    _.find($scope.backupItem.checkpointSpi, (spi, spiIx) => {
+                        if (spi === checkRes.secondObj) {
+                            return !ErrorPopover.show('checkpointJdbcDataSourceBean' + spiIx,
+                                'Found cache "' + checkRes.firstObj.name + '" with the same data source bean name "' +
+                                spi.JDBC.dataSourceBean + '" and different database: "' +
+                                LegacyUtils.cacheStoreJdbcDialectsLabel(checkRes.secondDB) + '" in current checkpoint configuration and "' +
+                                LegacyUtils.cacheStoreJdbcDialectsLabel(checkRes.firstDB) + '" in "' + checkRes.firstObj.name + '" cache',
+                                $scope.ui, 'general', 10000);
+                        }
+
+                        return false;
+                    });
+
+                    return false;
+                }
+
                 return ErrorPopover.show('cachesInput',
                     'Found caches "' + checkRes.firstObj.name + '" and "' + checkRes.secondObj.name + '" ' +
                     'with the same data source bean name "' + checkRes.firstObj.cacheStoreFactory[checkRes.firstObj.cacheStoreFactory.kind].dataSourceBean +

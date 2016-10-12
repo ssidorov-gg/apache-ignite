@@ -102,7 +102,7 @@ include ../../../../../app/helpers/jade/mixins.jade
                                                 span(ng-hide='field.edit')
                                                     a.labelFormField(ng-click='#{enabled} && (field.edit = true) && (#{model3} = model)') {{ model }}
                                                 span(ng-if='field.edit')
-                                                    +table-text-field('Path:', name, model3, model3 + '.dirPaths', valid, save, false)
+                                                    +table-text-field(name, name, model3, model3 + '.dirPaths', valid, save, false)
                                                         +table-save-button(valid, save, false)
                                                         +unique-feedback(name, uniqueTip)
 
@@ -114,7 +114,7 @@ include ../../../../../app/helpers/jade/mixins.jade
 
                                         div
                                             label.col-xs-12.col-sm-12.col-md-12
-                                                +table-text-field('Path:', name, model4, model4 + '.dirPaths', valid, save, true)
+                                                +table-text-field(name, name, model4, model4 + '.dirPaths', valid, save, true)
                                                     +table-save-button(valid, save, true)
                                                     +unique-feedback(name, uniqueTip)
 
@@ -275,23 +275,23 @@ include ../../../../../app/helpers/jade/mixins.jade
                                 +java-class('Listener:', 'checkpoint.S3.checkpointListener', '"checkpointS3Listener" + $index', 'true', 'false',
                                     'Checkpoint listener implementation class name')
                             .settings-row(ng-show=checkpointJDBC)
-                                +text('Data source bean name:', 'checkpoint.JDBC.dataSourceBean', '"checkpointJdbcDataSourceBean"', checkpointJDBC, 'Input bean name',
+                                +text('Data source bean name:', 'checkpoint.JDBC.dataSourceBean', '"checkpointJdbcDataSourceBean" + $index', checkpointJDBC, 'Input bean name',
                                     'Name of the data source bean in Spring context')
                             .settings-row(ng-show=checkpointJDBC)
-                                +dialect('Dialect:', 'checkpoint.JDBC.dialect', '"checkpointJdbcDialect"', checkpointJDBC,
+                                +dialect('Dialect:', 'checkpoint.JDBC.dialect', '"checkpointJdbcDialect" + $index', checkpointJDBC,
                                     'Dialect of SQL implemented by a particular RDBMS:', 'Generic JDBC dialect', 'Choose JDBC dialect')
                             .settings-row(ng-show=checkpointJDBC)
-                                +text('Table name:', 'checkpoint.JDBC.checkpointTableName', '"checkpointJdbcCheckpointTableName"', 'false', 'CHECKPOINTS', 'Checkpoint table name')
+                                +text('Table name:', 'checkpoint.JDBC.checkpointTableName', '"checkpointJdbcCheckpointTableName" + $index', 'false', 'CHECKPOINTS', 'Checkpoint table name')
                             .settings-row(ng-show=checkpointJDBC)
-                                +text('Key field name:', 'checkpoint.JDBC.keyFieldName', '"checkpointJdbcKeyFieldName"', 'false', 'NAME', 'Checkpoint key field name')
+                                +text('Key field name:', 'checkpoint.JDBC.keyFieldName', '"checkpointJdbcKeyFieldName" + $index', 'false', 'NAME', 'Checkpoint key field name')
                             .settings-row(ng-show=checkpointJDBC)
-                                +dropdown('Key field type:', 'checkpoint.JDBC.keyFieldType', '"checkpointJdbcKeyFieldType"', 'true', 'VARCHAR', 'supportedJdbcTypes', 'Checkpoint key field type')
+                                +dropdown('Key field type:', 'checkpoint.JDBC.keyFieldType', '"checkpointJdbcKeyFieldType" + $index', 'true', 'VARCHAR', 'supportedJdbcTypes', 'Checkpoint key field type')
                             .settings-row(ng-show=checkpointJDBC)
-                                +text('Value field name:', 'checkpoint.JDBC.valueFieldName', '"checkpointJdbcValueFieldName"', 'false', 'VALUE', 'Checkpoint value field name')
+                                +text('Value field name:', 'checkpoint.JDBC.valueFieldName', '"checkpointJdbcValueFieldName" + $index', 'false', 'VALUE', 'Checkpoint value field name')
                             .settings-row(ng-show=checkpointJDBC)
-                                +dropdown('Value field type:', 'checkpoint.JDBC.valueFieldType', '"checkpointJdbcValueFieldType"', 'true', 'BLOB', 'supportedJdbcTypes', 'Checkpoint value field type')
+                                +dropdown('Value field type:', 'checkpoint.JDBC.valueFieldType', '"checkpointJdbcValueFieldType" + $index', 'true', 'BLOB', 'supportedJdbcTypes', 'Checkpoint value field type')
                             .settings-row(ng-show=checkpointJDBC)
-                                +text('Expire date field name:', 'checkpoint.JDBC.expireDateFieldName', '"checkpointJdbcExpireDateFieldName"', 'false', 'EXPIRE_DATE', 'Checkpoint expire date field name')
+                                +text('Expire date field name:', 'checkpoint.JDBC.expireDateFieldName', '"checkpointJdbcExpireDateFieldName" + $index', 'false', 'EXPIRE_DATE', 'Checkpoint expire date field name')
                             .settings-row(ng-show=checkpointJDBC)
                                 +dropdown('Expire date field type:', 'checkpoint.JDBC.expireDateFieldType', '"checkpointJdbcExpireDateFieldType"', 'true', 'DATETIME', 'supportedJdbcTypes', 'Checkpoint expire date field type')
                             .settings-row(ng-show=checkpointJDBC)
