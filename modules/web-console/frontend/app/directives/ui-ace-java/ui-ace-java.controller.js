@@ -55,7 +55,7 @@ export default ['$scope', 'JavaTransformer', function($scope, generator) {
                     return acc;
                 }, []);
 
-                return generator[ctrl.generate](cache, cacheDomains);
+                return generator[ctrl.generator](cache, cacheDomains);
             };
 
             break;
