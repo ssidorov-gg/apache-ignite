@@ -27,14 +27,16 @@ angular.module('mgcrea.ngStrap.tooltip')
         function TooltipFactoryDecorated(element, config) {
             let tipElementEntered = false;
 
-            config.onShow = ($tooltip) => {
-                $tooltip.$element.on('mouseenter', () => tipElementEntered = true);
-                $tooltip.$element.on('mouseleave', () => {
-                    tipElementEntered = false;
+            if (config.trigger !== 'click') {
+                config.onShow = ($tooltip) => {
+                    $tooltip.$element.on('mouseenter', () => tipElementEntered = true);
+                    $tooltip.$element.on('mouseleave', () => {
+                        tipElementEntered = false;
 
-                    $tooltip.leave();
-                });
-            };
+                        $tooltip.leave();
+                    });
+                };
+            }
 
             const $tooltip = $delegate(element, config);
 

@@ -133,6 +133,8 @@ mixin java-class-autofocus(lbl, model, name, enabled, required, autofocus, tip, 
 //- Mixin for Java class name field.
 mixin java-class(lbl, model, name, enabled, required, tip, validationActive)
     +java-class-autofocus(lbl, model, name, enabled, required, 'false', tip, validationActive)
+        if  block
+            block
 
 //- Mixin for text field with enabled condition with options.
 mixin java-class-typeahead(lbl, model, name, options, enabled, required, placeholder, tip, validationActive)
