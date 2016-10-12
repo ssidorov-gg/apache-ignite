@@ -103,7 +103,7 @@ class GridSelectorNioSessionImpl extends GridNioSessionImpl {
 
         this.selectorIdx = selectorIdx;
 
-        sem = null;//sndQueueLimit > 0 ? new Semaphore(sndQueueLimit) : null;
+        sem = sndQueueLimit > 0 ? new Semaphore(sndQueueLimit) : null;
 
         if (writeBuf != null) {
             writeBuf.clear();
