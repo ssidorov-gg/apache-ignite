@@ -16,57 +16,53 @@
 
 include ../../../../../../app/helpers/jade/mixins.jade
 
--var form = 'checkpointFS'
--var model2 = 'checkpoint.FS'
--var checkpointFs = 'checkpoint.kind === "FS"'
+-var form = 'checkpointFsPaths'
+-var dirPaths = 'checkpoint.FS.dirPaths'
 
-div
-    .details-row
-        -var form = 'checkpointFsPathes'
+.details-row
+    +ignite-form-group(ng-form=form ng-model=dirPaths)
+        -var uniqueTip = 'Such path already exists!'
 
-        +ignite-form-group(ng-form=form ng-model=model2 + '.dirPaths')
-            -var uniqueTip = 'Such path already exists!'
+        ignite-form-field-label
+            | Paths
+        ignite-form-group-tooltip
+            | Paths to a shared directory where checkpoints will be stored
+        ignite-form-group-add(ng-click='(group.add = [{}])')
+            | Add new path
 
-            ignite-form-field-label
-                | Paths
-            ignite-form-group-tooltip
-                | Paths to a shared directory where checkpoints will be stored
-            ignite-form-group-add(ng-show='#{enabled}' ng-click='(group.add = [{}])')
-                | Add new path
+        .group-content(ng-if='checkpoint.FS.dirPaths.length')
+            -var model = 'obj.model';
+            -var name = '"edit" + $index'
+            -var valid = form + '[' + name + '].$valid'
+            -var save = dirPaths + '[$index] = ' + model
 
-            .group-content(ng-if='#{model2}.length')
-                -var model3 = 'obj.model';
-                -var name = '"edit" + $index'
-                -var valid = form + '[' + name + '].$valid'
-                -var save = model3 + '[$index] = ' + model3
-                div(ng-repeat='model in #{model3} track by $index' ng-init='obj = {}')
-                    label.col-xs-12.col-sm-12.col-md-12
-                        .indexField
-                            | {{ $index+1 }})
-                        +table-remove-conditional-button(model3, enabled, 'Remove path')
-                        span(ng-hide='field.edit')
-                            a.labelFormField(ng-click='#{enabled} && (field.edit = true) && (#{model3} = model)') {{ model }}
-                        span(ng-if='field.edit')
-                            // (name, model, items, valid, save, placeholder, newItem)
-                            +table-text-field('Path:', name, model3, model3 + '.dirPaths', valid, save, false)
-                                +table-save-button(valid, save, false)
-                                +unique-feedback(name, uniqueTip)
-
-            .group-content(ng-repeat='field in group.add')
-                -var model4 = 'new';
-                -var name = '"new"'
-                -var valid = form + '[' + name + '].$valid'
-                -var save = model4 + '.push(' + model4 + ')'
-
-                div
-                    label.col-xs-12.col-sm-12.col-md-12
-                        +table-java-class-field('model manager', name, model4, model4 + '.dirPaths', valid, save, true)
-                            +table-save-button(valid, save, true)
+            div(ng-repeat='model in checkpoint.FS.dirPaths track by $index' ng-init='obj = {}')
+                label.col-xs-12.col-sm-12.col-md-12
+                    .indexField
+                        | {{ $index+1 }})
+                    +table-remove-conditional-button(model, 'true', 'Remove path')
+                    span(ng-hide='field.edit')
+                        a.labelFormField(ng-click='(field.edit = true) && (#{model} = model)') {{ model }}
+                    span(ng-if='field.edit')
+                        +table-text-field(name, model, dirPaths, valid, save, 'Input directory path', false)
+                            +table-save-button(valid, save, false)
                             +unique-feedback(name, uniqueTip)
 
-            .group-content-empty(ng-if='!(#{model2}.length) && !group.add.length')
-                | Not defined
-    .details-row
-        +java-class('Listener', model2 + '.FS.checkpointListener', '"checkpointFsListener" + $index', 'true', checkpointFs,
-            'Custom FailoverSpi implementation class name.')
+        .group-content(ng-repeat='field in group.add')
+            -var model = 'new';
+            -var name = '"new"'
+            -var valid = form + '[' + name + '].$valid'
+            -var save = 'checkpoint.FS.dirPaths.push(' + model + ')'
 
+            div
+                label.col-xs-12.col-sm-12.col-md-12
+                    +table-text-field(name, model, 'checkpoint.FS.dirPaths', valid, save, 'Input directory path', true)
+                        +table-save-button(valid, save, true)
+                        +unique-feedback(name, uniqueTip)
+
+        .group-content-empty(ng-if='!(checkpoint.FS.dirPaths.length) && !group.add.length')
+            | Not defined
+
+.settings-row
+    +java-class('Listener:', 'checkpoint.FS.checkpointListener', '"checkpointFsListener" + $index', 'true', 'false',
+        'Checkpoint listener implementation class name')
