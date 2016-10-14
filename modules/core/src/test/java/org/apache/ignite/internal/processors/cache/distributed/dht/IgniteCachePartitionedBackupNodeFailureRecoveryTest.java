@@ -17,8 +17,20 @@
 
 package org.apache.ignite.internal.processors.cache.distributed.dht;
 
+import java.util.Objects;
+import java.util.concurrent.Callable;
+import javax.cache.processor.MutableEntry;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
+import javax.cache.processor.EntryProcessor;
+import javax.cache.processor.EntryProcessorException;
 import org.apache.ignite.IgniteCache;
-import org.apache.ignite.cache.*;
+import org.apache.ignite.cache.CacheAtomicWriteOrderMode;
+import org.apache.ignite.cache.CacheMode;
+import org.apache.ignite.cache.CacheAtomicityMode;
+import org.apache.ignite.cache.CachePeekMode;
+import org.apache.ignite.cache.CacheWriteSynchronizationMode;
 import org.apache.ignite.cache.affinity.Affinity;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.NearCacheConfiguration;
@@ -26,15 +38,6 @@ import org.apache.ignite.internal.IgniteEx;
 import org.apache.ignite.internal.IgniteInternalFuture;
 import org.apache.ignite.internal.processors.cache.IgniteCacheAbstractTest;
 import org.junit.Assert;
-
-import javax.cache.processor.EntryProcessor;
-import javax.cache.processor.EntryProcessorException;
-import javax.cache.processor.MutableEntry;
-import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static org.apache.ignite.testframework.GridTestUtils.runAsync;
 
@@ -75,7 +78,6 @@ public class IgniteCachePartitionedBackupNodeFailureRecoveryTest extends IgniteC
     @Override protected NearCacheConfiguration nearConfiguration() {
         return new NearCacheConfiguration();
     }
-
 
     /**
      * {@inheritDoc}
