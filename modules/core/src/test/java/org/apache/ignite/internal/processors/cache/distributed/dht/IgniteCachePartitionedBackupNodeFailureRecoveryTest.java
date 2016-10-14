@@ -44,44 +44,32 @@ import static org.apache.ignite.testframework.GridTestUtils.runAsync;
 /**
  */
 public class IgniteCachePartitionedBackupNodeFailureRecoveryTest extends IgniteCacheAbstractTest {
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc}*/
     @Override protected int gridCount() {
         return 3;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc}*/
     @Override protected CacheMode cacheMode() {
         return CacheMode.PARTITIONED;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc}*/
     @Override protected CacheAtomicityMode atomicityMode() {
         return CacheAtomicityMode.ATOMIC;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc}*/
     @Override protected CacheAtomicWriteOrderMode atomicWriteOrderMode() {
         return CacheAtomicWriteOrderMode.PRIMARY;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc}*/
     @Override protected NearCacheConfiguration nearConfiguration() {
         return new NearCacheConfiguration();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc}*/
     @Override protected CacheConfiguration cacheConfiguration(String gridName) throws Exception {
         CacheConfiguration cacheCfg = super.cacheConfiguration(gridName);
 
@@ -92,7 +80,7 @@ public class IgniteCachePartitionedBackupNodeFailureRecoveryTest extends IgniteC
     }
 
     /**
-     *
+     * Test stop and restart backup node.
      */
     public void testBackUpFail() throws Exception {
         final IgniteEx node1 = grid(0);
@@ -156,15 +144,12 @@ public class IgniteCachePartitionedBackupNodeFailureRecoveryTest extends IgniteC
             @Override
             public Void call() throws Exception {
                 while (!finished.get()) {
-
-                    IgniteEx backUp = node3;
-
-                    backUp.close();
+                   stopGrid(2);
 
                     lock.lock();
 
                     try {
-                        backUp = startGrid(2);
+                        IgniteEx backUp = startGrid(2);
 
                         IgniteCache<Integer, Integer> cache3 = backUp.cache(null);
 
@@ -188,6 +173,5 @@ public class IgniteCachePartitionedBackupNodeFailureRecoveryTest extends IgniteC
 
         Assert.assertTrue(primaryFut.error() == null);
         Assert.assertTrue(backupFut.error() == null);
-
     }
 }
