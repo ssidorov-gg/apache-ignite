@@ -17,7 +17,6 @@
 
 package org.apache.ignite.internal.processors.cache.distributed.dht;
 
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import javax.cache.processor.MutableEntry;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,18 +24,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.EntryProcessorException;
+import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
-import org.apache.ignite.cache.CacheAtomicWriteOrderMode;
-import org.apache.ignite.cache.CacheMode;
-import org.apache.ignite.cache.CacheAtomicityMode;
-import org.apache.ignite.cache.CachePeekMode;
-import org.apache.ignite.cache.CacheWriteSynchronizationMode;
+import org.apache.ignite.cache.*;
 import org.apache.ignite.cache.affinity.Affinity;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.NearCacheConfiguration;
 import org.apache.ignite.internal.IgniteEx;
 import org.apache.ignite.internal.IgniteInternalFuture;
 import org.apache.ignite.internal.processors.cache.IgniteCacheAbstractTest;
+import org.apache.ignite.testframework.junits.multijvm.IgniteProcessProxy;
 import org.junit.Assert;
 
 import static org.apache.ignite.testframework.GridTestUtils.runAsync;
@@ -69,12 +66,32 @@ public class IgniteCachePartitionedBackupNodeFailureRecoveryTest extends IgniteC
         return new NearCacheConfiguration();
     }
 
+    /** {@inheritDoc} */
+    @Override protected boolean isMultiJvm() {
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override protected void beforeTestsStarted() throws Exception {
+        startGrids(gridCount());
+
+        awaitPartitionMapExchange();
+    }
+
+    /** {@inheritDoc} */
+    @Override protected void afterTestsStopped() throws Exception {
+        stopAllGrids();
+
+        super.afterTestsStopped();
+    }
+
     /** {@inheritDoc}*/
     @Override protected CacheConfiguration cacheConfiguration(String gridName) throws Exception {
         CacheConfiguration cacheCfg = super.cacheConfiguration(gridName);
 
         cacheCfg.setBackups(1);
         cacheCfg.setWriteSynchronizationMode(CacheWriteSynchronizationMode.PRIMARY_SYNC);
+        cacheCfg.setRebalanceMode(CacheRebalanceMode.SYNC);
 
         return cacheCfg;
     }
@@ -103,9 +120,7 @@ public class IgniteCachePartitionedBackupNodeFailureRecoveryTest extends IgniteC
 
         assert key0 != null;
 
-        final Integer val = 0;
-
-        cache1.put(key0, val);
+        cache1.put(key0, 0);
 
         final AtomicBoolean finished = new AtomicBoolean();
 
@@ -149,13 +164,26 @@ public class IgniteCachePartitionedBackupNodeFailureRecoveryTest extends IgniteC
                     lock.lock();
 
                     try {
+
                         IgniteEx backUp = startGrid(2);
 
                         IgniteCache<Integer, Integer> cache3 = backUp.cache(null);
 
-                        Integer backUpVal = cache3.localPeek(finalKey, CachePeekMode.BACKUP);
+                        assertTrue(backUp.affinity(null).isBackup(backUp.localNode(), finalKey));
 
-                        assert Objects.equals(backUpVal, (val + cntr.get()));
+                     /*   Integer val = cache3.get(finalKey);
+
+                        assertEquals(exp,val);
+
+                        U.sleep(1000);*/
+
+                        Integer peekVal = cache3.localPeek(finalKey);
+
+              /*          Integer peekVal = cache3.localPeek(finalKey, CachePeekMode.BACKUP);*/
+
+                        Integer exp =cntr.get();
+
+                        assertEquals(exp, peekVal);
                     } finally {
                         lock.unlock();
                     }
@@ -173,5 +201,31 @@ public class IgniteCachePartitionedBackupNodeFailureRecoveryTest extends IgniteC
 
         Assert.assertTrue(primaryFut.error() == null);
         Assert.assertTrue(backupFut.error() == null);
+    }
+
+    /**
+     * Stop the process for the Grid at the given index.
+     *
+     * @param idx Index of Grid to stop.
+     */
+    protected void stopGrid(int idx) {
+        Ignite remote = grid(idx);
+
+        assert remote instanceof IgniteProcessProxy : remote;
+
+        IgniteProcessProxy proc = (IgniteProcessProxy) remote;
+
+        int pid = proc.getProcess().getPid();
+
+        try {
+            grid(0).log().info(String.format("Killing grid id %d with PID %d", idx, pid));
+
+            IgniteProcessProxy.kill(proc.name());
+
+            grid(0).log().info(String.format("Grid id %d with PID %d stopped", idx, pid));
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

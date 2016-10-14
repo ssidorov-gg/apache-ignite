@@ -245,6 +245,26 @@ public class IgniteProcessProxy implements IgniteEx {
     }
 
     /**
+     * Forcefully shut down the Grid.
+     *
+     * @param gridName Grid name.
+     */
+    public static void kill(String gridName) {
+        IgniteProcessProxy proxy = gridProxies.get(gridName);
+
+        A.notNull(gridName, "gridName");
+
+        try {
+            proxy.getProcess().kill();
+        }
+        catch (Exception e) {
+            U.error(proxy.log, "Exception while killing " + gridName, e);
+        }
+
+        gridProxies.remove(gridName, proxy);
+    }
+
+    /**
      * Kill all running processes.
      */
     public static void killAll() {
