@@ -76,6 +76,8 @@ public class GridCacheReturn implements Externalizable, Message, OptimizedMessag
     /** */
     private int cacheId;
 
+    private boolean simple;
+
     /**
      * Empty constructor.
      */
@@ -364,11 +366,22 @@ public class GridCacheReturn implements Externalizable, Message, OptimizedMessag
     @Override public void writeTo(OptimizedMessageWriter writer) {
         writer.writeHeader(directType());
 
-        writer.writeInt(cacheId);
-        writer.writeMessage(cacheObj);
-        writer.writeBoolean(invokeRes);
-        writer.writeCollection(invokeResCol, MessageCollectionItemType.MSG);
-        writer.writeBoolean(success);
+        simple = cacheObj == null && !invokeRes && invokeResCol == null && success;
+
+        if (simple) {
+            writer.writeBoolean(true);
+
+            writer.writeInt(cacheId);
+        }
+        else {
+            writer.writeBoolean(false);
+
+            writer.writeInt(cacheId);
+            writer.writeMessage(cacheObj);
+            writer.writeBoolean(invokeRes);
+            writer.writeCollection(invokeResCol, MessageCollectionItemType.MSG);
+            writer.writeBoolean(success);
+        }
     }
 
     /** {@inheritDoc} */
@@ -427,45 +440,70 @@ public class GridCacheReturn implements Externalizable, Message, OptimizedMessag
 
         switch (reader.state()) {
             case 0:
-                cacheId = reader.readInt("cacheId");
+                simple = reader.readBoolean("simple");
 
                 if (!reader.isLastRead())
                     return false;
 
                 reader.incrementState();
+        }
 
-            case 1:
-                cacheObj = reader.readMessage("cacheObj");
+        if (simple) {
+            success = true;
 
-                if (!reader.isLastRead())
-                    return false;
+            switch (reader.state()) {
+                case 1:
+                    cacheId = reader.readInt("cacheId");
 
-                reader.incrementState();
+                    if (!reader.isLastRead())
+                        return false;
 
-            case 2:
-                invokeRes = reader.readBoolean("invokeRes");
+                    reader.incrementState();
+            }
+        }
+        else {
+            switch (reader.state()) {
+                case 1:
+                    cacheId = reader.readInt("cacheId");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    reader.incrementState();
 
-            case 3:
-                invokeResCol = reader.readCollection("invokeResCol", MessageCollectionItemType.MSG);
+                case 2:
+                    cacheObj = reader.readMessage("cacheObj");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    reader.incrementState();
 
-            case 4:
-                success = reader.readBoolean("success");
+                case 3:
+                    invokeRes = reader.readBoolean("invokeRes");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    reader.incrementState();
 
+                case 4:
+                    invokeResCol = reader.readCollection("invokeResCol", MessageCollectionItemType.MSG);
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 5:
+                    success = reader.readBoolean("success");
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+            }
         }
 
         return reader.afterMessageRead(GridCacheReturn.class);

@@ -108,6 +108,8 @@ public class GridNearAtomicUpdateResponse extends GridCacheMessage implements Gr
     /** Near expire times. */
     private GridLongList nearExpireTimes;
 
+    private boolean simple;
+
     /**
      * Empty constructor required by {@link Externalizable}.
      */
@@ -447,17 +449,29 @@ public class GridNearAtomicUpdateResponse extends GridCacheMessage implements Gr
     @Override public void writeTo(OptimizedMessageWriter writer) {
         super.writeTo(writer);
 
-        writer.writeByteArray(errBytes);
-        writer.writeCollection(failedKeys, MessageCollectionItemType.MSG);
-        writer.writeMessage(futVer);
-        writer.writeMessage(nearExpireTimes);
-        writer.writeCollection(nearSkipIdxs, MessageCollectionItemType.INT);
-        writer.writeMessage(nearTtls);
-        writer.writeCollection(nearVals, MessageCollectionItemType.MSG);
-        writer.writeCollection(nearValsIdxs, MessageCollectionItemType.INT);
-        writer.writeMessage(nearVer);
-        writer.writeCollection(remapKeys, MessageCollectionItemType.MSG);
-        writer.writeMessage(ret);
+        simple = errBytes == null && failedKeys == null && nearExpireTimes == null && nearSkipIdxs == null && nearTtls == null && nearVals == null && nearValsIdxs == null && nearVer == null && remapKeys == null;
+
+        if (simple) {
+            writer.writeBoolean(true);
+
+            writer.writeMessage(futVer);
+            writer.writeMessage(ret);
+        }
+        else {
+            writer.writeBoolean(false);
+
+            writer.writeByteArray(errBytes);
+            writer.writeCollection(failedKeys, MessageCollectionItemType.MSG);
+            writer.writeMessage(futVer);
+            writer.writeMessage(nearExpireTimes);
+            writer.writeCollection(nearSkipIdxs, MessageCollectionItemType.INT);
+            writer.writeMessage(nearTtls);
+            writer.writeCollection(nearVals, MessageCollectionItemType.MSG);
+            writer.writeCollection(nearValsIdxs, MessageCollectionItemType.INT);
+            writer.writeMessage(nearVer);
+            writer.writeCollection(remapKeys, MessageCollectionItemType.MSG);
+            writer.writeMessage(ret);
+        }
     }
 
     /** {@inheritDoc} */
@@ -558,93 +572,123 @@ public class GridNearAtomicUpdateResponse extends GridCacheMessage implements Gr
 
         switch (reader.state()) {
             case 3:
-                errBytes = reader.readByteArray("errBytes");
+                simple = reader.readBoolean("simple");
 
                 if (!reader.isLastRead())
                     return false;
 
                 reader.incrementState();
+        }
 
-            case 4:
-                failedKeys = reader.readCollection("failedKeys", MessageCollectionItemType.MSG);
+        if (simple) {
+            switch (reader.state()) {
+                case 4:
+                    futVer = reader.readMessage("futVer");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    reader.incrementState();
 
-            case 5:
-                futVer = reader.readMessage("futVer");
+                case 5:
+                    ret = reader.readMessage("ret");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    reader.incrementState();
+            }
+        }
+        else {
+            switch (reader.state()) {
+                case 4:
+                    errBytes = reader.readByteArray("errBytes");
 
-            case 6:
-                nearExpireTimes = reader.readMessage("nearExpireTimes");
+                    if (!reader.isLastRead())
+                        return false;
 
-                if (!reader.isLastRead())
-                    return false;
+                    reader.incrementState();
 
-                reader.incrementState();
+                case 5:
+                    failedKeys = reader.readCollection("failedKeys", MessageCollectionItemType.MSG);
 
-            case 7:
-                nearSkipIdxs = reader.readCollection("nearSkipIdxs", MessageCollectionItemType.INT);
+                    if (!reader.isLastRead())
+                        return false;
 
-                if (!reader.isLastRead())
-                    return false;
+                    reader.incrementState();
 
-                reader.incrementState();
+                case 6:
+                    futVer = reader.readMessage("futVer");
 
-            case 8:
-                nearTtls = reader.readMessage("nearTtls");
+                    if (!reader.isLastRead())
+                        return false;
 
-                if (!reader.isLastRead())
-                    return false;
+                    reader.incrementState();
 
-                reader.incrementState();
+                case 7:
+                    nearExpireTimes = reader.readMessage("nearExpireTimes");
 
-            case 9:
-                nearVals = reader.readCollection("nearVals", MessageCollectionItemType.MSG);
+                    if (!reader.isLastRead())
+                        return false;
 
-                if (!reader.isLastRead())
-                    return false;
+                    reader.incrementState();
 
-                reader.incrementState();
+                case 8:
+                    nearSkipIdxs = reader.readCollection("nearSkipIdxs", MessageCollectionItemType.INT);
 
-            case 10:
-                nearValsIdxs = reader.readCollection("nearValsIdxs", MessageCollectionItemType.INT);
+                    if (!reader.isLastRead())
+                        return false;
 
-                if (!reader.isLastRead())
-                    return false;
+                    reader.incrementState();
 
-                reader.incrementState();
+                case 9:
+                    nearTtls = reader.readMessage("nearTtls");
 
-            case 11:
-                nearVer = reader.readMessage("nearVer");
+                    if (!reader.isLastRead())
+                        return false;
 
-                if (!reader.isLastRead())
-                    return false;
+                    reader.incrementState();
 
-                reader.incrementState();
+                case 10:
+                    nearVals = reader.readCollection("nearVals", MessageCollectionItemType.MSG);
 
-            case 12:
-                remapKeys = reader.readCollection("remapKeys", MessageCollectionItemType.MSG);
+                    if (!reader.isLastRead())
+                        return false;
 
-                if (!reader.isLastRead())
-                    return false;
+                    reader.incrementState();
 
-                reader.incrementState();
+                case 11:
+                    nearValsIdxs = reader.readCollection("nearValsIdxs", MessageCollectionItemType.INT);
 
-            case 13:
-                ret = reader.readMessage("ret");
+                    if (!reader.isLastRead())
+                        return false;
 
-                if (!reader.isLastRead())
-                    return false;
+                    reader.incrementState();
 
-                reader.incrementState();
+                case 12:
+                    nearVer = reader.readMessage("nearVer");
 
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 13:
+                    remapKeys = reader.readCollection("remapKeys", MessageCollectionItemType.MSG);
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 14:
+                    ret = reader.readMessage("ret");
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+            }
         }
 
         return reader.afterMessageRead(GridNearAtomicUpdateResponse.class);
