@@ -173,6 +173,7 @@ public class GridNearAtomicUpdateRequest extends GridCacheMessage implements Gri
     @GridDirectTransient
     private int initSize;
 
+    /** Simple form flag. */
     private boolean simple;
 
     /**

@@ -76,6 +76,7 @@ public class GridCacheReturn implements Externalizable, Message, OptimizedMessag
     /** */
     private int cacheId;
 
+    /** Simple form flag. */
     private boolean simple;
 
     /**

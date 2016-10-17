@@ -108,6 +108,7 @@ public class GridNearAtomicUpdateResponse extends GridCacheMessage implements Gr
     /** Near expire times. */
     private GridLongList nearExpireTimes;
 
+    /** Simple form flag. */
     private boolean simple;
 
     /**
