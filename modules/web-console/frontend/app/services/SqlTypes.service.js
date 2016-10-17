@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
-
 // List of H2 reserved SQL keywords.
 import H2_SQL_KEYWORDS from 'app/data/sql-keywords.json';
 

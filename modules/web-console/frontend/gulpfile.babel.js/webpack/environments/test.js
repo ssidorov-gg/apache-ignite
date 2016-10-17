@@ -15,20 +15,38 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
-import commonConfig from './common';
-import devConfig from './environments/development';
-import prodConfig from './environments/production';
-import testConfig from './environments/test';
+import webpack from 'webpack';
 
-const env = process.env.NODE_ENV || 'production';
+const NODE_ENV = process.env.NODE_ENV || 'production';
 
-// Config by environments.
-const configs = {
-    production: prodConfig,
-    development: devConfig,
-    test: testConfig
+export default () => {
+
+    return {
+        cache: true,
+        node: {
+            fs: 'empty'
+        },
+
+        module: {
+            preLoaders: null
+        },
+
+        // Entry points.
+        entry: null,
+
+        // Output system.
+        output: null,
+        eslint: null,
+
+        // Load plugins.
+        plugins: [
+            new webpack.ProvidePlugin({
+                $: 'jquery',
+                jQuery: 'jquery',
+                _: 'lodash',
+                nv: 'nvd3'
+            }),
+            new webpack.DefinePlugin({NODE_ENV: JSON.stringify(NODE_ENV)})
+        ]
+    };
 };
-
-// Load config file by environment
-export default _.merge(commonConfig(), configs[env]());
