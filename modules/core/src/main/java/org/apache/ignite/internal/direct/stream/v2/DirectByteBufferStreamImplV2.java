@@ -350,53 +350,37 @@ public class DirectByteBufferStreamImplV2 implements DirectByteBufferStream {
 
     /** {@inheritDoc} */
     @Override public void writeInt(int val) {
-        lastFinished = buf.remaining() >= 5;
+        lastFinished = buf.remaining() >= 4;
 
         if (lastFinished) {
-            if (val == Integer.MAX_VALUE)
-                val = Integer.MIN_VALUE;
-            else
-                val++;
-
             int pos = buf.position();
 
-            while ((val & 0xFFFF_FF80) != 0) {
-                byte b = (byte)(val | 0x80);
+            long off = baseOff + pos;
 
-                GridUnsafe.putByte(heapArr, baseOff + pos++, b);
+            if (BIG_ENDIAN)
+                GridUnsafe.putIntLE(heapArr, off, val);
+            else
+                GridUnsafe.putInt(heapArr, off, val);
 
-                val >>>= 7;
-            }
-
-            GridUnsafe.putByte(heapArr, baseOff + pos++, (byte)val);
-
-            buf.position(pos);
+            buf.position(pos + 4);
         }
     }
 
     /** {@inheritDoc} */
     @Override public void writeLong(long val) {
-        lastFinished = buf.remaining() >= 10;
+        lastFinished = buf.remaining() >= 8;
 
         if (lastFinished) {
-            if (val == Long.MAX_VALUE)
-                val = Long.MIN_VALUE;
-            else
-                val++;
-
             int pos = buf.position();
 
-            while ((val & 0xFFFF_FFFF_FFFF_FF80L) != 0) {
-                byte b = (byte)(val | 0x80);
+            long off = baseOff + pos;
 
-                GridUnsafe.putByte(heapArr, baseOff + pos++, b);
+            if (BIG_ENDIAN)
+                GridUnsafe.putLongLE(heapArr, off, val);
+            else
+                GridUnsafe.putLong(heapArr, off, val);
 
-                val >>>= 7;
-            }
-
-            GridUnsafe.putByte(heapArr, baseOff + pos++, (byte)val);
-
-            buf.position(pos);
+            buf.position(pos + 8);
         }
     }
 
@@ -838,76 +822,36 @@ public class DirectByteBufferStreamImplV2 implements DirectByteBufferStream {
 
     /** {@inheritDoc} */
     @Override public int readInt() {
-        lastFinished = false;
+        lastFinished = buf.remaining() >= 4;
 
-        int val = 0;
-
-        while (buf.hasRemaining()) {
+        if (lastFinished) {
             int pos = buf.position();
 
-            byte b = GridUnsafe.getByte(heapArr, baseOff + pos);
+            buf.position(pos + 4);
 
-            buf.position(pos + 1);
+            long off = baseOff + pos;
 
-            prim |= ((long)b & 0x7F) << (7 * primShift);
-
-            if ((b & 0x80) == 0) {
-                lastFinished = true;
-
-                val = (int)prim;
-
-                if (val == Integer.MIN_VALUE)
-                    val = Integer.MAX_VALUE;
-                else
-                    val--;
-
-                prim = 0;
-                primShift = 0;
-
-                break;
-            }
-            else
-                primShift++;
+            return BIG_ENDIAN ? GridUnsafe.getIntLE(heapArr, off) : GridUnsafe.getInt(heapArr, off);
         }
-
-        return val;
+        else
+            return 0;
     }
 
     /** {@inheritDoc} */
     @Override public long readLong() {
-        lastFinished = false;
+        lastFinished = buf.remaining() >= 8;
 
-        long val = 0;
-
-        while (buf.hasRemaining()) {
+        if (lastFinished) {
             int pos = buf.position();
 
-            byte b = GridUnsafe.getByte(heapArr, baseOff + pos);
+            buf.position(pos + 8);
 
-            buf.position(pos + 1);
+            long off = baseOff + pos;
 
-            prim |= ((long)b & 0x7F) << (7 * primShift);
-
-            if ((b & 0x80) == 0) {
-                lastFinished = true;
-
-                val = prim;
-
-                if (val == Long.MIN_VALUE)
-                    val = Long.MAX_VALUE;
-                else
-                    val--;
-
-                prim = 0;
-                primShift = 0;
-
-                break;
-            }
-            else
-                primShift++;
+            return BIG_ENDIAN ? GridUnsafe.getLongLE(heapArr, off) : GridUnsafe.getLong(heapArr, off);
         }
-
-        return val;
+        else
+            return 0;
     }
 
     /** {@inheritDoc} */

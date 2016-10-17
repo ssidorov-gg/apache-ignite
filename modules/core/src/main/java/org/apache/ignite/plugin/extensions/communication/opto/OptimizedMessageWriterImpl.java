@@ -96,52 +96,36 @@ public class OptimizedMessageWriterImpl implements OptimizedMessageWriter {
 
     /** {@inheritDoc} */
     @Override public void writeInt(int val) {
-        if (remaining() < 5)
+        if (remaining() < 4)
             nextBuffer();
-
-        if (val == Integer.MAX_VALUE)
-            val = Integer.MIN_VALUE;
-        else
-            val++;
 
         int pos = buf.position();
 
-        while ((val & 0xFFFF_FF80) != 0) {
-            byte b = (byte)(val | 0x80);
+        long off = baseOff + pos;
 
-            GridUnsafe.putByte(heapArr, baseOff + pos++, b);
+        if (BIG_ENDIAN)
+            GridUnsafe.putIntLE(heapArr, off, val);
+        else
+            GridUnsafe.putInt(heapArr, off, val);
 
-            val >>>= 7;
-        }
-
-        GridUnsafe.putByte(heapArr, baseOff + pos++, (byte)val);
-
-        buf.position(pos);
+        buf.position(pos + 4);
     }
 
     /** {@inheritDoc} */
     @Override public void writeLong(long val) {
-        if (remaining() < 10)
+        if (remaining() < 8)
             nextBuffer();
-
-        if (val == Long.MAX_VALUE)
-            val = Long.MIN_VALUE;
-        else
-            val++;
 
         int pos = buf.position();
 
-        while ((val & 0xFFFF_FFFF_FFFF_FF80L) != 0) {
-            byte b = (byte)(val | 0x80);
+        long off = baseOff + pos;
 
-            GridUnsafe.putByte(heapArr, baseOff + pos++, b);
+        if (BIG_ENDIAN)
+            GridUnsafe.putLongLE(heapArr, off, val);
+        else
+            GridUnsafe.putLong(heapArr, off, val);
 
-            val >>>= 7;
-        }
-
-        GridUnsafe.putByte(heapArr, baseOff + pos++, (byte)val);
-
-        buf.position(pos);
+        buf.position(pos + 8);
     }
 
     /** {@inheritDoc} */
