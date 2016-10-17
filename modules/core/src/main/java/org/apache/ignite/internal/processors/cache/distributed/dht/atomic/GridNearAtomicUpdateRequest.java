@@ -38,6 +38,7 @@ import org.apache.ignite.internal.util.tostring.GridToStringInclude;
 import org.apache.ignite.internal.util.typedef.internal.CU;
 import org.apache.ignite.internal.util.typedef.internal.S;
 import org.apache.ignite.internal.util.typedef.internal.U;
+import org.apache.ignite.plugin.extensions.communication.Message;
 import org.apache.ignite.plugin.extensions.communication.MessageCollectionItemType;
 import org.apache.ignite.plugin.extensions.communication.MessageReader;
 import org.apache.ignite.plugin.extensions.communication.MessageWriter;
@@ -52,6 +53,7 @@ import java.io.Externalizable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -170,6 +172,8 @@ public class GridNearAtomicUpdateRequest extends GridCacheMessage implements Gri
     /** Maximum possible size of inner collections. */
     @GridDirectTransient
     private int initSize;
+
+    private boolean simple;
 
     /**
      * Empty constructor required by {@link Externalizable}.
@@ -682,34 +686,92 @@ public class GridNearAtomicUpdateRequest extends GridCacheMessage implements Gri
         return ctx.atomicMessageLogger();
     }
 
+    void byteToFlags(byte res) {
+        clientReq = (res & 0x1) == 0x1;
+        fastMap = (res & 0x2) == 0x2;
+        hasPrimary = (res & 0x4) == 0x4;
+        keepBinary = (res & 0x8) == 0x8;
+        retval = (res & 0x10) == 0x10;
+        skipStore = (res & 0x20) == 0x20;
+        topLocked = (res & 0x40) == 0x40;
+    }
+
+    byte flagsToByte() {
+        byte res = 0;
+
+        if (clientReq)
+            res |= 0x1;
+
+        if (fastMap)
+            res |= 0x2;
+
+        if (hasPrimary)
+            res |= 0x4;
+
+        if (keepBinary)
+            res |= 0x8;
+
+        if (retval)
+            res |= 0x10;
+
+        if (skipStore)
+            res |= 0x20;
+
+        if (topLocked)
+            res |= 0x40;
+
+        return res;
+    }
+
     /** {@inheritDoc} */
     @Override public void writeTo(OptimizedMessageWriter writer) {
         super.writeTo(writer);
 
-        writer.writeBoolean(clientReq);
-        writer.writeMessage(conflictExpireTimes);
-        writer.writeMessage(conflictTtls);
-        writer.writeCollection(conflictVers, MessageCollectionItemType.MSG);
-        writer.writeCollection(entryProcessorsBytes, MessageCollectionItemType.BYTE_ARR);
-        writer.writeByteArray(expiryPlcBytes);
-        writer.writeBoolean(fastMap);
-        writer.writeObjectArray(filter, MessageCollectionItemType.MSG);
-        writer.writeMessage(futVer);
-        writer.writeBoolean(hasPrimary);
-        writer.writeObjectArray(invokeArgsBytes, MessageCollectionItemType.BYTE_ARR);
-        writer.writeBoolean(keepBinary);
-        writer.writeCollection(keys, MessageCollectionItemType.MSG);
-        writer.writeByte(op != null ? (byte)op.ordinal() : -1);
-        writer.writeBoolean(retval);
-        writer.writeBoolean(skipStore);
-        writer.writeUuid(subjId);
-        writer.writeByte(syncMode != null ? (byte)syncMode.ordinal() : -1);
-        writer.writeInt(taskNameHash);
-        writer.writeBoolean(topLocked);
-        writer.writeMessage(topVer);
-        writer.writeMessage(updateVer);
-        writer.writeCollection(vals, MessageCollectionItemType.MSG);
-        writer.writeCollection(partIds, MessageCollectionItemType.INT);
+        simple = conflictExpireTimes == null && keys != null && keys.size() == 1 && vals != null && vals.size() == 1 && partIds != null && partIds.size() == 1 && expiryPlcBytes == null && invokeArgsBytes == null && entryProcessorsBytes == null && filter == null;
+
+        if (simple) {
+            writer.writeBoolean(true);
+
+            writer.writeByte(flagsToByte());
+            writer.writeMessage(futVer);
+            writer.writeMessage(keys.get(0));
+            writer.writeByte(op != null ? (byte)op.ordinal() : -1);
+            writer.writeUuid(subjId);
+            writer.writeByte(syncMode != null ? (byte)syncMode.ordinal() : -1);
+            writer.writeInt(taskNameHash);
+            writer.writeMessage(topVer);
+            writer.writeMessage(updateVer);
+            writer.writeMessage(vals.get(0));
+            writer.writeInt(partIds.get(0));
+        }
+        else {
+            writer.writeBoolean(false);
+
+            writer.writeBoolean(clientReq);
+            writer.writeMessage(conflictExpireTimes);
+            writer.writeMessage(conflictTtls);
+            writer.writeCollection(conflictVers, MessageCollectionItemType.MSG);
+            writer.writeCollection(entryProcessorsBytes, MessageCollectionItemType.BYTE_ARR);
+            writer.writeByteArray(expiryPlcBytes);
+            writer.writeBoolean(fastMap);
+            writer.writeObjectArray(filter, MessageCollectionItemType.MSG);
+            writer.writeMessage(futVer);
+            writer.writeBoolean(hasPrimary);
+            writer.writeObjectArray(invokeArgsBytes, MessageCollectionItemType.BYTE_ARR);
+            writer.writeBoolean(keepBinary);
+            writer.writeCollection(keys, MessageCollectionItemType.MSG);
+            writer.writeByte(op != null ? (byte)op.ordinal() : -1);
+            writer.writeBoolean(retval);
+            writer.writeBoolean(skipStore);
+            writer.writeUuid(subjId);
+            writer.writeByte(syncMode != null ? (byte)syncMode.ordinal() : -1);
+            writer.writeInt(taskNameHash);
+            writer.writeBoolean(topLocked);
+            writer.writeMessage(topVer);
+            writer.writeMessage(updateVer);
+            writer.writeCollection(vals, MessageCollectionItemType.MSG);
+            writer.writeCollection(partIds, MessageCollectionItemType.INT);
+        }
     }
 
     /** {@inheritDoc} */
@@ -728,7 +790,7 @@ public class GridNearAtomicUpdateRequest extends GridCacheMessage implements Gri
 
         switch (writer.state()) {
             case 3:
-                if (!writer.writeBoolean("clientReq", clientReq))
+                if (!writer.writeByte("clientReq", flagsToByte()))
                     return false;
 
                 writer.incrementState();
@@ -764,108 +826,72 @@ public class GridNearAtomicUpdateRequest extends GridCacheMessage implements Gri
                 writer.incrementState();
 
             case 9:
-                if (!writer.writeBoolean("fastMap", fastMap))
-                    return false;
-
-                writer.incrementState();
-
-            case 10:
                 if (!writer.writeObjectArray("filter", filter, MessageCollectionItemType.MSG))
                     return false;
 
                 writer.incrementState();
 
-            case 11:
+            case 10:
                 if (!writer.writeMessage("futVer", futVer))
                     return false;
 
                 writer.incrementState();
 
-            case 12:
-                if (!writer.writeBoolean("hasPrimary", hasPrimary))
-                    return false;
-
-                writer.incrementState();
-
-            case 13:
+            case 11:
                 if (!writer.writeObjectArray("invokeArgsBytes", invokeArgsBytes, MessageCollectionItemType.BYTE_ARR))
                     return false;
 
                 writer.incrementState();
 
-            case 14:
-                if (!writer.writeBoolean("keepBinary", keepBinary))
-                    return false;
-
-                writer.incrementState();
-
-            case 15:
+            case 12:
                 if (!writer.writeCollection("keys", keys, MessageCollectionItemType.MSG))
                     return false;
 
                 writer.incrementState();
 
-            case 16:
+            case 13:
                 if (!writer.writeByte("op", op != null ? (byte)op.ordinal() : -1))
                     return false;
 
                 writer.incrementState();
 
-            case 17:
-                if (!writer.writeBoolean("retval", retval))
-                    return false;
-
-                writer.incrementState();
-
-            case 18:
-                if (!writer.writeBoolean("skipStore", skipStore))
-                    return false;
-
-                writer.incrementState();
-
-            case 19:
+            case 14:
                 if (!writer.writeUuid("subjId", subjId))
                     return false;
 
                 writer.incrementState();
 
-            case 20:
+            case 15:
                 if (!writer.writeByte("syncMode", syncMode != null ? (byte)syncMode.ordinal() : -1))
                     return false;
 
                 writer.incrementState();
 
-            case 21:
+            case 16:
                 if (!writer.writeInt("taskNameHash", taskNameHash))
                     return false;
 
                 writer.incrementState();
 
-            case 22:
-                if (!writer.writeBoolean("topLocked", topLocked))
-                    return false;
-
-                writer.incrementState();
-
-            case 23:
+            case 17:
                 if (!writer.writeMessage("topVer", topVer))
                     return false;
 
                 writer.incrementState();
 
-            case 24:
+            case 18:
                 if (!writer.writeMessage("updateVer", updateVer))
                     return false;
 
                 writer.incrementState();
 
-            case 25:
+            case 19:
                 if (!writer.writeCollection("vals", vals, MessageCollectionItemType.MSG))
                     return false;
 
                 writer.incrementState();
 
-            case 26:
+            case 20:
                 if (!writer.writeCollection("partIds", partIds, MessageCollectionItemType.INT))
                     return false;
 
@@ -887,205 +913,327 @@ public class GridNearAtomicUpdateRequest extends GridCacheMessage implements Gri
 
         switch (reader.state()) {
             case 3:
-                clientReq = reader.readBoolean("clientReq");
+                simple = reader.readBoolean("clientReq");
 
                 if (!reader.isLastRead())
                     return false;
 
                 reader.incrementState();
+        }
 
-            case 4:
-                conflictExpireTimes = reader.readMessage("conflictExpireTimes");
+        if (simple) {
+            switch (reader.state()) {
+                case 4:
+                    byte flags = reader.readByte("clientReq");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    byteToFlags(flags);
 
-            case 5:
-                conflictTtls = reader.readMessage("conflictTtls");
+                    reader.incrementState();
 
-                if (!reader.isLastRead())
-                    return false;
+                case 5:
+                    futVer = reader.readMessage("futVer");
 
-                reader.incrementState();
+                    if (!reader.isLastRead())
+                        return false;
 
-            case 6:
-                conflictVers = reader.readCollection("conflictVers", MessageCollectionItemType.MSG);
+                    reader.incrementState();
 
-                if (!reader.isLastRead())
-                    return false;
+                case 6:
+                    KeyCacheObject key = reader.readMessage("keys");
 
-                reader.incrementState();
+                    if (!reader.isLastRead())
+                        return false;
 
-            case 7:
-                entryProcessorsBytes = reader.readCollection("entryProcessorsBytes", MessageCollectionItemType.BYTE_ARR);
+                    keys = Collections.singletonList(key);
 
-                if (!reader.isLastRead())
-                    return false;
+                    reader.incrementState();
 
-                reader.incrementState();
+                case 7:
+                    byte opOrd;
 
-            case 8:
-                expiryPlcBytes = reader.readByteArray("expiryPlcBytes");
+                    opOrd = reader.readByte("op");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    op = GridCacheOperation.fromOrdinal(opOrd);
 
-            case 9:
-                fastMap = reader.readBoolean("fastMap");
+                    reader.incrementState();
 
-                if (!reader.isLastRead())
-                    return false;
+                case 8:
+                    subjId = reader.readUuid("subjId");
 
-                reader.incrementState();
+                    if (!reader.isLastRead())
+                        return false;
 
-            case 10:
-                filter = reader.readObjectArray("filter", MessageCollectionItemType.MSG, CacheEntryPredicate.class);
+                    reader.incrementState();
 
-                if (!reader.isLastRead())
-                    return false;
+                case 9:
+                    byte syncModeOrd;
 
-                reader.incrementState();
+                    syncModeOrd = reader.readByte("syncMode");
 
-            case 11:
-                futVer = reader.readMessage("futVer");
+                    if (!reader.isLastRead())
+                        return false;
 
-                if (!reader.isLastRead())
-                    return false;
+                    syncMode = CacheWriteSynchronizationMode.fromOrdinal(syncModeOrd);
 
-                reader.incrementState();
+                    reader.incrementState();
 
-            case 12:
-                hasPrimary = reader.readBoolean("hasPrimary");
+                case 10:
+                    taskNameHash = reader.readInt("taskNameHash");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    reader.incrementState();
 
-            case 13:
-                invokeArgsBytes = reader.readObjectArray("invokeArgsBytes", MessageCollectionItemType.BYTE_ARR, byte[].class);
+                case 11:
+                    topVer = reader.readMessage("topVer");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    reader.incrementState();
 
-            case 14:
-                keepBinary = reader.readBoolean("keepBinary");
+                case 12:
+                    updateVer = reader.readMessage("updateVer");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    reader.incrementState();
 
-            case 15:
-                keys = reader.readCollection("keys", MessageCollectionItemType.MSG);
+                case 13:
+                    CacheObject val = reader.readMessage("vals");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    vals = Collections.singletonList(val);
 
-            case 16:
-                byte opOrd;
+                    if (!reader.isLastRead())
+                        return false;
 
-                opOrd = reader.readByte("op");
+                    reader.incrementState();
 
-                if (!reader.isLastRead())
-                    return false;
+                case 14:
+                    int partId = reader.readInt("partIds");
 
-                op = GridCacheOperation.fromOrdinal(opOrd);
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    partIds = Collections.singletonList(partId);
 
-            case 17:
-                retval = reader.readBoolean("retval");
+                    reader.incrementState();
+            }
+        }
+        else {
+            switch (reader.state()) {
+                case 4:
+                    clientReq = reader.readBoolean("clientReq");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    reader.incrementState();
 
-            case 18:
-                skipStore = reader.readBoolean("skipStore");
+                case 5:
+                    conflictExpireTimes = reader.readMessage("conflictExpireTimes");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    reader.incrementState();
 
-            case 19:
-                subjId = reader.readUuid("subjId");
+                case 6:
+                    conflictTtls = reader.readMessage("conflictTtls");
 
-                if (!reader.isLastRead())
-                    return false;
+                    if (!reader.isLastRead())
+                        return false;
 
-                reader.incrementState();
+                    reader.incrementState();
 
-            case 20:
-                byte syncModeOrd;
+                case 7:
+                    conflictVers = reader.readCollection("conflictVers", MessageCollectionItemType.MSG);
 
-                syncModeOrd = reader.readByte("syncMode");
+                    if (!reader.isLastRead())
+                        return false;
 
-                if (!reader.isLastRead())
-                    return false;
+                    reader.incrementState();
 
-                syncMode = CacheWriteSynchronizationMode.fromOrdinal(syncModeOrd);
+                case 8:
+                    entryProcessorsBytes = reader.readCollection("entryProcessorsBytes", MessageCollectionItemType.BYTE_ARR);
 
-                reader.incrementState();
+                    if (!reader.isLastRead())
+                        return false;
 
-            case 21:
-                taskNameHash = reader.readInt("taskNameHash");
+                    reader.incrementState();
 
-                if (!reader.isLastRead())
-                    return false;
+                case 9:
+                    expiryPlcBytes = reader.readByteArray("expiryPlcBytes");
 
-                reader.incrementState();
+                    if (!reader.isLastRead())
+                        return false;
 
-            case 22:
-                topLocked = reader.readBoolean("topLocked");
+                    reader.incrementState();
 
-                if (!reader.isLastRead())
-                    return false;
+                case 10:
+                    fastMap = reader.readBoolean("fastMap");
 
-                reader.incrementState();
+                    if (!reader.isLastRead())
+                        return false;
 
-            case 23:
-                topVer = reader.readMessage("topVer");
+                    reader.incrementState();
 
-                if (!reader.isLastRead())
-                    return false;
+                case 11:
+                    filter = reader.readObjectArray("filter", MessageCollectionItemType.MSG, CacheEntryPredicate.class);
 
-                reader.incrementState();
+                    if (!reader.isLastRead())
+                        return false;
 
-            case 24:
-                updateVer = reader.readMessage("updateVer");
+                    reader.incrementState();
 
-                if (!reader.isLastRead())
-                    return false;
+                case 12:
+                    futVer = reader.readMessage("futVer");
 
-                reader.incrementState();
+                    if (!reader.isLastRead())
+                        return false;
 
-            case 25:
-                vals = reader.readCollection("vals", MessageCollectionItemType.MSG);
+                    reader.incrementState();
 
-                if (!reader.isLastRead())
-                    return false;
+                case 13:
+                    hasPrimary = reader.readBoolean("hasPrimary");
 
-                reader.incrementState();
+                    if (!reader.isLastRead())
+                        return false;
 
-            case 26:
-                partIds = reader.readCollection("partIds", MessageCollectionItemType.INT);
+                    reader.incrementState();
 
-                if (!reader.isLastRead())
-                    return false;
+                case 14:
+                    invokeArgsBytes = reader.readObjectArray("invokeArgsBytes", MessageCollectionItemType.BYTE_ARR, byte[].class);
 
-                reader.incrementState();
+                    if (!reader.isLastRead())
+                        return false;
 
+                    reader.incrementState();
+
+                case 15:
+                    keepBinary = reader.readBoolean("keepBinary");
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 16:
+                    keys = reader.readCollection("keys", MessageCollectionItemType.MSG);
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 17:
+                    byte opOrd;
+
+                    opOrd = reader.readByte("op");
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    op = GridCacheOperation.fromOrdinal(opOrd);
+
+                    reader.incrementState();
+
+                case 18:
+                    retval = reader.readBoolean("retval");
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 19:
+                    skipStore = reader.readBoolean("skipStore");
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 20:
+                    subjId = reader.readUuid("subjId");
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 21:
+                    byte syncModeOrd;
+
+                    syncModeOrd = reader.readByte("syncMode");
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    syncMode = CacheWriteSynchronizationMode.fromOrdinal(syncModeOrd);
+
+                    reader.incrementState();
+
+                case 22:
+                    taskNameHash = reader.readInt("taskNameHash");
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 23:
+                    topLocked = reader.readBoolean("topLocked");
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 24:
+                    topVer = reader.readMessage("topVer");
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 25:
+                    updateVer = reader.readMessage("updateVer");
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 26:
+                    vals = reader.readCollection("vals", MessageCollectionItemType.MSG);
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+                case 27:
+                    partIds = reader.readCollection("partIds", MessageCollectionItemType.INT);
+
+                    if (!reader.isLastRead())
+                        return false;
+
+                    reader.incrementState();
+
+            }
         }
 
         return reader.afterMessageRead(GridNearAtomicUpdateRequest.class);
@@ -1114,7 +1262,7 @@ public class GridNearAtomicUpdateRequest extends GridCacheMessage implements Gri
 
     /** {@inheritDoc} */
     @Override public byte fieldsCount() {
-        return 27;
+        return 47;
     }
 
     /** {@inheritDoc} */
