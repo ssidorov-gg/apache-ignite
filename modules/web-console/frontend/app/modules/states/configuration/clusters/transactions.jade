@@ -66,4 +66,4 @@ include ../../../../../app/helpers/jade/mixins.jade
                     +java-class('Manager factory:', model + '.txManagerFactory', '"txManagerFactory"', 'true', 'false',
                         'Class name of transaction manager factory for integration with JEE app servers')
             .col-sm-6
-                +preview(model, 'clusterTransactions')
+                +preview-xml-java(model, 'clusterTransactions')

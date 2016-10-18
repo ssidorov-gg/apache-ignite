@@ -51,4 +51,4 @@ include ../../../../../app/helpers/jade/mixins.jade
                 .settings-row(ng-show='!(#{model}.cacheMode && #{model}.cacheMode != "PARTITIONED")')
                     +number('Backups:', model + '.backups', '"backups"', 'true', '0', '0', 'Number of backup nodes')
             .col-sm-6
-                +preview(model, 'clusterAtomics')
+                +preview-xml-java(model, 'clusterAtomics')

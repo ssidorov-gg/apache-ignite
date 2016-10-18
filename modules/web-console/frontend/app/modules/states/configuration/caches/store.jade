@@ -87,6 +87,11 @@ mixin hibernateField(name, model, items, valid, save, newItem)
                                     +dialect('Dialect:', pojoStoreFactory + '.dialect', '"pojoDialect"', required,
                                         'Dialect of SQL implemented by a particular RDBMS:', 'Generic JDBC dialect',
                                         'Choose JDBC dialect')
+                                .details-row
+                                    +checkbox('Escape table and filed names', pojoStoreFactory + '.sqlEscapeAll', '"sqlEscapeAll"',
+                                        'If enabled than all schema, table and field names will be escaped with double quotes (for example: "tableName"."fieldName").<br/>\
+                                        This enforces case sensitivity for field names and also allows having special characters in table and field names.<br/>\
+                                        Escaped names will be used for CacheJdbcPojoStore internal SQL queries.')
                             div(ng-show='#{storeFactoryKind} === "CacheJdbcBlobStoreFactory"')
                                 -var blobStoreFactory = storeFactory + '.CacheJdbcBlobStoreFactory'
                                 -var blobStoreFactoryVia = blobStoreFactory + '.connectVia'

@@ -93,9 +93,10 @@ import UnsavedChangesGuard from './services/UnsavedChangesGuard.service';
 
 // Filters.
 import byName from './filters/byName.filter';
+import defaultName from './filters/default-name.filter';
 import domainsValidation from './filters/domainsValidation.filter';
-import hasPojo from './filters/hasPojo.filter';
 import duration from './filters/duration.filter';
+import hasPojo from './filters/hasPojo.filter';
 
 // Generators
 import $generatorCommon from './modules/configuration/generator/generator-common';
@@ -227,10 +228,11 @@ angular
 .controller(...igfs)
 .controller(...profile)
 // Filters.
-.filter(...hasPojo)
-.filter(...domainsValidation)
 .filter(...byName)
+.filter('defaultName', defaultName)
+.filter(...domainsValidation)
 .filter(...duration)
+.filter(...hasPojo)
 .config(['$stateProvider', '$locationProvider', '$urlRouterProvider', ($stateProvider, $locationProvider, $urlRouterProvider) => {
     // Set up the states.
     $stateProvider

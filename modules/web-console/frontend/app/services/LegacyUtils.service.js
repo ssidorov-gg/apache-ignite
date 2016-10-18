@@ -182,15 +182,15 @@ export default ['IgniteLegacyUtils', ['IgniteErrorPopover', (ErrorPopover) => {
 
     const VALID_JAVA_IDENTIFIER = new RegExp('^[a-zA-Z_$][a-zA-Z\\d_$]*$');
 
-    function isValidJavaIdentifier(msg, ident, elemId, panels, panelId) {
+    function isValidJavaIdentifier(msg, ident, elemId, panels, panelId, stopEdit) {
         if (isEmptyString(ident))
-            return ErrorPopover.show(elemId, msg + ' is invalid!', panels, panelId);
+            return !stopEdit && ErrorPopover.show(elemId, msg + ' is invalid!', panels, panelId);
 
         if (_.includes(JAVA_KEYWORDS, ident))
-            return ErrorPopover.show(elemId, msg + ' could not contains reserved java keyword: "' + ident + '"!', panels, panelId);
+            return !stopEdit && ErrorPopover.show(elemId, msg + ' could not contains reserved java keyword: "' + ident + '"!', panels, panelId);
 
         if (!VALID_JAVA_IDENTIFIER.test(ident))
-            return ErrorPopover.show(elemId, msg + ' contains invalid identifier: "' + ident + '"!', panels, panelId);
+            return !stopEdit && ErrorPopover.show(elemId, msg + ' contains invalid identifier: "' + ident + '"!', panels, panelId);
 
         return true;
     }
@@ -309,24 +309,24 @@ export default ['IgniteLegacyUtils', ['IgniteErrorPopover', (ErrorPopover) => {
         javaBuiltInTypes,
         isJavaBuiltInClass,
         isValidJavaIdentifier,
-        isValidJavaClass(msg, ident, allowBuiltInClass, elemId, packageOnly, panels, panelId) {
+        isValidJavaClass(msg, ident, allowBuiltInClass, elemId, packageOnly, panels, panelId, stopEdit = false) {
             if (isEmptyString(ident))
-                return ErrorPopover.show(elemId, msg + ' could not be empty!', panels, panelId);
+                return !stopEdit && ErrorPopover.show(elemId, msg + ' could not be empty!', panels, panelId);
 
             const parts = ident.split('.');
 
             const len = parts.length;
 
             if (!allowBuiltInClass && isJavaBuiltInClass(ident))
-                return ErrorPopover.show(elemId, msg + ' should not be the Java build-in class!', panels, panelId);
+                return !stopEdit && ErrorPopover.show(elemId, msg + ' should not be the Java build-in class!', panels, panelId);
 
             if (len < 2 && !isJavaBuiltInClass(ident) && !packageOnly)
-                return ErrorPopover.show(elemId, msg + ' does not have package specified!', panels, panelId);
+                return !stopEdit && ErrorPopover.show(elemId, msg + ' does not have package specified!', panels, panelId);
 
             for (let i = 0; i < parts.length; i++) {
                 const part = parts[i];
 
-                if (!isValidJavaIdentifier(msg, part, elemId, panels, panelId))
+                if (!isValidJavaIdentifier(msg, part, elemId, panels, panelId, stopEdit))
                     return false;
             }
 

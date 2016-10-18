@@ -372,7 +372,7 @@ export default ['cachesController', [
             if (evictionPlc && evictionPlc.kind) {
                 const plc = evictionPlc[evictionPlc.kind];
 
-                if (plc.maxMemorySize === 0 && plc.maxSize === 0)
+                if (plc && !plc.maxMemorySize && !plc.maxSize)
                     return ErrorPopover.show('evictionPolicymaxMemorySizeInput', 'Either maximum memory size or maximum size should be great than 0!', $scope.ui, 'memory');
             }
 

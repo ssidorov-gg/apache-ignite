@@ -76,7 +76,7 @@ include ../../../../../app/helpers/jade/mixins.jade
                                         span(ng-hide='field.edit')
                                             a.labelFormField(ng-click='#{enabled} && (field.edit = true) && (#{model} = model)') {{ model }}
                                         span(ng-if='field.edit')
-                                            +table-java-class-field('Trust manager:', name, model, trust, valid, save, false)
+                                            +table-java-class-field('Trust manager', name, model, trust, valid, save, false)
                                                 +table-save-button(valid, save, false)
                                                 +unique-feedback(name, uniqueTip)
                             div(ng-hide=enabled)

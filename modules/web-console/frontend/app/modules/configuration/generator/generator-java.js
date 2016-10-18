@@ -1637,6 +1637,12 @@ $generatorJava.cacheStore = function(cache, domains, cacheVarName, res) {
 
                 res.needEmptyLine = true;
 
+                if (storeFactory.sqlEscapeAll) {
+                    res.line(varName + '.setSqlEscapeAll(true);');
+
+                    res.needEmptyLine = true;
+                }
+
                 const domainConfigs = _.filter(domains, function(domain) {
                     return $generatorCommon.domainQueryMetadata(domain) === 'Configuration' &&
                         $generatorCommon.isDefinedAndNotEmpty(domain.databaseTable);

@@ -424,6 +424,7 @@ export default ['domainsController', [
         function prepareNewItem(cacheId) {
             return {
                 space: $scope.spaces[0]._id,
+                generatePojo: true,
                 caches: cacheId && _.find($scope.caches, {value: cacheId}) ? [cacheId] : // eslint-disable-line no-nested-ternary
                     (_.isEmpty($scope.caches) ? [] : [$scope.caches[0].value]),
                 queryMetadata: 'Configuration'
@@ -1561,15 +1562,11 @@ export default ['domainsController', [
                     });
 
                     // Found duplicate by key.
-                    if (idx >= 0 && idx !== index) {
-                        if (stopEdit)
-                            return false;
-
-                        return ErrorPopover.show(LegacyTable.tableFieldId(index, pairField.idPrefix + pairField.id), 'Field with such ' + pairField.dupObjName + ' already exists!', $scope.ui, 'query');
-                    }
+                    if (idx >= 0 && idx !== index)
+                        return !stopEdit && ErrorPopover.show(LegacyTable.tableFieldId(index, pairField.idPrefix + pairField.id), 'Field with such ' + pairField.dupObjName + ' already exists!', $scope.ui, 'query');
                 }
 
-                if (pairField.classValidation && !LegacyUtils.isValidJavaClass(pairField.msg, pairValue.value, true, LegacyTable.tableFieldId(index, 'Value' + pairField.id), false, $scope.ui, 'query')) {
+                if (pairField.classValidation && !LegacyUtils.isValidJavaClass(pairField.msg, pairValue.value, true, LegacyTable.tableFieldId(index, 'Value' + pairField.id), false, $scope.ui, 'query', stopEdit)) {
                     if (stopEdit)
                         return false;
 
@@ -1618,8 +1615,8 @@ export default ['domainsController', [
 
                 let model = item[field.model];
 
-                if (!LegacyUtils.isValidJavaIdentifier(dbFieldTable.msg + ' java name', dbFieldValue.javaFieldName, LegacyTable.tableFieldId(index, 'JavaFieldName' + dbFieldTable.id)))
-                    return false;
+                if (!LegacyUtils.isValidJavaIdentifier(dbFieldTable.msg + ' java name', dbFieldValue.javaFieldName, LegacyTable.tableFieldId(index, 'JavaFieldName' + dbFieldTable.id), $scope.ui, 'store', stopEdit))
+                    return stopEdit;
 
                 if (LegacyUtils.isDefined(model)) {
                     let idx = _.findIndex(model, function(dbMeta) {
@@ -1628,7 +1625,7 @@ export default ['domainsController', [
 
                     // Found duplicate.
                     if (idx >= 0 && index !== idx)
-                        return ErrorPopover.show(LegacyTable.tableFieldId(index, 'DatabaseFieldName' + dbFieldTable.id), 'Field with such database name already exists!', $scope.ui, 'store');
+                        return stopEdit || ErrorPopover.show(LegacyTable.tableFieldId(index, 'DatabaseFieldName' + dbFieldTable.id), 'Field with such database name already exists!', $scope.ui, 'store');
 
                     idx = _.findIndex(model, function(dbMeta) {
                         return dbMeta.javaFieldName === dbFieldValue.javaFieldName;
@@ -1636,7 +1633,7 @@ export default ['domainsController', [
 
                     // Found duplicate.
                     if (idx >= 0 && index !== idx)
-                        return ErrorPopover.show(LegacyTable.tableFieldId(index, 'JavaFieldName' + dbFieldTable.id), 'Field with such java name already exists!', $scope.ui, 'store');
+                        return stopEdit || ErrorPopover.show(LegacyTable.tableFieldId(index, 'JavaFieldName' + dbFieldTable.id), 'Field with such java name already exists!', $scope.ui, 'store');
 
                     if (index < 0)
                         model.push(dbFieldValue);
@@ -1697,7 +1694,7 @@ export default ['domainsController', [
 
                 // Found duplicate.
                 if (idx >= 0 && idx !== curIdx)
-                    return ErrorPopover.show(LegacyTable.tableFieldId(curIdx, 'IndexName'), 'Index with such name already exists!', $scope.ui, 'query');
+                    return !stopEdit && ErrorPopover.show(LegacyTable.tableFieldId(curIdx, 'IndexName'), 'Index with such name already exists!', $scope.ui, 'query');
             }
 
             LegacyTable.tableReset();
@@ -1810,10 +1807,7 @@ export default ['domainsController', [
 
                 // Found duplicate.
                 if (idx >= 0 && idx !== curIdx) {
-                    if (stopEdit)
-                        return true;
-
-                    return ErrorPopover.show(LegacyTable.tableFieldId(curIdx,
+                    return !stopEdit && ErrorPopover.show(LegacyTable.tableFieldId(curIdx,
                         'FieldName' + indexIdx + (curIdx >= 0 ? '-' : '')),
                         'Field with such name already exists in index!', $scope.ui, 'query');
                 }

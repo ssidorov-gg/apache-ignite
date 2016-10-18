@@ -1277,6 +1277,8 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                         bean.dataSource(id, 'dataSourceBean', this.dataSourceBean(id, storeFactory.dialect))
                             .beanProperty('dialect', new EmptyBean(this.dialectClsName(storeFactory.dialect)));
 
+                        bean.boolProperty('sqlEscapeAll');
+
                         const setType = (typeBean, propName) => {
                             if (JavaTypes.nonBuiltInClass(typeBean.valueOf(propName)))
                                 typeBean.stringProperty(propName);

@@ -258,8 +258,6 @@ mixin table-text-field(name, model, items, valid, save, placeholder, newItem)
 
 //- Mixin for table java class field.
 mixin table-java-class-field(lbl, name, model, items, valid, save, newItem)
-    -var errLbl = lbl.substring(0, lbl.length - 1)
-
     -var resetOnEnter = newItem ? '(stopblur = true) && (group.add = [{}])' : '(field.edit = false)'
     -var onEnter = valid + ' && (' + save + '); ' + valid + ' && ' + resetOnEnter + ';'
 
@@ -269,10 +267,10 @@ mixin table-java-class-field(lbl, name, model, items, valid, save, newItem)
     -var onBlur = valid + ' && ( ' + save + '); ' + resetOnBlur + ';'
 
     div(ignite-on-focus-out=onBlur)
-        +form-field-feedback(name, 'javaBuiltInClass', errLbl + ' should not be the Java built-in class!')
-        +form-field-feedback(name, 'javaKeywords', errLbl + ' could not contains reserved Java keyword!')
-        +form-field-feedback(name, 'javaPackageSpecified', errLbl + ' does not have package specified!')
-        +form-field-feedback(name, 'javaIdentifier', errLbl + ' is invalid Java identifier!')
+        +form-field-feedback(name, 'javaBuiltInClass', lbl + ' should not be the Java built-in class!')
+        +form-field-feedback(name, 'javaKeywords', lbl + ' could not contains reserved Java keyword!')
+        +form-field-feedback(name, 'javaPackageSpecified', lbl + ' does not have package specified!')
+        +form-field-feedback(name, 'javaIdentifier', lbl + ' is invalid Java identifier!')
 
         if block
             block

@@ -133,10 +133,10 @@ module.exports.factory = (_, socketio, agentMgr, configure) => {
                                     return acc;
 
                                 return agent.queryFetch(demo, acc.responseNodeId, acc.queryId, pageSize)
-                                    .then((res) => {
-                                        acc.rows = acc.rows.concat(res.rows);
+                                    .then(({result}) => {
+                                        acc.rows = acc.rows.concat(result.rows);
 
-                                        acc.hasMore = res.hasMore;
+                                        acc.hasMore = result.hasMore;
 
                                         return fetchResult(acc);
                                     });

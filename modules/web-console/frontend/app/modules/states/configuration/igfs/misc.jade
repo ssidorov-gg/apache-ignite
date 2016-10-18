@@ -93,11 +93,11 @@ mixin table-igfs-path-mode-edit(prefix, focusId, index)
                         .group-content(ng-show='(#{pathModes} && #{pathModes}.length > 0) || tableNewItemActive(tblPathModes)')
                             table.links-edit(id='pathModes' st-table=pathModes)
                                 tbody
-                                    tr(ng-repeat='item in #{pathModes}')
+                                    tr(ng-repeat='item in #{pathModes} track by $index')
                                         td.col-sm-12(ng-hide='tableEditing(tblPathModes, $index)')
                                             a.labelFormField(ng-click='tableStartEdit(backupItem, tblPathModes, $index)') {{item.path + " [" + item.mode + "]"}}
                                             +btn-remove('tableRemove(backupItem, tblPathModes, $index)', '"Remove path"')
-                                        td.col-sm-12(ng-if='tableEditing(tblPathModes, $index)')
+                                        td.col-sm-12(ng-show='tableEditing(tblPathModes, $index)')
                                             +table-igfs-path-mode-edit('cur', '{{::tblPathModes.focusId + $index}}', '$index')
                                 tfoot(ng-show='tableNewItemActive(tblPathModes)')
                                     tr

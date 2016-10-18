@@ -196,7 +196,8 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
                 dialect: {
                     type: String,
                     enum: ['Generic', 'Oracle', 'DB2', 'SQLServer', 'MySQL', 'PostgreSQL', 'H2']
-                }
+                },
+                sqlEscapeAll: Boolean
             },
             CacheJdbcBlobStoreFactory: {
                 connectVia: {type: String, enum: ['URL', 'DataSource']},

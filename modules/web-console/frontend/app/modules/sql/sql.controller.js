@@ -27,6 +27,8 @@ const SCAN_CACHE_WITH_FILTER = 'VISOR_SCAN_CACHE_WITH_FILTER';
 /** Prefix for node local key for SCAN near queries. */
 const SCAN_CACHE_WITH_FILTER_CASE_SENSITIVE = 'VISOR_SCAN_CACHE_WITH_FILTER_CASE_SENSITIVE';
 
+const NON_COLLOCATED_JOINS_SINCE = '1.7.0';
+
 const _fullColName = (col) => {
     const res = [];
 
@@ -133,7 +135,7 @@ class Paragraph {
     }
 
     queryExecuted() {
-        return !_.isEmpty(this.meta);
+        return !_.isEmpty(this.meta) || !_.isEmpty(this.errMsg);
     }
 
     scanExplain() {
@@ -154,8 +156,8 @@ class Paragraph {
 }
 
 // Controller for SQL notebook screen.
-export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', '$animate', '$location', '$anchorScroll', '$state', '$modal', '$popover', 'IgniteLoading', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteConfirm', 'IgniteAgentMonitor', 'IgniteChartColors', 'IgniteNotebook', 'IgniteScanFilterInput', 'IgniteNodes', 'uiGridExporterConstants', 'IgniteVersion',
-    function($root, $scope, $http, $q, $timeout, $interval, $animate, $location, $anchorScroll, $state, $modal, $popover, Loading, LegacyUtils, Messages, Confirm, agentMonitor, IgniteChartColors, Notebook, ScanFilterInput, Nodes, uiGridExporterConstants, Version) {
+export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', '$animate', '$location', '$anchorScroll', '$state', '$filter', '$modal', '$popover', 'IgniteLoading', 'IgniteLegacyUtils', 'IgniteMessages', 'IgniteConfirm', 'IgniteAgentMonitor', 'IgniteChartColors', 'IgniteNotebook', 'IgniteScanFilterInput', 'IgniteNodes', 'uiGridExporterConstants', 'IgniteVersion',
+    function($root, $scope, $http, $q, $timeout, $interval, $animate, $location, $anchorScroll, $state, $filter, $modal, $popover, Loading, LegacyUtils, Messages, Confirm, agentMonitor, IgniteChartColors, Notebook, ScanFilterInput, Nodes, uiGridExporterConstants, Version) {
         let stopTopology = null;
 
         const _tryStopRefresh = function(paragraph) {
@@ -212,7 +214,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
             }
         };
 
-        $scope.maskCacheName = (cacheName) => _.isEmpty(cacheName) ? '<default>' : cacheName;
+        const maskCacheName = $filter('defaultName');
 
         // We need max 1800 items to hold history for 30 mins in case of refresh every second.
         const HISTORY_LENGTH = 1800;
@@ -788,7 +790,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
                             let item = _.find(cachesAcc, {name: cache.name});
 
                             if (_.isNil(item)) {
-                                cache.label = $scope.maskCacheName(cache.name);
+                                cache.label = maskCacheName(cache.name);
 
                                 cache.nodes = [];
 
@@ -1077,7 +1079,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
             paragraph.gridOptions.rebuildColumns();
 
             paragraph.chartColumns = _.reduce(paragraph.meta, (acc, col, idx) => {
-                if (paragraph.columnFilter(col) && _notObjectType(col.fieldTypeName)) {
+                if (_notObjectType(col.fieldTypeName)) {
                     acc.push({
                         label: col.fieldName,
                         type: col.fieldTypeName,
@@ -1104,8 +1106,6 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
         $scope.toggleSystemColumns = function(paragraph) {
             if (paragraph.disabledSystemColumns)
                 return;
-
-            paragraph.systemColumns = !paragraph.systemColumns;
 
             paragraph.columnFilter = _columnFilter(paragraph);
 
@@ -1136,11 +1136,12 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
                 if (!LegacyUtils.isDefined(paragraph.chartValCols))
                     paragraph.chartValCols = [];
 
-                if (res.columns.length <= 2) {
+                if (res.columns.length) {
                     const _key = _.find(res.columns, {fieldName: '_KEY'});
                     const _val = _.find(res.columns, {fieldName: '_VAL'});
 
-                    paragraph.disabledSystemColumns = (res.columns.length === 2 && _key && _val) ||
+                    paragraph.disabledSystemColumns = !(_key && _val) ||
+                        (res.columns.length === 2 && _key && _val) ||
                         (res.columns.length === 1 && (_key || _val));
                 }
 
@@ -1235,12 +1236,18 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
 
         /**
          * @param {String} name Cache name.
+         * @param {Boolean} local Local query.
          * @return {String} Nid
          */
-        const cacheNode = (name) => {
+        const _chooseNode = (name, local) => {
             const nodes = cacheNodes(name);
 
-            return nodes[_.random(0, nodes.length - 1)].nid;
+            if (local) {
+                return Nodes.selectNode(nodes, name)
+                    .then((selectedNids) => _.head(selectedNids));
+            }
+
+            return Promise.resolve(nodes[_.random(0, nodes.length - 1)].nid);
         };
 
         const _executeRefresh = (paragraph) => {
@@ -1248,7 +1255,8 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
 
             agentMonitor.awaitAgent()
                 .then(() => _closeOldQuery(paragraph))
-                .then(() => agentMonitor.query(cacheNode(args.cacheName), args.cacheName, args.query, false, false, args.pageSize))
+                .then(() => args.localNid || _chooseNode(args.cacheName, false))
+                .then((nid) => agentMonitor.query(nid, args.cacheName, args.query, args.nonCollocatedJoins, !!args.localNid, args.pageSize))
                 .then(_processQueryResult.bind(this, paragraph))
                 .catch((err) => paragraph.errMsg = err.message);
         };
@@ -1272,68 +1280,57 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
             ${query} 
             ) LIMIT ${limitSize}`;
 
-        $scope.distributedJoinAvailable = (paragraph) => {
-            const MIN_SUPPORTED_VERSION = '1.7.0';
+        $scope.nonCollocatedJoinsAvailable = (paragraph) => {
             const cache = _.find($scope.caches, {name: paragraph.cacheName});
 
             if (cache)
-                return !!_.find(cache.nodes, (node) => Version.since(node.version, MIN_SUPPORTED_VERSION));
+                return !!_.find(cache.nodes, (node) => Version.since(node.version, NON_COLLOCATED_JOINS_SINCE));
 
             return false;
         };
 
-        $scope.executeDistribution = (paragraph) => {
-            if (!$scope.distributedJoinAvailable(paragraph))
-                return;
+        $scope.execute = (paragraph, nonCollocatedJoins = false) => {
+            const local = !!paragraph.localQry;
 
-            return $scope.execute(paragraph, true);
-        };
+            $scope.actionAvailable(paragraph, true) && _chooseNode(paragraph.cacheName, local)
+                .then((nid) => {
+                    Notebook.save($scope.notebook)
+                        .catch(Messages.showError);
 
-        $scope.executeLocal = (paragraph) => {
-            return Nodes.selectNode(cacheNodes(paragraph.cacheName), paragraph.cacheName)
-                .then((selectedNids) => $scope.execute(paragraph, false, _.head(selectedNids)));
-        };
+                    paragraph.prevQuery = paragraph.queryArgs ? paragraph.queryArgs.query : paragraph.query;
 
-        $scope.execute = (paragraph, distributedJoins = false, localNid) => {
-            if (!$scope.actionAvailable(paragraph, true))
-                return;
+                    _showLoading(paragraph, true);
 
-            const local = !!localNid;
-            const nid = localNid || cacheNode(paragraph.cacheName);
+                    return _closeOldQuery(paragraph)
+                        .then(() => {
+                            const args = paragraph.queryArgs = {
+                                cacheName: paragraph.cacheName,
+                                pageSize: paragraph.pageSize,
+                                query: paragraph.query,
+                                firstPageOnly: paragraph.firstPageOnly,
+                                nonCollocatedJoins,
+                                type: 'QUERY',
+                                localNid: local ? nid : null
+                            };
 
-            Notebook.save($scope.notebook)
-                .catch(Messages.showError);
+                            const qry = args.firstPageOnly ? addLimit(args.query, args.pageSize) : paragraph.query;
 
-            paragraph.prevQuery = paragraph.queryArgs ? paragraph.queryArgs.query : paragraph.query;
+                            return agentMonitor.query(nid, args.cacheName, qry, nonCollocatedJoins, local, args.pageSize);
+                        })
+                        .then((res) => {
+                            _processQueryResult(paragraph, res);
 
-            _showLoading(paragraph, true);
+                            _tryStartRefresh(paragraph);
+                        })
+                        .catch((err) => {
+                            paragraph.errMsg = err.message;
 
-            return _closeOldQuery(paragraph)
-                .then(() => {
-                    const args = paragraph.queryArgs = {
-                        cacheName: paragraph.cacheName,
-                        pageSize: paragraph.pageSize,
-                        query: paragraph.query,
-                        type: 'QUERY'
-                    };
+                            _showLoading(paragraph, false);
 
-                    const qry = paragraph.fetchFirstPage ? addLimit(args.query, args.pageSize) : paragraph.query;
-
-                    return agentMonitor.query(nid, args.cacheName, qry, distributedJoins, local, args.pageSize);
-                })
-                .then((res) => {
-                    _processQueryResult(paragraph, res);
-
-                    _tryStartRefresh(paragraph);
-                })
-                .catch((err) => {
-                    paragraph.errMsg = err.message;
-
-                    _showLoading(paragraph, false);
-
-                    $scope.stopRefresh(paragraph);
-                })
-                .then(() => paragraph.ace.focus());
+                            $scope.stopRefresh(paragraph);
+                        })
+                        .then(() => paragraph.ace.focus());
+                });
         };
 
         const _cancelRefresh = (paragraph) => {
@@ -1360,7 +1357,8 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
             _showLoading(paragraph, true);
 
             _closeOldQuery(paragraph)
-                .then(() => {
+                .then(() => _chooseNode(paragraph.cacheName, false))
+                .then((nid) => {
                     const args = paragraph.queryArgs = {
                         cacheName: paragraph.cacheName,
                         pageSize: paragraph.pageSize,
@@ -1368,7 +1366,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
                         type: 'EXPLAIN'
                     };
 
-                    return agentMonitor.query(cacheNode(paragraph.cacheName), args.cacheName, args.query, false, false, args.pageSize);
+                    return agentMonitor.query(nid, args.cacheName, args.query, false, false, args.pageSize);
                 })
                 .then(_processQueryResult.bind(this, paragraph))
                 .catch((err) => {
@@ -1380,34 +1378,48 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
         };
 
         $scope.scan = (paragraph, query = null) => {
-            if (!$scope.actionAvailable(paragraph, false))
-                return;
+            const local = !!paragraph.localQry;
 
-            Notebook.save($scope.notebook)
-                .catch(Messages.showError);
+            $scope.actionAvailable(paragraph, false) && _chooseNode(paragraph.cacheName, local)
+                .then((nid) => {
+                    Notebook.save($scope.notebook)
+                        .catch(Messages.showError);
 
-            _cancelRefresh(paragraph);
+                    _cancelRefresh(paragraph);
 
-            _showLoading(paragraph, true);
+                    _showLoading(paragraph, true);
 
-            _closeOldQuery(paragraph)
-                .then(() => {
-                    const args = paragraph.queryArgs = {
-                        cacheName: paragraph.cacheName,
-                        pageSize: paragraph.pageSize,
-                        query,
-                        type: 'SCAN'
-                    };
+                    _closeOldQuery(paragraph)
+                        .then(() => {
+                            const args = paragraph.queryArgs = {
+                                cacheName: paragraph.cacheName,
+                                pageSize: paragraph.pageSize,
+                                firstPageOnly: paragraph.firstPageOnly,
+                                query,
+                                type: 'SCAN',
+                                localNid: local ? nid : null
+                            };
 
-                    return agentMonitor.query(cacheNode(paragraph.cacheName), args.cacheName, query, false, false, args.pageSize);
-                })
-                .then(_processQueryResult.bind(this, paragraph))
-                .catch((err) => {
-                    paragraph.errMsg = err.message;
+                            return agentMonitor.query(nid, args.cacheName, query, false, local, args.pageSize);
+                        })
+                        .then((res) => {
+                            if (paragraph.firstPageOnly) {
+                                res.hasMore = false;
 
-                    _showLoading(paragraph, false);
-                })
-                .then(() => paragraph.ace.focus());
+                                _processQueryResult(paragraph, res);
+
+                                _closeOldQuery(paragraph);
+                            }
+                            else
+                                _processQueryResult(paragraph, res);
+                        })
+                        .catch((err) => {
+                            paragraph.errMsg = err.message;
+
+                            _showLoading(paragraph, false);
+                        })
+                        .then(() => paragraph.ace.focus());
+                });
         };
 
         $scope.scanWithFilter = (paragraph) => {
@@ -1530,10 +1542,11 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
             paragraph.gridOptions.api.exporter.pdfExport(uiGridExporterConstants.ALL, uiGridExporterConstants.VISIBLE);
         };
 
-        $scope.exportCsvAll = function(paragraph) {
+        $scope.exportCsvAll = (paragraph) => {
             const args = paragraph.queryArgs;
 
-            agentMonitor.queryGetAll(cacheNode(args.cacheName), args.cacheName, args.query, false)
+            return Promise.resolve(args.localNid || _chooseNode(args.cacheName, false))
+                .then((nid) => agentMonitor.queryGetAll(nid, args.cacheName, args.query, !!args.nonCollocatedJoins, !!args.localNid))
                 .then((res) => _export(paragraph.name + '-all.csv', paragraph.columnFilter, res.columns, res.rows))
                 .catch(Messages.showError)
                 .then(() => paragraph.ace.focus());
@@ -1651,7 +1664,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
 
                 if (_.isNil(paragraph.queryArgs.query)) {
                     scope.title = 'SCAN query';
-                    scope.content = [`SCAN query for cache: <b>${$scope.maskCacheName(paragraph.queryArgs.cacheName)}</b>`];
+                    scope.content = [`SCAN query for cache: <b>${maskCacheName(paragraph.queryArgs.cacheName, true)}</b>`];
                 }
                 else if (paragraph.queryArgs.query.startsWith(SCAN_CACHE_WITH_FILTER)) {
                     scope.title = 'SCAN query';
@@ -1663,7 +1676,7 @@ export default ['$rootScope', '$scope', '$http', '$q', '$timeout', '$interval', 
                     else
                         filter = paragraph.queryArgs.query.substr(SCAN_CACHE_WITH_FILTER.length);
 
-                    scope.content = [`SCAN query for cache: <b>${$scope.maskCacheName(paragraph.queryArgs.cacheName)}</b> with filter: <b>${filter}</b>`];
+                    scope.content = [`SCAN query for cache: <b>${maskCacheName(paragraph.queryArgs.cacheName, true)}</b> with filter: <b>${filter}</b>`];
                 }
                 else if (paragraph.queryArgs.query .startsWith('EXPLAIN ')) {
                     scope.title = 'Explain query';

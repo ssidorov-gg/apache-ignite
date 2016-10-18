@@ -1215,6 +1215,9 @@ $generatorSpring.cacheStore = function(cache, domains, res) {
                 res.line('<bean class="' + $generatorCommon.jdbcDialectClassName(storeFactory.dialect) + '"/>');
                 res.endBlock('</property>');
 
+                if (storeFactory.sqlEscapeAll)
+                    $generatorSpring.property(res, storeFactory, 'sqlEscapeAll');
+
                 const domainConfigs = _.filter(domains, function(domain) {
                     return $generatorCommon.isDefinedAndNotEmpty(domain.databaseTable);
                 });

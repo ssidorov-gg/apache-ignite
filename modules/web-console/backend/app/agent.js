@@ -225,18 +225,18 @@ module.exports.factory = function(_, fs, path, JSZip, socketio, settings, mongo)
          * @param {String} nid Node id.
          * @param {String} cacheName Cache name.
          * @param {String} query Query.
-         * @param {Boolean} distributedJoins Flag whether to execute distributed joins.
+         * @param {Boolean} nonCollocatedJoins Flag whether to execute non collocated joins.
          * @param {Boolean} local Flag whether to execute query locally.
          * @param {int} pageSize Page size.
          * @returns {Promise}
          */
-        fieldsQuery(demo, nid, cacheName, query, distributedJoins, local, pageSize) {
+        fieldsQuery(demo, nid, cacheName, query, nonCollocatedJoins, local, pageSize) {
             const cmd = new Command(demo, 'exe')
                 .addParam('name', 'org.apache.ignite.internal.visor.compute.VisorGatewayTask')
                 .addParam('p1', nid)
                 .addParam('p2', 'org.apache.ignite.internal.visor.query.VisorQueryTask');
 
-            if (distributedJoins) {
+            if (nonCollocatedJoins) {
                 cmd.addParam('p3', 'org.apache.ignite.internal.visor.query.VisorQueryArgV2')
                     .addParam('p4', cacheName)
                     .addParam('p5', query)
