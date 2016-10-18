@@ -250,6 +250,11 @@ export default ['JavaTypes', 'igniteEventGroups', 'IgniteConfigurationGenerator'
 
                         sb.append(`${nested.id} = ${this._newBean(nested)};`);
 
+                        const clsName = JavaTypes.shortClassName(nested.clsName);
+
+                        if (arrType !== clsName)
+                            nested.id = '((' + clsName + ') ' + nested.id + ')';
+
                         this._setProperties(sb, nested, vars, limitLines);
 
                         sb.emptyLine();

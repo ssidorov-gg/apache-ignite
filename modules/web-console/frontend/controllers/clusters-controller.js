@@ -105,6 +105,9 @@ export default ['clustersController', [
                 }
                 else if (field.type === 'checkpointSpi') {
                     const newCheckpointCfg = {
+                        FS: {
+                            directoryPaths: []
+                        },
                         S3: {
                             awsCredentials: {
                                 kind: 'Basic'

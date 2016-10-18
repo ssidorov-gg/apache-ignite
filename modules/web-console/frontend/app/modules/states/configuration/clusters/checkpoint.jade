@@ -68,8 +68,8 @@ include ../../../../../app/helpers/jade/mixins.jade
                                     <ul>\
                                         <li>File System - Uses a shared file system to store checkpoints</li>\
                                         <li>Cache - Uses a cache to store checkpoints</li>\
-                                        <li>Amazon S3 - Uses a database to store checkpoints</li>\
-                                        <li>Database - Uses Amazon S3 to store checkpoints</li>\
+                                        <li>Amazon S3 - Uses Amazon S3 to store checkpoints</li>\
+                                        <li>Database - Uses a database to store checkpoints</li>\
                                         <li>Custom - Custom checkpoint SPI implementation</li>\
                                         <li>Default - No checkpoint SPI configured</li>\
                                     </ul>')
@@ -259,4 +259,4 @@ include ../../../../../app/helpers/jade/mixins.jade
                                 +java-class('Class name:', 'checkpoint.Custom.className', '"checkpointCustomClassName" + $index', 'true', checkpointCustom,
                                     'Custom CheckpointSpi implementation class')
             .col-sm-6
-                +preview(model, 'clusterCheckpoint')
+                +preview-xml-java('backupItem', 'clusterCheckpoint', 'caches')

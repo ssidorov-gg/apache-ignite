@@ -59,6 +59,7 @@ export default class AbstractTransformer {
 
         return sb;
     }
+
     // Generate cache key configurations.
     static clusterCacheKeyConfiguration(keyCfgs, sb = new StringBuilder()) {
         const cfg = this.generator.clusterCacheKeyConfiguration(keyCfgs);
@@ -68,8 +69,8 @@ export default class AbstractTransformer {
         return sb;
     }
 
-    static clusterCheckpoint(collision, sb = new StringBuilder()) {
-        const cfg = this.generator.clusterCheckpoint(collision);
+    static clusterCheckpoint(cluster, caches, sb = new StringBuilder()) {
+        const cfg = this.generator.clusterCheckpoint(cluster, caches);
 
         this._setProperties(sb, cfg);
 

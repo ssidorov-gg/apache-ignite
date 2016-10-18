@@ -694,7 +694,7 @@ module.exports.factory = function(passportMongo, settings, pluginMongo, mongoose
         checkpointSpi: [{
             kind: {type: String, enum: ['FS', 'Cache', 'S3', 'JDBC', 'Custom']},
             FS: {
-                dirPaths: [String],
+                directoryPaths: [String],
                 checkpointListener: String
             },
             Cache: {

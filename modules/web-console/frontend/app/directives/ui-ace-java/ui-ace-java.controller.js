@@ -45,6 +45,19 @@ export default ['$scope', 'JavaTransformer', function($scope, generator) {
             };
 
             break;
+        case 'clusterCheckpoint':
+            ctrl.generate = (cluster, caches) => {
+                const clusterCaches = _.reduce(caches, (acc, cache) => {
+                    if (_.includes(cluster.caches, cache.value))
+                        acc.push(cache.cache);
+
+                    return acc;
+                }, []);
+
+                return generator.clusterCheckpoint(cluster, clusterCaches);
+            };
+
+            break;
         case 'cacheStore':
         case 'cacheQuery':
             ctrl.generate = (cache, domains) => {

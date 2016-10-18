@@ -55,6 +55,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
             this.clusterAtomics(cluster.atomicConfiguration, cfg);
             this.clusterBinary(cluster.binaryConfiguration, cfg);
             this.clusterCacheKeyConfiguration(cluster.cacheKeyConfiguration, cfg);
+            this.clusterCheckpoint(cluster, cluster.caches, cfg);
             this.clusterCollision(cluster.collision, cfg);
             this.clusterCommunication(cluster, cfg);
             this.clusterConnector(cluster.connector, cfg);
@@ -391,14 +392,14 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
         }
 
         // Generate checkpoint configurations.
-        static clusterCheckpoint(checkpointSpis, caches, cfg = this.igniteConfigurationBean()) {
-            const cfgs = _.filter(_.map(checkpointSpis, (spi) => {
+        static clusterCheckpoint(cluster, caches, cfg = this.igniteConfigurationBean()) {
+            const cfgs = _.filter(_.map(cluster.checkpointSpi, (spi) => {
                 switch (spi.kind) {
                     case 'FS':
                         const fsBean = new Bean('org.apache.ignite.spi.checkpoint.sharedfs.SharedFsCheckpointSpi',
                             'checkpointSpi', spi.FS);
 
-                        fsBean.arrayProperty('dirPaths', 'dirPaths', _.get(spi, 'FS.dirPaths'))
+                        fsBean.collectionProperty('directoryPaths', 'directoryPaths', _.get(spi, 'FS.directoryPaths'))
                             .emptyBeanProperty('checkpointListener');
 
                         return fsBean;
@@ -407,9 +408,10 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                         const cacheBean = new Bean('org.apache.ignite.spi.checkpoint.cache.CacheCheckpointSpi',
                             'checkpointSpi', spi.Cache);
 
-                        _.forEach(_.find(caches, (cache) => cache._id === spi.Cache), (cache) => {
-                            spi.Cache.cacheName = cache.name;
-                        });
+                        const foundCache = _.find(caches, (cache) => cache._id === spi.Cache.cache);
+
+                        if (foundCache)
+                            spi.Cache.cacheName = foundCache.name;
 
                         cacheBean.stringProperty('cacheName')
                             .emptyBeanProperty('checkpointListener');
@@ -612,9 +614,7 @@ export default ['JavaTypes', 'igniteClusterDefaults', 'igniteCacheDefaults', 'ig
                         const dialect = _.get(spi.JDBC, 'dialect');
 
                         jdbcBean.dataSource(id, 'dataSourceBean', this.dataSourceBean(id, dialect))
-                            .beanProperty('dialect', new EmptyBean(this.dialectClsName(dialect)));
-
-                        jdbcBean.stringProperty('checkpointTableName')
+                            .stringProperty('checkpointTableName')
                             .stringProperty('keyFieldName')
                             .stringProperty('keyFieldType')
                             .stringProperty('valueFieldName')
